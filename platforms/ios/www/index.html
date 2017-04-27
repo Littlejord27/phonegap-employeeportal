@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Required meta tags-->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <title>B&amp;M Employee Portal</title>
+        <link rel="stylesheet" href="lib/framework7/css/framework7.ios.min.css">
+        <link rel="stylesheet" href="lib/framework7/css/framework7.ios.colors.min.css">
+        <link rel="stylesheet" href="lib/framework7icons/css/framework7-icons.css">
+        <link rel="stylesheet" href="css/styles.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    </head>
+    <body>
+        <div class="statusbar-overlay"></div>
+        <div class="views">
+            <div class="view view-main">
+                <div class="navbar">
+                    <div class="navbar-inner">
+                        <div class="center sliding">B&amp;M</div>
+                        <div class="right">
+                            <a href="#" class="link icon-only"><i class="icon icon-bars"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="pages navbar-through toolbar-through">
+                    <div data-page="index" class="page">
+                        <div class="page-content">
+                            <div class="content-block">
+                                <p class="deviceready"></p>
+                                <div class="row">
+                                    <div col="33"><a href="pos_cart.html" class="index-icon">Cart</a></div>
+                                    <div col="33"><a id="clear-native" href="#" class="index-icon">Clear</a></div>
+                                    <div col="33"><a href="#" class="index-icon">Log Out</a></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="lib/framework7/js/framework7.min.js"></script>
+        <script type="text/javascript" src="js/class/class-invoice.js"></script>
+        <script type="text/javascript" src="js/class/class-taskmaster.js"></script>
+        <script type="text/javascript" src="js/includes/database.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
+</html>

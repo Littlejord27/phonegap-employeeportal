@@ -1,0 +1,8 @@
+{
+    "libz.tbd": 1,
+    "AVFoundation.framework": 1,
+    "CoreMedia.framework": 1,
+    "CoreVideo.framework": 1,
+    "QuartzCore.framework": 1,
+    "libiconv.dylib": 1
+}
