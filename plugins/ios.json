@@ -10,16 +10,10 @@
         "cordova-plugin-console": {
             "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
         },
-        "cordova-plugin-statusbar": {
-            "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
-        },
-        "cordova-plugin-whitelist": {
+        "cordova-plugin-cszbar": {
             "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
         },
         "cordova-plugin-device": {
-            "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
-        },
-        "cordova-plugin-nativestorage": {
             "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
         },
         "cordova-plugin-media": {
@@ -32,7 +26,13 @@
             "PHOTOLIBRARY_USAGE_DESCRIPTION": " ",
             "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
         },
-        "cordova-plugin-cszbar": {
+        "cordova-plugin-nativestorage": {
+            "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
+        },
+        "cordova-plugin-statusbar": {
+            "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
+        },
+        "cordova-plugin-whitelist": {
             "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
         }
     },

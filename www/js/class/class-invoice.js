@@ -10,29 +10,31 @@ function Invoice () {
 	
 	this.payments 		= [];
 	this.salesLines 	= [];
+	this.discounts 		= [];
 
 	this.subtotalAmount = 0;
 	this.taxPercent 	= 0.101;
 	this.taxAmount 		= 0;
 	this.totalAmount 	= 0;
 	this.balance 		= 0;
+	this.discount 		= 0;
 }
 
 Invoice.prototype.addLine = function(item){
 	this.salesLines.push(item);
 	NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
 	this.recalc();
-};
+}
 Invoice.prototype.deleteLine = function(id){
 	this.salesLines.splice(id, 1);
 	NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
 	this.recalc();
-};
+}
 Invoice.prototype.changeQuantity = function(id, newQuantity){
 	this.salesLines[id].quantity = newQuantity;
 	NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
 	this.recalc();
-};
+}
 Invoice.prototype.changeLocation = function(id, location){
 	var prevLocation = this.salesLines[id].location;
 	this.salesLines[id].location = location;
@@ -44,18 +46,39 @@ Invoice.prototype.changeLocation = function(id, location){
 	}
 	NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
 	this.recalc();
-};
+}
 Invoice.prototype.recalc = function(item){
 	this.subtotalAmount = 0;
 	this.taxAmount 		= 0;
 	this.totalAmount 	= 0;
+	this.discount 		= 0;
 	for (var i = 0; i < this.salesLines.length; i++) {
 		var quantityDollarAmount = this.salesLines[i].retailAmount * this.salesLines[i].quantity;
 		this.subtotalAmount += quantityDollarAmount;
 		this.taxAmount += quantityDollarAmount * this.taxPercent;
 	}
-	this.totalAmount = this.subtotalAmount + this.taxAmount;
-};
+	for (var i = 0; i < this.discounts.length; i++) {
+		this.discount += this.calcDiscount(this.discounts[i]);
+	}
+	this.totalAmount = this.subtotalAmount + this.taxAmount - this.discount;
+}
+Invoice.prototype.calcDiscount = function(discount){
+	switch(discount.type){
+		case 'PMD':
+			return addPMDDiscount();
+			break;
+	}
+}
+function addPMDDiscount(){
+	var discount = 0;
+	for (var i = 0; i < Invoice.salesLines.length; i++) {
+		if(Invoice.salesLines[i].categoryname == "Latex Mattresses" && Invoice.salesLines[i].retailAmount > 600){
+			discount += (69.99 * Invoice.salesLines[i].quantity);
+		}
+	}
+	return discount;
+}
+
 Invoice.prototype.getRemainingBalance = function(){
 	this.balance = this.totalAmount + this.delivery.cost;
 	for (var i = 0; i < this.payments.length; i++) {
@@ -220,12 +243,30 @@ Invoice.prototype.addPayments = function(paymentObject){
 	this.payments = this.payments.concat(paymentObject);
 	NativeStorage.setItem('payments', JSON.stringify(this.payments), noop, noop);
 };
+Invoice.prototype.addDiscount = function(discount){
+	for (var i = 0; i < this.discounts.length; i++) {
+		if(this.discounts[i].type == discount.type){
+			consool('already in');
+			return;
+		}
+	}
+	this.discounts.push(discount);
+	NativeStorage.setItem('discounts', JSON.stringify(this.discounts), noop, noop);
+	this.recalc();
+}
+Invoice.prototype.setDiscounts = function(discountObject){
+	this.discounts = discountObject;
+	NativeStorage.setItem('discounts', JSON.stringify(this.discounts), noop, noop);
+	this.recalc();
+};
+
 
 Invoice.prototype.createInvoice = function(){
 	//var tm = new TaskMaster();
 	//tm.createInvoice();
 };
 
+// TODO: Show Discounts
 Invoice.prototype.draw = function(selector){
 	var cart = '';
 	for (var i = 0; i < this.salesLines.length; i++) {
@@ -360,12 +401,53 @@ function getLocationNickname(stock){
 			return 'Warehouse';
 		case 5:
 			return 'Outlet';
-		case -1:
-			return 'FM';
 		default:
 			return 'XX';
 	}
 }
+
+Invoice.prototype.xfactorsModal = function(){
+	myApp.modal({
+	title:  'XFactors',
+	text: '',
+	buttons: [
+	  {
+	    text: 'Cancel',
+	    onClick: function() {
+	      	myApp.alert('You clicked Cancel.');
+	    }
+	  },
+	  {
+	    text: 'Okay',
+	    bold: true,
+	    onClick: function() {
+	    	Invoice.paymentPopup();
+	      	myApp.alert('You clicked Okay.');
+	    }
+	  },
+	],
+	modalTemplate: '<div class="modal {{#unless buttons}}modal-no-buttons{{/unless}}">' +
+					  '<div class="modal-inner">' +
+					    '{{#if title}}' +
+					      '<div class="modal-title">{{title}}</div>' +
+					    '{{/if}}' +
+					    '{{#if text}}' +
+					       '<div class="modal-text">{{text}}</div>' +
+					    '{{/if}}' +
+					    '{{#if afterText}}' +
+					      '{{afterText}}' +
+					    '{{/if}}' +
+					  '</div>' +
+					  '{{#if buttons}}' +
+					    '<div class="modal-buttons">' +
+					      '{{#each buttons}}' +
+					        '<span class="modal-button {{#if bold}}modal-button-bold{{/if}}">{{text}}</span>' +
+					      '{{/each}}' +
+					    '</div>' +
+					  '{{/if}}' +
+					'</div>',
+	})
+};
 
 Invoice.prototype.paymentPopup = function(){
 	var balance = this.balance;
@@ -536,4 +618,5 @@ Invoice.prototype.init = function(){
 
 	NativeStorage.getItem('cart', function(obj){ Invoice.setSalesLines(JSON.parse(obj)); }, consool);
 	NativeStorage.getItem('payments', function(obj){ Invoice.setPayments(JSON.parse(obj)); }, consool);
+	NativeStorage.getItem('discounts', function(obj){ Invoice.setDiscounts(JSON.parse(obj)); }, consool);
 };

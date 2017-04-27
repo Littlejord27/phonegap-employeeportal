@@ -38,12 +38,19 @@ $$(document).on('deviceready', function() {
     Invoice.init();
 
     $$('.framework7-root').on('click', '.pos-actions', function(){
-        var actions = ['Transfer Invoice', 'Reset Page', 'Reset Sale']; 
+        var actions = ['Add Discount', 'Clear Discounts', 'Transfer Invoice', 'Reset Page', 'Reset Sale']; 
         choicelistModal({
             type: 'modal',
             data: actions,
             success: function(index,title,data) {
                 switch(data[index]){
+                    case 'Add Discount':
+                        addDiscountModal();
+                        break;
+                    case 'Clear Discounts':
+                        Invoice.setDiscounts([]);
+                        cartDetailsToolbarHeader();
+                        break;
                     case 'Transfer Invoice':
                         TaskMaster.listStations(function(data){
                             transferInvoiceModal(data.stations);
@@ -63,6 +70,7 @@ $$(document).on('deviceready', function() {
     $$('.framework7-root').on('click', '.quantity-col-card', function(){
 		var elem = $$(this);
 		var id = elem.data("id")
+        consool(Invoice.salesLines[id]);
 		var stockQuantity = createStockArray(Invoice.salesLines[id]);
 		choicelistModal({
             type: 'modal',
@@ -86,7 +94,7 @@ $$(document).on('deviceready', function() {
 		var id = elem.data("id")
 		choicelistModal({
             type: 'modal',
-            data: ['Store','Warehouse','Outlet','Used'],
+            data: ['Store','Warehouse','Outlet'],
             success: function(index,title,data) {
             	switch(data[index]){
             		case 'Store':
@@ -97,9 +105,6 @@ $$(document).on('deviceready', function() {
             			break;
             		case 'Outlet':
             			Invoice.changeLocation(id, 'O');
-            			break;
-            		case 'Used':
-            			Invoice.changeLocation(id, 'FM');
             			break;
             	}
             	var classSelector = elem.parent().parent().parent().parent()[0].className;
@@ -588,6 +593,7 @@ myApp.onPageInit('pos_summary', function (page) {
     }
 
     $$('#pay-button').on('click', function(){
+        //Invoice.xfactorsModal();
         Invoice.paymentPopup();
     });
 });
@@ -674,8 +680,18 @@ function PoSContinueInit(page){
 function cartDetailsToolbarHeader(){
     $$('.tax-toolbar').html(formatNumberMoney(Invoice.taxAmount));
     $$('.taxpercent').html((Invoice.taxPercent * 100).toFixed(1) + '%');
-    $$('.subtotal-toolbar').html(formatNumberMoney(Invoice.subtotalAmount));
     $$('.delivery-toolbar').html(formatNumberMoney(Invoice.delivery.cost));
+    if(Invoice.delivery.date != '00/00/00'){
+        $$('.delivery-date-toolbar').html(Invoice.delivery.date);
+    }
+    $$('.subtotal-toolbar').html(formatNumberMoney(Invoice.subtotalAmount));
+    if(Invoice.discount > 0){
+        $$('.discount-toolbar').html('<span style="color:green;">' + formatNumberMoney(Invoice.discount) + '</span>');
+        $$('.discount-label-toolbar').show();
+    } else {
+        $$('.discount-toolbar').html(''); 
+        $$('.discount-label-toolbar').hide();
+    }
     $$('.total-toolbar').html(formatNumberMoney(Invoice.totalAmount + Invoice.delivery.cost));
 }
 
@@ -704,9 +720,6 @@ function createStockArray(line){
 			break;
 		case 'O':
 			return numberArrayize(line.stock[2].available, limit);
-			break;
-		case 'FM':
-			return numberArrayize(line.stock[3].available, limit);
 			break;
 	}
 }
@@ -939,6 +952,27 @@ var choicelistModal= function(params) {
         // No choices... error?
     }
 };
+
+function addDiscountModal(){
+    choicelistModal({
+        type: 'modal',
+        data: ['PMD', 'Tax Free', 'Troll Bridge'], // TODO : Get tax array from TM
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'PMD':
+                    Invoice.addDiscount({type:'PMD'});
+                    break;
+                case 'Tax':
+                    Invoice.addDiscount({type:'Tax'});
+                    break;
+                case 'Troll':
+                    Invoice.addDiscount({type:'Troll'});
+                    break;
+            }
+            cartDetailsToolbarHeader();
+        }
+    }); 
+}
 
 function transferInvoiceModal(stations){
     choicelistModal({
