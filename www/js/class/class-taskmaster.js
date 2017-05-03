@@ -218,7 +218,8 @@ function TaskMaster (){
 			url: '/4DACTION/api',
 			data: {
 				action: 'searchInventory',
-				q: q
+				q: q,
+				key: this.key
 			},
 			success: function(data) {
 				onSuccess(data);

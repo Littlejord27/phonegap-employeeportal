@@ -60,7 +60,10 @@ Invoice.prototype.recalc = function(item){
 	for (var i = 0; i < this.discounts.length; i++) {
 		this.discount += this.calcDiscount(this.discounts[i]);
 	}
-	this.totalAmount = this.subtotalAmount + this.taxAmount - this.discount;
+	this.subtotalAmount = roundTo(this.subtotalAmount, 2);
+	this.taxAmount = roundTo(this.taxAmount, 2);
+	this.discount = roundTo(this.discount, 2);
+	this.totalAmount = roundTo(this.subtotalAmount + this.taxAmount - this.discount, 2);
 }
 Invoice.prototype.calcDiscount = function(discount){
 	switch(discount.type){
@@ -72,8 +75,8 @@ Invoice.prototype.calcDiscount = function(discount){
 function addPMDDiscount(){
 	var discount = 0;
 	for (var i = 0; i < Invoice.salesLines.length; i++) {
-		if(Invoice.salesLines[i].categoryname == "Latex Mattresses" && Invoice.salesLines[i].retailAmount > 600){
-			discount += (69.99 * Invoice.salesLines[i].quantity);
+		if(Invoice.salesLines[i].categoryname == "Latex Mattresses" && Invoice.salesLines[i].retailAmount > 699){
+			discount += (69.95 * Invoice.salesLines[i].quantity);
 		}
 	}
 	return discount;
@@ -113,7 +116,7 @@ Invoice.prototype.setBalance = function(amount){
 	for (var i = 0; i < this.payments.length; i++) {
 		amount -= this.payments[i].amount;
 	}
-	this.balance = amount;
+	this.balance = roundTo(amount, 2);
 };
 
 Invoice.prototype.setBillingStreet = function(street){
@@ -262,8 +265,7 @@ Invoice.prototype.setDiscounts = function(discountObject){
 
 
 Invoice.prototype.createInvoice = function(){
-	//var tm = new TaskMaster();
-	//tm.createInvoice();
+	TaskMaster.createInvoice();
 };
 
 // TODO: Show Discounts
@@ -272,19 +274,29 @@ Invoice.prototype.draw = function(selector){
 	for (var i = 0; i < this.salesLines.length; i++) {
 		cart += '<div class="card" data-id="'+i+'">' +
 				    '<div class="card-header">'+this.salesLines[i].model+'<span class="delete-line" data-id="'+i+'"><i class="icon f7-icons">close_round</i></span></div>' +
-				    '<div class="card-content">' + /* TODO : Find Better Way To Show Characteristics */
-				        '<div class="card-content-inner">'+this.salesLines[i].name+'</div>' +
+				    '<div class="card-content">' +
+				        '<div class="card-content-inner">' +
+				        	'<div class="row">' +
+				        		'<div class="col-33"><img class="prod-img" src="media/products/no-product-pic_icon.png"></div>' +
+				        		'<div class="col-33">' +
+				        			'<span>'+ formatNumberMoney(this.salesLines[i].retailAmount) +' ea.</span><br>' +
+				        			(this.salesLines[i].size != '' ? '<span>'+this.salesLines[i].size+'</span><br>' : '')+
+				        			(this.salesLines[i].color != '' ? '<span>'+this.salesLines[i].color+'</span><br>' : '')+
+				        			(this.salesLines[i].material != '' ? '<span>'+this.salesLines[i].material+'</span><br>' : '')+
+				        			'<p class="location-edit-card" data-id="'+i+'">' + getLocationNickname(this.salesLines[i].location) + '</p>' +
+				        		'</div>' +
+				        		'<div class="col-33">' + discountAmountCalc(this.salesLines[i])+ '</div>' +
+				        	'</div>' +
+				        	'<span> Special Note </span>' +
+				        '</div>' +
 				    '</div>' +
 				    '<div class="card-footer">'+
-					    '<div class="row" style="width: 100%; text-align: center;">' +
-					    	'<div class="col-33">' +
-					    		'<p>' + this.salesLines[i].retailAmount + '</p>'+
+					    '<div class="row" style="width: 100%;">' +
+					    	'<div class="col-50">' +
+					    		'<p>' + formatNumberMoney(this.salesLines[i].retailAmount * this.salesLines[i].quantity) + '</p>'+
 					    	'</div>' +
-					    	'<div class="col-33 quantity-col-card" data-id="'+i+'">' +
+					    	'<div class="col-50 quantity-col-card right-float right-align" data-id="'+i+'">' +
 					    		'<p>QTY:' + this.salesLines[i].quantity + '</p>'+
-					    	'</div>' +
-					    	'<div class="col-33 location-col-card" data-id="'+i+'">' +
-					    		'<p>' +this.salesLines[i].location + '</p>'+
 					    	'</div>' +
 					    '</div>' +
 				    '</div>' +
@@ -299,6 +311,20 @@ Invoice.prototype.draw = function(selector){
 		$$('.cart-list').append(cart);
 	}
 };
+
+function discountAmountCalc(lineItem){
+	var lineDiscount = 0;
+	for (var i = 0; i < Invoice.discounts.length; i++) {
+		switch(Invoice.discounts[i].type){
+			case 'PMD':
+				if(lineItem.categoryname == "Latex Mattresses" && lineItem.retailAmount > 600){
+					lineDiscount += (69.99 * lineItem.quantity);
+				}
+				break;
+		}
+	}
+	return (lineDiscount > 0) ? 'Discount: '+formatNumberMoney(lineDiscount) : '';
+}
 
 Invoice.prototype.itemPopup = function(item){
 	var stockTable 	= 	createStockTable(item.stock);
@@ -367,6 +393,13 @@ Invoice.prototype.itemPopup = function(item){
 };
 
 function createStockTable(stock){
+	stock.push({
+		"locationid": 42,
+		"locationname": "Special Order",
+		"locationletter": "SO",
+		"available": 1000,
+		'onorderavailable': 0
+	});
 	var stockTable = 	'<table>' +
 							'<tr>' +
 								'<th>Location</th>' +
@@ -374,11 +407,16 @@ function createStockTable(stock){
 								'<th></th>' +
 							'</tr>';
 	for (var i = 0; i < stock.length; i++) {
+		if(stock[i].locationid!=42){
+			stock[length-1].onorderavailable += stock[i].onorderavailable;
+		}
 		if(stock[i].available > 0){
-			var locationNickname = getLocationNickname(stock[i]);
+			var locationNickname = getLocationNickname(stock[i].locationid);
 			var stockLocationLine =	'<tr id="locationLine'+i+'" class="locationLine">' +
-										'<td>'+locationNickname+ ' - ' +stock[i].available+'</td>' +
-										'<td><input id="locationLineInput'+i+'" class="stock-table-quantity" type="number" value="0" data-stock="'+stock[i].available+'" data-location="'+stock[i].locationletter+'"></td>' +
+										'<td>'+locationNickname+ ' ' +((stock[i].locationid==42) ? '<span class="orange">'+(stock[i].onorderavailable > 0 ? '- '+stock[i].onorderavailable : '' )+'</span>' : '- '+stock[i].available)+'</td>' +
+										'<td><input id="locationLineInput'+i+'" class="stock-table-quantity"' +
+											' type="number" value="0" data-stock="'+stock[i].available+'" data-location="'+stock[i].locationletter+'">'+
+										'</td>' +
 										'<td><div class="row">' + 
 											'<div class="col-50 quantity-down"><i class="icon f7-icons">arrow_left_fill</i></div>' +
 											'<div class="col-50 quantity-up"><i class="icon f7-icons">arrow_right_fill</i></div>' +
@@ -386,21 +424,30 @@ function createStockTable(stock){
 									'</tr>';
 			stockTable += stockLocationLine;
 		} else {
-			stockTable += '<td colspan="3" style="text-align: center;">'+stock[i].locationname+' - Out Of Stock</td>';
+			stockTable += '<tr id="locationLine'+i+'" class="locationLine"><td colspan="3" style="text-align: center;">'+stock[i].locationname+' - Out Of Stock</td></tr>';
 		}
 	}
 	stockTable += '</table>';
 	return stockTable;
 }
 
-function getLocationNickname(stock){
-	switch(stock.locationid){
+function getLocationNickname(locationid){
+	switch(locationid){
+		case 'I':
+			//fall through
 		case 1:
 			return 'Store';
+		case 'W':
+			//fall through
 		case 2:
 			return 'Warehouse';
+		case 'O':
+			//fall through
 		case 5:
 			return 'Outlet';
+		case 'SO':
+		case 42:
+			return 'Special Order';
 		default:
 			return 'XX';
 	}
@@ -409,7 +456,7 @@ function getLocationNickname(stock){
 Invoice.prototype.xfactorsModal = function(){
 	myApp.modal({
 	title:  'XFactors',
-	text: '',
+	text: '<div class="Test">Test</div>',
 	buttons: [
 	  {
 	    text: 'Cancel',
@@ -426,26 +473,6 @@ Invoice.prototype.xfactorsModal = function(){
 	    }
 	  },
 	],
-	modalTemplate: '<div class="modal {{#unless buttons}}modal-no-buttons{{/unless}}">' +
-					  '<div class="modal-inner">' +
-					    '{{#if title}}' +
-					      '<div class="modal-title">{{title}}</div>' +
-					    '{{/if}}' +
-					    '{{#if text}}' +
-					       '<div class="modal-text">{{text}}</div>' +
-					    '{{/if}}' +
-					    '{{#if afterText}}' +
-					      '{{afterText}}' +
-					    '{{/if}}' +
-					  '</div>' +
-					  '{{#if buttons}}' +
-					    '<div class="modal-buttons">' +
-					      '{{#each buttons}}' +
-					        '<span class="modal-button {{#if bold}}modal-button-bold{{/if}}">{{text}}</span>' +
-					      '{{/each}}' +
-					    '</div>' +
-					  '{{/if}}' +
-					'</div>',
 	})
 };
 
@@ -488,9 +515,11 @@ Invoice.prototype.paymentPopup = function(){
 					'</div>';
 	myApp.popup(popupHTML);
 
+	Invoice.drawPayments(Invoice.payments, '#payment-pop');
+
 	$$('#balance-input').on('keyup', function(){
 		if(this.value > balance){
-			$$('#balance-input').val(balance.toFixed(2));
+			$$('#balance-input').val(balance);
 		}
 	});
 
@@ -530,13 +559,13 @@ Invoice.prototype.paymentPopup = function(){
 					payments.push({type:type, amount:amount});
 					break;
 				case 'Full':
-					$$('#balance-input').val(balance.toFixed(2));
+					$$('#balance-input').val(balance);
 					break;
 			}
 			if(type != 'Full'){
-				balance -= amount;
+				balance = Math.abs(balance - amount);
 				$$('#remaining-balance').text(formatNumberMoney(balance));
-				Invoice.drawPayments(payments);
+				Invoice.drawPayments(payments, '#payment-pop');
 				$$('#balance-input').val('');
 			}
 		}
@@ -546,12 +575,13 @@ Invoice.prototype.paymentPopup = function(){
 		$$('#summary-paid').text(formatNumberMoney(Invoice.getRemainingBalance()));
 		$$('#summary-paid-label').show();
 		myApp.closeModal('#payment-pop');
+		Invoice.drawPayments(payments, '#customer-cart-div');
 	});
 };
 
-Invoice.prototype.drawPayments = function(payments){
-	$$('#payment-div').remove();
-	var html = '<div id="payment-div" class="list-block"><ul>';
+Invoice.prototype.drawPayments = function(payments, selector){
+	$$('#payment-popup-div').remove();
+	var html = '<div id="payment-popup-div" class="list-block"><ul>';
 	for (var i = payments.length - 1; i >= 0 ; i--) {
 		var paymentLine = 	'<li class="item-content">' +
 								'<div class="item-media"></div>' +
@@ -562,7 +592,7 @@ Invoice.prototype.drawPayments = function(payments){
 							'</li>';
 		html += paymentLine;
 	}
-	$$('#payment-pop').append(html+'</ul></div>');
+	$$(selector).append(html+'</ul></div>');
 }
 
 
@@ -585,38 +615,39 @@ Invoice.prototype.reinit = function(){
     this.payments = [];
     NativeStorage.setItem('payments', '', noop, noop);
     this.setBalance(0);
+    this.setDiscounts([]);
     this.recalc();
     mainView.router.refreshPage();
 };
 
 Invoice.prototype.init = function(){
-	NativeStorage.getItem('first', function(obj){  Invoice.setFirstName(obj); }, consool);
-	NativeStorage.getItem('last', function(obj){  Invoice.setLastName(obj); }, consool);
-	NativeStorage.getItem('phoneNumber', function(obj){  Invoice.setPhoneNumber(obj); }, consool);
-	NativeStorage.getItem('email', function(obj){ Invoice.setEmail(obj); }, consool);
+	NativeStorage.getItem('first', function(obj){  Invoice.setFirstName(obj); }, function(error){ if(error.code == 2){ Invoice.setFirstName(''); } else { consool(error); }});
+	NativeStorage.getItem('last', function(obj){  Invoice.setLastName(obj); }, function(error){ if(error.code == 2){ Invoice.setLastName(''); }});
+	NativeStorage.getItem('phoneNumber', function(obj){  Invoice.setPhoneNumber(obj); }, function(error){ if(error.code == 2){ Invoice.setPhoneNumber(''); }});
+	NativeStorage.getItem('email', function(obj){ Invoice.setEmail(obj); }, function(error){ if(error.code == 2){ Invoice.setEmail(''); }});
 
-	NativeStorage.getItem('streetOne', function(obj){ Invoice.setBillingStreet(obj); }, consool);
-	NativeStorage.getItem('streetTwo', function(obj){ Invoice.setBillingStreetTwo(obj); }, consool);
-	NativeStorage.getItem('city', function(obj){ Invoice.setBillingCity(obj); }, consool);
-	NativeStorage.getItem('state', function(obj){ Invoice.setBillingState(obj); }, consool);
-	NativeStorage.getItem('zip', function(obj){ Invoice.setBillingZip(obj); }, consool);
+	NativeStorage.getItem('streetOne', function(obj){ Invoice.setBillingStreet(obj); }, function(error){ if(error.code == 2){ Invoice.setBillingStreet(''); }});
+	NativeStorage.getItem('streetTwo', function(obj){ Invoice.setBillingStreetTwo(obj); }, function(error){ if(error.code == 2){ Invoice.setBillingStreetTwo(''); }});
+	NativeStorage.getItem('city', function(obj){ Invoice.setBillingCity(obj); }, function(error){ if(error.code == 2){ Invoice.setBillingCity(''); }});
+	NativeStorage.getItem('state', function(obj){ Invoice.setBillingState(obj); }, function(error){ if(error.code == 2){ Invoice.setBillingState(''); }});
+	NativeStorage.getItem('zip', function(obj){ Invoice.setBillingZip(obj); }, function(error){ if(error.code == 2){ Invoice.setBillingZip(''); }});
 
-	NativeStorage.getItem('streetOne-shipping', function(obj){ Invoice.setShippingStreet(obj); }, consool);
-	NativeStorage.getItem('streetTwo-shipping', function(obj){ Invoice.setShippingStreetTwo(obj); }, consool);
-	NativeStorage.getItem('city-shipping', function(obj){ Invoice.setShippingCity(obj); }, consool);
-	NativeStorage.getItem('state-shipping', function(obj){ Invoice.setShippingState(obj); }, consool);
-	NativeStorage.getItem('zip-shipping', function(obj){ Invoice.setShippingZip(obj); }, consool);
+	NativeStorage.getItem('streetOne-shipping', function(obj){ Invoice.setShippingStreet(obj); }, function(error){ if(error.code == 2){ Invoice.setShippingStreet(''); } else { consool(error); }});
+	NativeStorage.getItem('streetTwo-shipping', function(obj){ Invoice.setShippingStreetTwo(obj); }, function(error){ if(error.code == 2){ Invoice.setShippingStreetTwo(''); } else { consool(error); }});
+	NativeStorage.getItem('city-shipping', function(obj){ Invoice.setShippingCity(obj); }, function(error){ if(error.code == 2){ Invoice.setShippingCity(''); } else { consool(error); }});
+	NativeStorage.getItem('state-shipping', function(obj){ Invoice.setShippingState(obj); }, function(error){ if(error.code == 2){ Invoice.setShippingState(''); } else { consool(error); }});
+	NativeStorage.getItem('zip-shipping', function(obj){ Invoice.setShippingZip(obj); }, function(error){ if(error.code == 2){ Invoice.setShippingZip(''); } else { consool(error); }});
 
-	NativeStorage.getItem('method', function(obj){ Invoice.setDeliveryMethod(obj); }, consool);
-	NativeStorage.getItem('cost', function(obj){ Invoice.setDeliveryCost(obj); }, consool);
-	NativeStorage.getItem('date', function(obj){ Invoice.delivery.date = obj; }, consool);
-	NativeStorage.getItem('month', function(obj){ Invoice.delivery.month = obj; }, consool);
-	NativeStorage.getItem('day', function(obj){ Invoice.delivery.day = obj; }, consool);
-	NativeStorage.getItem('year', function(obj){ Invoice.delivery.year = obj; }, consool);
-	NativeStorage.getItem('location', function(obj){ Invoice.delivery.location = obj; }, consool);
-	NativeStorage.getItem('notes', function(obj){ Invoice.delivery.notes = obj; }, consool);
+	NativeStorage.getItem('method', function(obj){ Invoice.setDeliveryMethod(obj); }, function(error){ if(error.code == 2){ Invoice.setDeliveryMethod(''); } else { consool(error); }});
+	NativeStorage.getItem('cost', function(obj){ Invoice.setDeliveryCost(obj); }, function(error){ if(error.code == 2){ Invoice.setDeliveryCost(0); } else { consool(error); }});
+	NativeStorage.getItem('date', function(obj){ Invoice.delivery.date = obj; }, function(error){ if(error.code == 2){ Invoice.delivery.date = '00/00/00'; } else { consool(error); }});
+	NativeStorage.getItem('month', function(obj){ Invoice.delivery.month = obj; }, function(error){ if(error.code == 2){ Invoice.delivery.month = '00'; } else { consool(error); }});
+	NativeStorage.getItem('day', function(obj){ Invoice.delivery.day = obj; }, function(error){ if(error.code == 2){ Invoice.delivery.day = '00'; } else { consool(error); }});
+	NativeStorage.getItem('year', function(obj){ Invoice.delivery.year = obj; }, function(error){ if(error.code == 2){ Invoice.delivery.year = '00'; } else { consool(error); }});
+	NativeStorage.getItem('location', function(obj){ Invoice.delivery.location = obj; }, function(error){ if(error.code == 2){ Invoice.delivery.location = ''; } else { consool(error); }});
+	NativeStorage.getItem('notes', function(obj){ Invoice.delivery.notes = obj; }, function(error){ if(error.code == 2){ Invoice.delivery.notes = ''; } else { consool(error); }});
 
-	NativeStorage.getItem('cart', function(obj){ Invoice.setSalesLines(JSON.parse(obj)); }, consool);
-	NativeStorage.getItem('payments', function(obj){ Invoice.setPayments(JSON.parse(obj)); }, consool);
-	NativeStorage.getItem('discounts', function(obj){ Invoice.setDiscounts(JSON.parse(obj)); }, consool);
+	NativeStorage.getItem('cart', function(obj){ Invoice.setSalesLines(JSON.parse(obj)); }, function(error){ if(error.code == 2){ Invoice.setSalesLines([]); } else { consool(error); }});
+	NativeStorage.getItem('payments', function(obj){ Invoice.setPayments(JSON.parse(obj)); }, function(error){ if(error.code == 2){ Invoice.setPayments([]); } else { consool(error); }});
+	NativeStorage.getItem('discounts', function(obj){ Invoice.setDiscounts(JSON.parse(obj)); }, function(error){ if(error.code == 2){ Invoice.setDiscounts([]); } else { consool(error); }});
 };

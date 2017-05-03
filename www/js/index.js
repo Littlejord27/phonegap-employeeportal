@@ -37,6 +37,10 @@ $$(document).on('deviceready', function() {
 
     Invoice.init();
 
+    $$('.framework7-root').on('click', '.home-icon', function(){
+        mainView.router.back({url:'profile.html', force:true});
+    });
+
     $$('.framework7-root').on('click', '.pos-actions', function(){
         var actions = ['Add Discount', 'Clear Discounts', 'Transfer Invoice', 'Reset Page', 'Reset Sale']; 
         choicelistModal({
@@ -89,14 +93,14 @@ $$(document).on('deviceready', function() {
         });
 	});
 
-	$$('.framework7-root').on('click', '.location-col-card', function(){
+	$$('.framework7-root').on('click', '.location-edit-card', function(){
 		var elem = $$(this);
 		var id = elem.data("id")
 		choicelistModal({
             type: 'modal',
-            data: ['Store','Warehouse','Outlet'],
+            data: ['Store','Warehouse','Outlet', 'Special Order'],
             success: function(index,title,data) {
-            	switch(data[index]){
+            	switch(data[index]){ // ITEM LOCATION SWITCH
             		case 'Store':
             			Invoice.changeLocation(id, 'I');
             			break;
@@ -106,9 +110,12 @@ $$(document).on('deviceready', function() {
             		case 'Outlet':
             			Invoice.changeLocation(id, 'O');
             			break;
+                    case 'Special Order':
+                        Invoice.changeLocation(id, 'SO');
+                        break;
             	}
-            	var classSelector = elem.parent().parent().parent().parent()[0].className;
-				var idSelector = elem.parent().parent().parent().parent()[0].id;
+            	var classSelector  = elem.parent().parent().parent().parent().parent().parent()[0].className;
+				var idSelector     = elem.parent().parent().parent().parent().parent().parent()[0].id;
 				if(idSelector != ''){
 					Invoice.draw('#'+idSelector);
 				} else if(classSelector == 'cart-list'){
@@ -133,6 +140,45 @@ $$(document).on('deviceready', function() {
 		cartDetailsToolbarHeader();
 	});
 
+    var searchDelayTimer;
+    $$('.framework7-root').on('keyup', '#search-box', function(){
+        if(this.value.length > 3){
+            clearTimeout(searchDelayTimer);
+            (function(search){
+                searchDelayTimer = setTimeout(function() {
+                    TaskMaster.searchInventory(search, function(data){
+                        var listNames = data.inventoryNames;
+                        var listSkus = data.inventorySkus;
+                        for (var i = 0; i < listNames.length; i++) {
+                            var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title">'+listNames[i]+'</div></div></li>');
+                            searchItem.on('click', function(){
+                                TaskMaster.getItemInfo(elem.data('sku'), function(data){
+                                    var itemLine = {
+                                        brand:data.item.brand,
+                                        categoryname:data.item.categoryname,
+                                        color:data.item.color,
+                                        customerswaiting:data.item.customerswaiting,
+                                        customerswaitinglist:data.item.customerswaitinglist,
+                                        material:data.item.material,
+                                        model:data.item.model,
+                                        name:data.item.name,
+                                        retailAmount:data.item.retailAmount,
+                                        size:data.item.size,
+                                        sku:data.item.sku,
+                                        stock:data.item.stock,
+                                        vendorsku:data.item.vendorsku
+                                    };
+                                    //Invoice.itemPopup(itemLine); // TODO : UNCOMMENT LINE AFTER SEARCH SCROLL WORKS
+                                });
+                            });
+                            $$('.search-results').append(searchItem);
+                        }
+                    });
+                }, 500); // Will do the ajax stuff after 1000 ms, or 1 s
+            })(this.value);
+        }
+    });
+
 	$$('#clear-native').on('click', function(){
 		NativeStorage.clear( consool, consool );
 	});
@@ -144,8 +190,13 @@ $$(document).on('deviceready', function() {
         if(error.code == 2){ Invoice.setDeliveryMethod('team'); }
     });
     NativeStorage.getItem('location', noop, function(error){
-        if(error.code == 2){ Invoice.setDeliveryMethod('I'); } // DEFAULT PICK UP LOCATION
+        if(error.code == 2){ Invoice.delivery.location = 'I'; } // DEFAULT PICK UP LOCATION
     });
+});
+
+myApp.onPageInit('profile', function (page) {
+    var mySwiper = myApp.swiper('.profile-swiper', {
+    }); 
 });
 
 myApp.onPageInit('pos_cart pos_customer pos_delivery pos_summary', function(page){
@@ -161,7 +212,18 @@ myApp.onPageInit('pos_cart', function (page) {
 
     $$('#search-button').on('click', startSearch);
 
-    function startSearch(){ }
+    function startSearch(){
+        myApp.modal({
+            title:  'Search',
+            text: '<input id="search-box">',
+            afterText: '<div class="list-block search-result-div"><ul class="search-results"></ul></div>',
+            buttons: [
+              {
+                text: 'Cancel', onClick: function() { }
+              },
+            ],
+        })
+    }
 
     function startScan(){
         cloudSky.zBar.scan(
@@ -417,6 +479,7 @@ myApp.onPageInit('pos_delivery', function (page) {
 
     function setShippingFields(){
         NativeStorage.getItem('sameBilling', function(obj){
+            consool(obj); 
             if(Invoice.delivery.method == 'team' || Invoice.delivery.method == 'shipping'){
                 if(obj){
                     setShippingFromBilling();
@@ -527,7 +590,7 @@ myApp.onPageInit('pos_summary', function (page) {
 
     $$('#summary-billing-info').text(Invoice.getBilling());
 
-    Invoice.setBalance(Invoice.totalAmount + Invoice.delivery.cost);
+    Invoice.setBalance(roundTo(Invoice.totalAmount + Invoice.delivery.cost, 2));
 
     NativeStorage.getItem('sameBilling', function(obj){
         if(obj){ //if same as billing
@@ -592,7 +655,7 @@ myApp.onPageInit('pos_summary', function (page) {
         }
     }
 
-    $$('#pay-button').on('click', function(){
+    $$('.pos-pay').on('click', function(){
         //Invoice.xfactorsModal();
         Invoice.paymentPopup();
     });
@@ -605,50 +668,34 @@ function PoSNavigationInit(page){
     var pageContainer= $$(page.container);
     posNav = pageContainer.find(".pos-navigation");
 
-    if(page.name != 'pos_cart'){
-        if(Invoice.salesLines.length > 0){
-            posNav.find('.pos-cart-button').addClass('pos-button-complete');
-        } else {
-            posNav.find('.pos-cart-button').addClass('pos-button-incomplete');
-        }
-    } else{
-        posNav.find('.pos-cart-button').addClass('pos-button-active');
+    if(Invoice.salesLines.length > 0){
+        posNav.find('.pos-cart-button .checkmark-wrapper').html('<i class="icon f7-icons">check_round</i>');
+    } else {
+        posNav.find('.pos-cart-button .checkmark-wrapper').html('');
     }
 
-    if(page.name != 'pos_customer'){
-        if(Invoice.customer.first != ''){
-            posNav.find('.pos-customer-button').addClass('pos-button-complete');
-        } else {
-            posNav.find('.pos-customer-button').addClass('pos-button-incomplete');
-        }
-    } else{
-        posNav.find('.pos-customer-button').addClass('pos-button-active');
+    if(Invoice.customer.first != ''){
+        posNav.find('.pos-customer-button .checkmark-wrapper').html('<i class="icon f7-icons">check_round</i>');
+    } else {
+        posNav.find('.pos-customer-button .checkmark-wrapper').html('');
     }
 
-    if(page.name != 'pos_delivery'){ // Add other methods
-    	var teamMethod = (Invoice.delivery.method == 'team' && Invoice.getDeliveryDateString() != '00/00/00');
-    	//var shippingMethod = (Invoice.delivery.method == 'shipping' && );
-    	var shippingMethod = false;
-    	var carryoutMethod = (Invoice.delivery.method == 'carryout');
-    	var pickupMethod = (Invoice.delivery.method == 'pickup' && Invoice.delivery.store != '');
-    	var laterMethod = (Invoice.delivery.method == 'later');
-        if(teamMethod || shippingMethod || pickupMethod || carryoutMethod || laterMethod){
-            posNav.find('.pos-delivery-button').addClass('pos-button-complete');
-        } else {
-            posNav.find('.pos-delivery-button').addClass('pos-button-incomplete');
-        }
-    } else{
-        posNav.find('.pos-delivery-button').addClass('pos-button-active');
+    var teamMethod = (Invoice.delivery.method == 'team' && Invoice.getDeliveryDateString() != '00/00/00');
+    //var shippingMethod = (Invoice.delivery.method == 'shipping' && );
+    var shippingMethod = false;
+    var carryoutMethod = (Invoice.delivery.method == 'carryout');
+    var pickupMethod = (Invoice.delivery.method == 'pickup' && Invoice.delivery.store != '');
+    var laterMethod = (Invoice.delivery.method == 'later');
+    if(teamMethod || shippingMethod || pickupMethod || carryoutMethod || laterMethod){
+        posNav.find('.pos-delivery-button .checkmark-wrapper').html('<i class="icon f7-icons">check_round</i>');
+    } else {
+        posNav.find('.pos-delivery-button .checkmark-wrapper').html('');
     }
 
-    if(page.name != 'pos_summary'){
-        if(false){
-            posNav.find('.pos-summary-button').addClass('pos-button-complete');
-        } else {
-            posNav.find('.pos-summary-button').addClass('pos-button-incomplete');
-        }
-    } else{
-        posNav.find('.pos-summary-button').addClass('pos-button-active');
+    if(false){
+        posNav.find('.pos-summary-button .checkmark-wrapper').html('<i class="icon f7-icons">check_round</i>');
+    } else {
+        posNav.find('.pos-summary-button .checkmark-wrapper').html('');
     }
 };
 
@@ -689,7 +736,7 @@ function cartDetailsToolbarHeader(){
         $$('.discount-toolbar').html('<span style="color:green;">' + formatNumberMoney(Invoice.discount) + '</span>');
         $$('.discount-label-toolbar').show();
     } else {
-        $$('.discount-toolbar').html(''); 
+        $$('.discount-toolbar').html('');
         $$('.discount-label-toolbar').hide();
     }
     $$('.total-toolbar').html(formatNumberMoney(Invoice.totalAmount + Invoice.delivery.cost));
@@ -698,7 +745,7 @@ function cartDetailsToolbarHeader(){
 
 
 function formatNumberMoney(money){
-    return '$' + money.toFixed(2);
+    return '$' + roundTo(money, 2).toFixed(2);
 }
 function noop(){
     return this;
@@ -711,7 +758,7 @@ function consool(msg){
 function createStockArray(line){
 	var location = line.location;
 	var limit = 10;
-	switch(location){
+	switch(location){ // ITEM LOCATION SWITCH
 		case 'I':
 			return numberArrayize(line.stock[0].available, limit);
 			break;
@@ -721,6 +768,9 @@ function createStockArray(line){
 		case 'O':
 			return numberArrayize(line.stock[2].available, limit);
 			break;
+        case 'SO':
+            return numberArrayize(line.stock[line.stock.length-1].available, limit);
+            break;
 	}
 }
 function numberArrayize(number, limit){
@@ -730,6 +780,17 @@ function numberArrayize(number, limit){
 		tempArray[i] = i + 1;
 	}
 	return tempArray;
+}
+
+function roundTo(n, digits) {
+ if (digits === undefined) {
+   digits = 0;
+ }
+
+ var multiplicator = Math.pow(10, digits);
+ n = parseFloat((n * multiplicator).toFixed(11));
+ var test =(Math.round(n) / multiplicator);
+ return +(test.toFixed(2));
 }
 
 var choicelistModal= function(params) {
