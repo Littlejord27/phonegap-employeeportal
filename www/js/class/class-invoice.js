@@ -271,7 +271,7 @@ Invoice.prototype.createInvoice = function(){
 // TODO: Show Discounts
 Invoice.prototype.draw = function(selector){
 	var cart = '';
-	for (var i = 0; i < this.salesLines.length; i++) {
+	for (var i = this.salesLines.length-1; i >= 0; i--) {
 		cart += '<div class="card" data-id="'+i+'">' +
 				    '<div class="card-header">'+this.salesLines[i].model+'<span class="delete-line" data-id="'+i+'"><i class="icon f7-icons">close_round</i></span></div>' +
 				    '<div class="card-content">' +
@@ -367,6 +367,7 @@ Invoice.prototype.itemPopup = function(item){
 		}
 		Invoice.draw();
 		myApp.closeModal('.stock-popup');
+		myApp.closeModal('.search-modal')
 		cartDetailsToolbarHeader();
 	});
 

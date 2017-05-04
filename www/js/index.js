@@ -10,7 +10,11 @@
 *
 */
 
-var myApp = new Framework7();
+// Initialize your app
+var myApp = new Framework7({
+});
+
+// Export selectors engine
 var $$ = Dom7;
 
 var isAndroid = Framework7.prototype.device.android === true;
@@ -42,7 +46,7 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.pos-actions', function(){
-        var actions = ['Add Discount', 'Clear Discounts', 'Transfer Invoice', 'Reset Page', 'Reset Sale']; 
+        var actions = ['Add Discount', 'Clear Discounts', 'Transfer Invoice', 'Reset Sale']; 
         choicelistModal({
             type: 'modal',
             data: actions,
@@ -59,8 +63,6 @@ $$(document).on('deviceready', function() {
                         TaskMaster.listStations(function(data){
                             transferInvoiceModal(data.stations);
                         });
-                        break;
-                    case 'Reset Page':
                         break;
                     case 'Reset Sale':
                         Invoice.reinit();
@@ -150,9 +152,9 @@ $$(document).on('deviceready', function() {
                         var listNames = data.inventoryNames;
                         var listSkus = data.inventorySkus;
                         for (var i = 0; i < listNames.length; i++) {
-                            var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title">'+listNames[i]+'</div></div></li>');
+                            var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title search-result-item">'+listNames[i]+'</div></div></li>');
                             searchItem.on('click', function(){
-                                TaskMaster.getItemInfo(elem.data('sku'), function(data){
+                                TaskMaster.getItemInfo($$(this).data('sku'), function(data){
                                     var itemLine = {
                                         brand:data.item.brand,
                                         categoryname:data.item.categoryname,
@@ -168,7 +170,7 @@ $$(document).on('deviceready', function() {
                                         stock:data.item.stock,
                                         vendorsku:data.item.vendorsku
                                     };
-                                    //Invoice.itemPopup(itemLine); // TODO : UNCOMMENT LINE AFTER SEARCH SCROLL WORKS
+                                    Invoice.itemPopup(itemLine);
                                 });
                             });
                             $$('.search-results').append(searchItem);
@@ -192,11 +194,14 @@ $$(document).on('deviceready', function() {
     NativeStorage.getItem('location', noop, function(error){
         if(error.code == 2){ Invoice.delivery.location = 'I'; } // DEFAULT PICK UP LOCATION
     });
+
+    mainView.router.loadPage({url:'profile.html'});
 });
 
 myApp.onPageInit('profile', function (page) {
     var mySwiper = myApp.swiper('.profile-swiper', {
     }); 
+    navigator.splashscreen.hide();
 });
 
 myApp.onPageInit('pos_cart pos_customer pos_delivery pos_summary', function(page){
@@ -213,7 +218,7 @@ myApp.onPageInit('pos_cart', function (page) {
     $$('#search-button').on('click', startSearch);
 
     function startSearch(){
-        myApp.modal({
+        var searchModal = myApp.modal({
             title:  'Search',
             text: '<input id="search-box">',
             afterText: '<div class="list-block search-result-div"><ul class="search-results"></ul></div>',
@@ -222,7 +227,8 @@ myApp.onPageInit('pos_cart', function (page) {
                 text: 'Cancel', onClick: function() { }
               },
             ],
-        })
+        });
+        $$(searchModal).addClass('search-modal');
     }
 
     function startScan(){
@@ -565,7 +571,7 @@ myApp.onPageInit('pos_delivery', function (page) {
         minDate: new Date(),
         closeOnSelect: true,
         onDayClick: function(p, dayContainer, year, month, day){
-            alert(month+'/'+day+'/'+year);
+            Invoice.setDeliveryDateString(month, day, year);
         }
     });          
 
@@ -610,12 +616,16 @@ myApp.onPageInit('pos_summary', function (page) {
         case 'team':
             $$('#summary-delivery-method').text(Invoice.delivery.method);
             $$('#summary-delivery-cost').text(formatNumberMoney(Invoice.delivery.cost));
+            $$('.summary-delivery-cost-class').show();
             $$('#summary-delivery-date').text(Invoice.delivery.date);
+            $$('.summary-delivery-date-class').show();
             break;
         case 'shipping':
             $$('#summary-delivery-method').text(Invoice.delivery.method);
             $$('#summary-delivery-cost').text(formatNumberMoney(Invoice.delivery.cost));
+            $$('.summary-delivery-cost-class').show();
             $$('#summary-delivery-date').text(Invoice.delivery.date);
+            $$('.summary-delivery-date-class').show();
             break;
         case 'carryout':
             $$('#summary-delivery-method').text(Invoice.delivery.method);
@@ -625,10 +635,11 @@ myApp.onPageInit('pos_summary', function (page) {
         case 'pickup':
             $$('#summary-delivery-method').text(Invoice.delivery.method);
             $$('#summary-delivery-date').text(Invoice.delivery.date);
+            $$('.summary-delivery-date-class').show();
             $$('.summary-delivery-cost-class').hide();
-            $$('.summary-delivery-date-class').hide();
             break;
         case 'later':
+            $$('#summary-delivery-method').text('Decide Later');
             $$('.summary-delivery-cost-class').hide();
             $$('.summary-delivery-date-class').hide();
             break;

@@ -187,6 +187,26 @@ tr:nth-child(even) {
   background-color: initial;
 }
 
+.search-results{
+  height: 300px;
+  overflow: auto
+}
+
+.search-result-item{
+  font-size: 12px;
+  white-space: normal;
+}
+
+.stock-popup{
+  z-index:  100000;
+}
+
+.search-modal{
+  margin-top: -235px;
+  left: 39%;
+  width: 350px;
+}
+
 /* Delivery */
 
 #section-one .list-block{
@@ -368,8 +388,21 @@ tr:nth-child(even) {
   background-color: rgb(71, 188, 195);
 }
 
+/* RGB Colors */
 /*
-RGB Colors
 Dark Teal: (66, 137, 139);
 Light Teal: (71, 188, 195);
 */
+
+/* iPad testing */
+@media screen and (orientation:portrait) and (min-width: 481px){
+  .ipad-test{
+    color: red;
+  }
+}
+
+@media screen and (orientation:landscape) and (min-width: 481px){
+  .ipad-test{
+    color: purple;
+  }
+}
