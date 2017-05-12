@@ -21,10 +21,35 @@ var isAndroid = Framework7.prototype.device.android === true;
 var isIos = Framework7.prototype.device.ios === true;
 var isBrowser = (!isAndroid & !isIos) ? true : false;
 
-var TaskMaster = new TaskMaster();
-var Invoice = new Invoice();
+var TM = new TaskMaster();
+var invoice = new Invoice();
 
 var DEBUG_MODE = true;
+
+var INVOICES = [];
+
+var EMPLOYEE = {
+    id:0,
+    name:'',
+    department:'',
+    locationid:0,
+};
+
+var userSwitch = 1;
+switch(userSwitch){
+    case 1:
+        EMPLOYEE.id = 42;
+        EMPLOYEE.name = 'JordanL';
+        EMPLOYEE.department = 'IT';
+        EMPLOYEE.locationid = 5;
+        break;
+    case 2:
+        EMPLOYEE.id = 16;
+        EMPLOYEE.name = 'MattD';
+        EMPLOYEE.department = 'IT';
+        EMPLOYEE.locationid = 5;
+        break;
+}
 
 var mainView = myApp.addView('.view-main', {
     dynamicNavbar: true,
@@ -39,56 +64,32 @@ var mainView = myApp.addView('.view-main', {
 $$(document).on('deviceready', function() {
     $$('.deviceready').text('Device Ready');
 
-    Invoice.init();
+    invoiceInit();
 
     $$('.framework7-root').on('click', '.home-icon', function(){
         mainView.router.back({url:'profile.html', force:true});
     });
 
     $$('.framework7-root').on('click', '.pos-actions', function(){
-        var actions = ['Add Discount', 'Clear Discounts', 'Transfer Invoice', 'Reset Sale']; 
-        choicelistModal({
-            type: 'modal',
-            data: actions,
-            success: function(index,title,data) {
-                switch(data[index]){
-                    case 'Add Discount':
-                        addDiscountModal();
-                        break;
-                    case 'Clear Discounts':
-                        Invoice.setDiscounts([]);
-                        cartDetailsToolbarHeader();
-                        break;
-                    case 'Transfer Invoice':
-                        TaskMaster.listStations(function(data){
-                            transferInvoiceModal(data.stations);
-                        });
-                        break;
-                    case 'Reset Sale':
-                        Invoice.reinit();
-                        mainView.router.refreshPage();
-                        break;
-                }
-            }
-        });
+        serviceActions();
     });
 
     $$('.framework7-root').on('click', '.quantity-col-card', function(){
 		var elem = $$(this);
 		var id = elem.data("id")
-        consool(Invoice.salesLines[id]);
-		var stockQuantity = createStockArray(Invoice.salesLines[id]);
+        consool(invoice.salesLines[id]);
+		var stockQuantity = createStockArray(invoice.salesLines[id]);
 		choicelistModal({
             type: 'modal',
             data: stockQuantity,
             success: function(index,title,data) {
-            	Invoice.changeQuantity(id, data[index]);
+            	invoice.changeQuantity(id, data[index]);
             	var classSelector = elem.parent().parent().parent().parent()[0].className;
 				var idSelector = elem.parent().parent().parent().parent()[0].id;
 				if(idSelector != ''){
-					Invoice.draw('#'+idSelector);
+					invoice.draw('#'+idSelector);
 				} else if(classSelector == 'cart-list'){
-					Invoice.draw('.'+classSelector);
+					invoice.draw('.'+classSelector);
 				}
 				cartDetailsToolbarHeader();
             }
@@ -104,24 +105,24 @@ $$(document).on('deviceready', function() {
             success: function(index,title,data) {
             	switch(data[index]){ // ITEM LOCATION SWITCH
             		case 'Store':
-            			Invoice.changeLocation(id, 'I');
+            			invoice.changeLocation(id, 'I');
             			break;
             		case 'Warehouse':
-            			Invoice.changeLocation(id, 'W');
+            			invoice.changeLocation(id, 'W');
             			break;
             		case 'Outlet':
-            			Invoice.changeLocation(id, 'O');
+            			invoice.changeLocation(id, 'O');
             			break;
                     case 'Special Order':
-                        Invoice.changeLocation(id, 'SO');
+                        invoice.changeLocation(id, 'SO');
                         break;
             	}
             	var classSelector  = elem.parent().parent().parent().parent().parent().parent()[0].className;
 				var idSelector     = elem.parent().parent().parent().parent().parent().parent()[0].id;
 				if(idSelector != ''){
-					Invoice.draw('#'+idSelector);
+					invoice.draw('#'+idSelector);
 				} else if(classSelector == 'cart-list'){
-					Invoice.draw('.'+classSelector);
+					invoice.draw('.'+classSelector);
 				}
 				cartDetailsToolbarHeader();
             }
@@ -131,13 +132,13 @@ $$(document).on('deviceready', function() {
 	$$('.framework7-root').on('click', '.delete-line', function(){
 		// TODO: Add Modal to confirm delete.
 		var elem = $$(this);
-		Invoice.deleteLine(elem.data("id"));
+		invoice.deleteLine(elem.data("id"));
 		var classSelector = elem.parent().parent().parent()[0].className;
 		var idSelector = elem.parent().parent().parent()[0].id;
 		if(idSelector != ''){
-			Invoice.draw('#'+idSelector);
+			invoice.draw('#'+idSelector);
 		} else if(classSelector == 'cart-list'){
-			Invoice.draw('.'+classSelector);
+			invoice.draw('.'+classSelector);
 		}
 		cartDetailsToolbarHeader();
 	});
@@ -148,13 +149,13 @@ $$(document).on('deviceready', function() {
             clearTimeout(searchDelayTimer);
             (function(search){
                 searchDelayTimer = setTimeout(function() {
-                    TaskMaster.searchInventory(search, function(data){
+                    TM.searchInventory(search, function(data){
                         var listNames = data.inventoryNames;
                         var listSkus = data.inventorySkus;
                         for (var i = 0; i < listNames.length; i++) {
                             var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title search-result-item">'+listNames[i]+'</div></div></li>');
                             searchItem.on('click', function(){
-                                TaskMaster.getItemInfo($$(this).data('sku'), function(data){
+                                TM.getItemInfo($$(this).data('sku'), function(data){
                                     var itemLine = {
                                         brand:data.item.brand,
                                         categoryname:data.item.categoryname,
@@ -170,7 +171,7 @@ $$(document).on('deviceready', function() {
                                         stock:data.item.stock,
                                         vendorsku:data.item.vendorsku
                                     };
-                                    Invoice.itemPopup(itemLine);
+                                    invoice.itemPopup(itemLine);
                                 });
                             });
                             $$('.search-results').append(searchItem);
@@ -189,18 +190,99 @@ $$(document).on('deviceready', function() {
         if(error.code == 2){ NativeStorage.setItem('sameBilling', false, noop, noop); }
     });
     NativeStorage.getItem('method', noop, function(error){
-        if(error.code == 2){ Invoice.setDeliveryMethod('team'); }
+        if(error.code == 2){ invoice.setDeliveryMethod('team'); }
     });
     NativeStorage.getItem('location', noop, function(error){
-        if(error.code == 2){ Invoice.delivery.location = 'I'; } // DEFAULT PICK UP LOCATION
+        if(error.code == 2){ invoice.delivery.location = 'I'; } // DEFAULT PICK UP LOCATION
     });
 
-    mainView.router.loadPage({url:'profile.html'});
+    NativeStorage.getItem('invoices', function(obj){ 
+        obj = JSON.parse(obj);
+        for (var i = 0; i < obj.length; i++) {
+            INVOICES.push(new Invoice(obj[i]));
+        }
+    }, function(error){ 
+        if(error.code == 2){ 
+            INVOICES = [];
+        } else {
+            consool(error);
+        }
+    });
+
+    if(EMPLOYEE.id != 0){
+        mainView.router.loadPage({url:'profile.html'});
+    } else {
+        navigator.splashscreen.hide();
+    }
+
+    $$('#password').on('focus', function(){$$(this).val('');});
+    $$('.framework7-root').on('click', '.login-button', function(){
+        TM.login($$('#password').val(), function(employee){
+            EMPLOYEE.id = employee.id;
+            EMPLOYEE.name = employee.name;
+            EMPLOYEE.department = employee.department;
+            EMPLOYEE.locationid = employee.store;
+            invoice.setSalesperson(EMPLOYEE.name);
+            mainView.router.loadPage({url:'profile.html'});
+        }, consool);
+    });
 });
 
 myApp.onPageInit('profile', function (page) {
+
+    $$('.admin-setting-link').on('click', function(){
+        //adminmenupopover();
+    });
+
+    $$('.employee-name').text(EMPLOYEE.name);
+    $$('.employee-department').text(EMPLOYEE.department);
+
     var mySwiper = myApp.swiper('.profile-swiper', {
-    }); 
+    });
+    $$('.scan-catch').on('click', function(){
+        cloudSky.zBar.scan(
+            {
+                text_title: "Bedrooms and More",
+                text_instructions: "Scan Product QR Code",
+                camera: "back",
+                flash: "off",
+                drawSight: true
+            },
+            function(qrcode) {
+                var needle = qrcode.search('qr/');
+                var sku = qrcode.substr(needle + 3);
+                choicelistModal({ 
+                    type: 'modal',
+                    data: ['Add to Cart', 'Other Option'],
+                    success: function(index,title,data) {
+                        switch(data[index]){
+                            case 'Add to Cart':
+                                mainView.router.loadPage('pos_cart.html');
+                                TM.getItemInfo(sku, function(data){
+                                    var itemLine = {
+                                        brand:data.item.brand,
+                                        categoryname:data.item.categoryname,
+                                        color:data.item.color,
+                                        customerswaiting:data.item.customerswaiting,
+                                        customerswaitinglist:data.item.customerswaitinglist,
+                                        material:data.item.material,
+                                        model:data.item.model,
+                                        name:data.item.name,
+                                        retailAmount:data.item.retailAmount,
+                                        size:data.item.size,
+                                        sku:data.item.sku,
+                                        stock:data.item.stock,
+                                        vendorsku:data.item.vendorsku
+                                    };
+                                    invoice.itemPopup(itemLine);
+                                });
+                                break;
+                        }
+                    }
+                });
+            }
+        );
+    });
     navigator.splashscreen.hide();
 });
 
@@ -211,7 +293,7 @@ myApp.onPageInit('pos_cart pos_customer pos_delivery pos_summary', function(page
 });
 
 myApp.onPageInit('pos_cart', function (page) {
-    Invoice.draw();
+    invoice.draw();
 
     $$('#scan-button').on('click', startScan);
 
@@ -243,7 +325,7 @@ myApp.onPageInit('pos_cart', function (page) {
             function(qrcode) {
                 var needle = qrcode.search('qr/');
                 var sku = qrcode.substr(needle + 3);
-                TaskMaster.getItemInfo(sku, function(data){
+                TM.getItemInfo(sku, function(data){
                     var itemLine = {
                         brand:data.item.brand,
                         categoryname:data.item.categoryname,
@@ -259,7 +341,7 @@ myApp.onPageInit('pos_cart', function (page) {
                         stock:data.item.stock,
                         vendorsku:data.item.vendorsku
                     };
-                    Invoice.itemPopup(itemLine);
+                    invoice.itemPopup(itemLine);
                 });
             }
         );
@@ -267,26 +349,26 @@ myApp.onPageInit('pos_cart', function (page) {
 });
 
 myApp.onPageInit('pos_customer', function (page) {
-    $$('#firstName').val(Invoice.customer.first);
-    $$('#lastName').val(Invoice.customer.last);
-    $$('#email').val(Invoice.customer.email);
-    $$('#phoneNumber').val(Invoice.customer.phoneNumber);
-    $$('#streetOne').val(Invoice.customer.billing.street);
-    $$('#streetTwo').val(Invoice.customer.billing.streetTwo);
-    $$('#city').val(Invoice.customer.billing.city);
-    $$('#state').val(Invoice.customer.billing.state);
-    $$('#zip').val(Invoice.customer.billing.zip);
+    $$('#firstName').val(invoice.customer.first);
+    $$('#lastName').val(invoice.customer.last);
+    $$('#email').val(invoice.customer.email);
+    $$('#phoneNumber').val(invoice.customer.phoneNumber);
+    $$('#streetOne').val(invoice.customer.billing.street);
+    $$('#streetTwo').val(invoice.customer.billing.streetTwo);
+    $$('#city').val(invoice.customer.billing.city);
+    $$('#state').val(invoice.customer.billing.state);
+    $$('#zip').val(invoice.customer.billing.zip);
 
-    $$('#firstName').on('keyup', function(){ Invoice.setFirstName(this.value);});
-    $$('#lastName').on('keyup', function(){ Invoice.setLastName(this.value);});
-    $$('#email').on('keyup', function(){ Invoice.setEmail(this.value);});
-    $$('#phoneNumber').on('keyup', function(){ Invoice.setPhoneNumber(this.value);});
+    $$('#firstName').on('keyup', function(){ invoice.setFirstName(this.value);});
+    $$('#lastName').on('keyup', function(){ invoice.setLastName(this.value);});
+    $$('#email').on('keyup', function(){ invoice.setEmail(this.value);});
+    $$('#phoneNumber').on('keyup', function(){  invoice.setPhoneNumber(this.value); });
 
-    $$('#streetOne').on('keyup', function(){ Invoice.setBillingStreet(this.value);});
-    $$('#streetTwo').on('keyup', function(){ Invoice.setBillingStreetTwo(this.value);});
-    $$('#city').on('keyup', function(){ Invoice.setBillingCity(this.value);});
-    $$('#state').on('keyup', function(){ Invoice.setBillingState(this.value);});
-    $$('#zip').on('keyup', function(){ Invoice.setBillingZip(this.value);});
+    $$('#streetOne').on('keyup', function(){ invoice.setBillingStreet(this.value);});
+    $$('#streetTwo').on('keyup', function(){ invoice.setBillingStreetTwo(this.value);});
+    $$('#city').on('keyup', function(){ invoice.setBillingCity(this.value);});
+    $$('#state').on('keyup', function(){ invoice.setBillingState(this.value);});
+    $$('#zip').on('keyup', function(){ invoice.setBillingZip(this.value);});
 
     $$('input').each(function(){
         if(this.value != ''){
@@ -298,11 +380,11 @@ myApp.onPageInit('pos_customer', function (page) {
 myApp.onPageInit('pos_delivery', function (page) {
     setShippingFields();
 
-    $$('#delivery-method').val(Invoice.delivery.method);
+    $$('#delivery-method').val(invoice.delivery.method);
 
-    $$('#additional-notes').val(Invoice.delivery.notes);
+    $$('#additional-notes').val(invoice.delivery.notes);
 
-    switch(Invoice.delivery.method){
+    switch(invoice.delivery.method){
         case 'team':
             $$('#method-title').text('Delivery (WA Only)');
             break;
@@ -329,7 +411,7 @@ myApp.onPageInit('pos_delivery', function (page) {
             break;
     }
 
-    switch(Invoice.delivery.location){
+    switch(invoice.delivery.location){
     	case 'I':
     		$$('#pickup-location-id').text('Seattle Store');
     		break;
@@ -338,44 +420,44 @@ myApp.onPageInit('pos_delivery', function (page) {
     		break;
     	default:
     		consool('broke');
-    		consool(Invoice.delivery.location);
+    		consool(invoice.delivery.location);
     		break;
     }
     
     $$('#delivery-method').on('change', function(){
         var shippingMethod = this.value;
-        Invoice.resetDeliveryInfo();
+        invoice.resetDeliveryInfo();
         switch(shippingMethod){
             case 'team':
-                Invoice.setDeliveryMethod('team');
+                invoice.setDeliveryMethod('team');
                 setShippingFields();
                 $$('#section-two').show();
                 $$('#section-four').hide();
                 displayThirdSection();
                 break;
             case 'shipping':
-                Invoice.setDeliveryMethod('shipping');
+                invoice.setDeliveryMethod('shipping');
                 setShippingFields();
                 $$('#section-two').show();
                 $$('#section-three').hide();
                 $$('#section-four').hide();
                 break;
             case 'pickup':
-            	Invoice.setDeliveryMethod('pickup');
+            	invoice.setDeliveryMethod('pickup');
             	$$('#section-two').hide();
 				$$('#section-three').hide();
             	$$('#section-four').show();
             	$$('#section-five').show();
             	break;
             case 'carryout':
-                Invoice.setDeliveryMethod('carryout');
+                invoice.setDeliveryMethod('carryout');
                 $$('#section-two').hide();
                 $$('#section-three').hide();
                 $$('#section-four').hide();
                 $$('#section-five').show();
                 break;
             case 'later':
-                Invoice.setDeliveryMethod('later');
+                invoice.setDeliveryMethod('later');
                 $$('#section-two').hide();
                 $$('#section-three').hide();
                 $$('#section-four').hide();
@@ -386,44 +468,44 @@ myApp.onPageInit('pos_delivery', function (page) {
 
     $$('#pickup-location').on('change', function(){
         var pickupLocation = this.value;
-        Invoice.setDeliveryLocation(pickupLocation);
+        invoice.setDeliveryLocation(pickupLocation);
     });
 
     $$('.delivery-input').on('keyup', displayThirdSection);
 
     $$('#streetOne-delivery').on('keyup', function(){
         if($$("#same-as-billing").prop( "checked")){
-            Invoice.setBillingStreet(this.value);
+            invoice.setBillingStreet(this.value);
         } else {
-            Invoice.setShippingStreet(this.value);
+            invoice.setShippingStreet(this.value);
         }
     });
     $$('#streetTwo-delivery').on('keyup', function(){
         if($$("#same-as-billing").prop( "checked")){
-            Invoice.setBillingStreetTwo(this.value);
+            invoice.setBillingStreetTwo(this.value);
         } else {
-            Invoice.setShippingStreetTwo(this.value);
+            invoice.setShippingStreetTwo(this.value);
         }
     });
     $$('#city-delivery').on('keyup', function(){
         if($$("#same-as-billing").prop( "checked")){
-            Invoice.setBillingCity(this.value);
+            invoice.setBillingCity(this.value);
         } else {
-            Invoice.setShippingCity(this.value);
+            invoice.setShippingCity(this.value);
         }
     });
     $$('#state-delivery').on('keyup', function(){
         if($$("#same-as-billing").prop( "checked")){
-            Invoice.setBillingState(this.value);
+            invoice.setBillingState(this.value);
         } else {
-            Invoice.setShippingState(this.value);
+            invoice.setShippingState(this.value);
         }
     });
     $$('#zip-delivery').on('keyup', function(){
         if($$("#same-as-billing").prop( "checked")){
-            Invoice.setBillingZip(this.value);
+            invoice.setBillingZip(this.value);
         } else {
-            Invoice.setShippingZip(this.value);
+            invoice.setShippingZip(this.value);
         }
     });
 
@@ -438,24 +520,24 @@ myApp.onPageInit('pos_delivery', function (page) {
     });
 
     $$('#additional-notes').on('keyup', function(){
-        Invoice.setDeliveryNotes(this.value);
+        invoice.setDeliveryNotes(this.value);
     });
 
     function setShippingFromBilling(){
-        $$('#streetOne-delivery').val(Invoice.customer.billing.street);
-        $$('#streetTwo-delivery').val(Invoice.customer.billing.streetTwo);
-        $$('#city-delivery').val(Invoice.customer.billing.city);
-        $$('#state-delivery').val(Invoice.customer.billing.state);
-        $$('#zip-delivery').val(Invoice.customer.billing.zip);
+        $$('#streetOne-delivery').val(invoice.customer.billing.street);
+        $$('#streetTwo-delivery').val(invoice.customer.billing.streetTwo);
+        $$('#city-delivery').val(invoice.customer.billing.city);
+        $$('#state-delivery').val(invoice.customer.billing.state);
+        $$('#zip-delivery').val(invoice.customer.billing.zip);
         displayThirdSection();
     }
 
     function setShippingFromSaved(){
-        $$('#streetOne-delivery').val(Invoice.customer.shipping.street);
-        $$('#streetTwo-delivery').val(Invoice.customer.shipping.streetTwo);
-        $$('#city-delivery').val(Invoice.customer.shipping.city);
-        $$('#state-delivery').val(Invoice.customer.shipping.state);
-        $$('#zip-delivery').val(Invoice.customer.shipping.zip);
+        $$('#streetOne-delivery').val(invoice.customer.shipping.street);
+        $$('#streetTwo-delivery').val(invoice.customer.shipping.streetTwo);
+        $$('#city-delivery').val(invoice.customer.shipping.city);
+        $$('#state-delivery').val(invoice.customer.shipping.state);
+        $$('#zip-delivery').val(invoice.customer.shipping.zip);
         displayThirdSection();
     }
 
@@ -465,19 +547,19 @@ myApp.onPageInit('pos_delivery', function (page) {
         var state = $$('#state-delivery').val();
         var zip = $$('#zip-delivery').val();
 
-        if(streetOne != '' && city != '' && state != '' && zip.length > 4 && Invoice.delivery.method == 'team'){
-            TaskMaster.zipdeliverycost(streetOne, city, state, zip,  function(data){
-                Invoice.setDeliveryCost(data.costOfDelivery);
-                Invoice.setTaxPercent(data.totaltaxpercent);
+        if(streetOne != '' && city != '' && state != '' && zip.length > 4 && invoice.delivery.method == 'team'){
+            TM.zipdeliverycost(streetOne, city, state, zip,  function(data){
+                invoice.setDeliveryCost(data.costOfDelivery);
+                invoice.setTaxPercent(data.totaltaxpercent);
                 cartDetailsToolbarHeader();
             });
-            TaskMaster.deliverystatus(0, '2017', zip, fillCalendar);
+            TM.deliverystatus(0, '2017', zip, fillCalendar);
             $$('#section-three').show();
-        } else if(zip.length > 4 && Invoice.delivery.method == 'shipping'){
-            //TaskMaster.unishippersquote(Invoice.getSkus(), zip,  consool);
+        } else if(zip.length > 4 && invoice.delivery.method == 'shipping'){
+            //TM.unishippersquote(invoice.getSkus(), zip,  consool);
         } else {
-            Invoice.setDeliveryCost(0);
-            Invoice.setDeliveryDateString('00', '00', '00');
+            invoice.setDeliveryCost(0);
+            invoice.setDeliveryDateString('00', '00', '00');
             cartDetailsToolbarHeader();
             $$('#section-three').hide();
         }
@@ -485,8 +567,7 @@ myApp.onPageInit('pos_delivery', function (page) {
 
     function setShippingFields(){
         NativeStorage.getItem('sameBilling', function(obj){
-            consool(obj); 
-            if(Invoice.delivery.method == 'team' || Invoice.delivery.method == 'shipping'){
+            if(invoice.delivery.method == 'team' || invoice.delivery.method == 'shipping'){
                 if(obj){
                     setShippingFromBilling();
                 } else {
@@ -525,22 +606,22 @@ myApp.onPageInit('pos_delivery', function (page) {
             $$('.calendar-custom-toolbar .right .link').on('click', function () {
                 calendarInline.nextMonth();
             });
-            if(Invoice.getDeliveryDateString() != '00/00/00'){
+            if(invoice.getDeliveryDateString() != '00/00/00'){
                 //$$('.picker-calendar-day-selected').removeClass('picker-calendar-day-selected');
                 var today = $$('.picker-calendar-day-selected');
-                var selectedDate = Invoice.delivery.year+'-'+(Invoice.delivery.month -1)+'-'+Invoice.delivery.day;
+                var selectedDate = invoice.delivery.year+'-'+(invoice.delivery.month -1)+'-'+invoice.delivery.day;
                 $$('.picker-calendar-day-selected').removeClass('picker-calendar-day-selected');
                 $$('.picker-calendar-day[data-date="'+selectedDate+'"]').addClass('picker-calendar-day-selected');
-                $$('#delivery-date').text(' - '+ Invoice.getDeliveryDateString());
+                $$('#delivery-date').text(' - '+ invoice.getDeliveryDateString());
             }
         },
         onMonthYearChangeStart: function (p) {
-            //TaskMaster.deliverystatus(parseInt(p.currentMonth) +1, p.currentYear, Invoice.customer.shipping.zip, fillCalendar);
+            //TM.deliverystatus(parseInt(p.currentMonth) +1, p.currentYear, invoice.customer.shipping.zip, fillCalendar);
             NativeStorage.getItem('sameBilling', function(obj){
                 if(obj){ 
-                    TaskMaster.deliverystatus((parseInt(p.currentMonth) + 1), p.currentYear, Invoice.customer.billing.zip, fillCalendar);
+                    TM.deliverystatus((parseInt(p.currentMonth) + 1), p.currentYear, invoice.customer.billing.zip, fillCalendar);
                 } else {
-                    TaskMaster.deliverystatus((parseInt(p.currentMonth) + 1), p.currentYear, Invoice.customer.shipping.zip, fillCalendar);
+                    TM.deliverystatus((parseInt(p.currentMonth) + 1), p.currentYear, invoice.customer.shipping.zip, fillCalendar);
                 }
             }, function(error){
                 consool(error);
@@ -558,8 +639,8 @@ myApp.onPageInit('pos_delivery', function (page) {
                 case 'Black':
                     break;
             }
-            Invoice.setDeliveryDateString(month, day, year);
-            $$('#delivery-date').text(' - '+ Invoice.getDeliveryDateString());
+            invoice.setDeliveryDateString(month, day, year);
+            $$('#delivery-date').text(' - '+ invoice.getDeliveryDateString());
         }
     }); // End Calendar Init
 
@@ -571,7 +652,7 @@ myApp.onPageInit('pos_delivery', function (page) {
         minDate: new Date(),
         closeOnSelect: true,
         onDayClick: function(p, dayContainer, year, month, day){
-            Invoice.setDeliveryDateString(month, day, year);
+            invoice.setDeliveryDateString(month, day, year);
         }
     });          
 
@@ -589,87 +670,69 @@ myApp.onPageInit('pos_delivery', function (page) {
 });
 
 myApp.onPageInit('pos_summary', function (page) {
-    $$('#summary-customer-name-first').text(Invoice.customer.first);
-    $$('#summary-customer-name-last').text(Invoice.customer.last);
-    $$('#summary-customer-phone').text(Invoice.customer.cell);
-    $$('#summary-customer-email').text(Invoice.customer.email);
+    invoice.setBalance(roundTo(invoice.totalAmount + invoice.delivery.cost, 2));
 
-    $$('#summary-billing-info').text(Invoice.getBilling());
+    $$('#summary-div-billingInfo-name').text(invoice.customer.first + ' ' + invoice.customer.last);
+    $$('#summary-div-billingInfo-phone').text(invoice.customer.cell);
+    $$('#summary-div-billingInfo-email').text(invoice.customer.email);
+    $$('#summary-div-billingInfo-addr').text(invoice.getBilling());
 
-    Invoice.setBalance(roundTo(Invoice.totalAmount + Invoice.delivery.cost, 2));
-
-    NativeStorage.getItem('sameBilling', function(obj){
-        if(obj){ //if same as billing
-            $$('#summary-shipping-info').html('<b> Same as Billing </b>');
-        } else {
-            $$('#summary-shipping-info').text(Invoice.getShipping());
-        }
-    }, function(error){
-        consool(error);
-        $$('#summary-shipping-info').hide();
-    });
-
-    Invoice.draw('#summary-cart');
-
-    //$$('.summary-delivery-method-class').hide();
-    switch(Invoice.delivery.method){
-        case 'team':
-            $$('#summary-delivery-method').text(Invoice.delivery.method);
-            $$('#summary-delivery-cost').text(formatNumberMoney(Invoice.delivery.cost));
-            $$('.summary-delivery-cost-class').show();
-            $$('#summary-delivery-date').text(Invoice.delivery.date);
-            $$('.summary-delivery-date-class').show();
-            break;
+    switch(invoice.delivery.method){
         case 'shipping':
-            $$('#summary-delivery-method').text(Invoice.delivery.method);
-            $$('#summary-delivery-cost').text(formatNumberMoney(Invoice.delivery.cost));
-            $$('.summary-delivery-cost-class').show();
-            $$('#summary-delivery-date').text(Invoice.delivery.date);
-            $$('.summary-delivery-date-class').show();
-            break;
-        case 'carryout':
-            $$('#summary-delivery-method').text(Invoice.delivery.method);
-            $$('.summary-delivery-cost-class').hide();
-            $$('.summary-delivery-date-class').hide();
+        case 'team':
+            $$('#summary-div-receiving-method').text(invoice.delivery.method);
+            $$('#summary-div-receiving-addr').show();
+            $$('#summary-div-receiving-date').text(invoice.delivery.date);
+            NativeStorage.getItem('sameBilling', function(obj){ 
+                if(obj){ 
+                    $$('#summary-div-receiving-addr').text(invoice.getBilling());
+                } else {
+                    $$('#summary-div-receiving-addr').text(invoice.getShipping());
+                }
+            }, function(error){
+
+            });
             break;
         case 'pickup':
-            $$('#summary-delivery-method').text(Invoice.delivery.method);
-            $$('#summary-delivery-date').text(Invoice.delivery.date);
-            $$('.summary-delivery-date-class').show();
-            $$('.summary-delivery-cost-class').hide();
+            $$('#summary-div-receiving-method').text(invoice.delivery.method);
+            $$('#summary-div-receiving-addr').hide();
+            $$('#summary-div-receiving-date').text(invoice.delivery.date);
             break;
+        case 'carryout':
         case 'later':
-            $$('#summary-delivery-method').text('Decide Later');
-            $$('.summary-delivery-cost-class').hide();
-            $$('.summary-delivery-date-class').hide();
+            $$('#summary-div-receiving-method').text(invoice.delivery.method);
+            $$('#summary-div-receiving-addr').hide();
+            $$('#summary-div-receiving-date').hide();
             break;
     }
 
-    if(Invoice.delivery.notes == ''){
-        $$('#summary-delivery-notes').hide();    
-    } else {
-        $$('#summary-delivery-notes').text(Invoice.delivery.notes);
-    }
+    invoice.draw('#summary-cart');
 
-    if(Invoice.salesLines.length < 1){
+    if(invoice.salesLines.length < 1){
         $$('#customer-cart-div').hide();
         $$('#cart-title').hide();
     } else {
-        $$('#summary-subtotal').text(formatNumberMoney(Invoice.subtotalAmount));
-        $$('#summary-tax').text(formatNumberMoney(Invoice.taxAmount));
-        $$('#summary-delivery').text(formatNumberMoney(Invoice.delivery.cost));
-        $$('#summary-total').text(formatNumberMoney(Invoice.totalAmount + Invoice.delivery.cost));
-        if(Invoice.totalAmount - Invoice.getRemainingBalance() == 0){
+        $$('#summary-subtotal').text(formatNumberMoney(invoice.subtotalAmount));
+        $$('#summary-tax').text(formatNumberMoney(invoice.taxAmount));
+        $$('#summary-delivery').text(formatNumberMoney(invoice.delivery.cost));
+        $$('#summary-total').text(formatNumberMoney(invoice.totalAmount + invoice.delivery.cost));
+        if(invoice.totalAmount - invoice.getRemainingBalance() == 0){
             $$('#summary-paid-label').hide();
         } else {
-            $$('#summary-paid').text(formatNumberMoney(Invoice.getRemainingBalance()));
+            $$('#summary-paid').text(formatNumberMoney(invoice.getRemainingBalance()));
         }
     }
 
+    $$('#summary-delivery-notes').text(invoice.delivery.notes);
+
     $$('.pos-pay').on('click', function(){
-        //Invoice.xfactorsModal();
-        Invoice.paymentPopup();
+        //invoice.xfactorsModal();
+        invoice.paymentPopup();
     });
+});
+
+myApp.onPageInit('pos__thankyou', function (page) {
+    $$('#text').text('This was added by Jquery');
 });
 
 /*
@@ -679,24 +742,24 @@ function PoSNavigationInit(page){
     var pageContainer= $$(page.container);
     posNav = pageContainer.find(".pos-navigation");
 
-    if(Invoice.salesLines.length > 0){
+    if(invoice.salesLines.length > 0){
         posNav.find('.pos-cart-button .checkmark-wrapper').html('<i class="icon f7-icons">check_round</i>');
     } else {
         posNav.find('.pos-cart-button .checkmark-wrapper').html('');
     }
 
-    if(Invoice.customer.first != ''){
+    if(invoice.customer.first != ''){
         posNav.find('.pos-customer-button .checkmark-wrapper').html('<i class="icon f7-icons">check_round</i>');
     } else {
         posNav.find('.pos-customer-button .checkmark-wrapper').html('');
     }
 
-    var teamMethod = (Invoice.delivery.method == 'team' && Invoice.getDeliveryDateString() != '00/00/00');
-    //var shippingMethod = (Invoice.delivery.method == 'shipping' && );
+    var teamMethod = (invoice.delivery.method == 'team' && invoice.getDeliveryDateString() != '00/00/00');
+    //var shippingMethod = (invoice.delivery.method == 'shipping' && );
     var shippingMethod = false;
-    var carryoutMethod = (Invoice.delivery.method == 'carryout');
-    var pickupMethod = (Invoice.delivery.method == 'pickup' && Invoice.delivery.store != '');
-    var laterMethod = (Invoice.delivery.method == 'later');
+    var carryoutMethod = (invoice.delivery.method == 'carryout');
+    var pickupMethod = (invoice.delivery.method == 'pickup' && invoice.delivery.store != '');
+    var laterMethod = (invoice.delivery.method == 'later');
     if(teamMethod || shippingMethod || pickupMethod || carryoutMethod || laterMethod){
         posNav.find('.pos-delivery-button .checkmark-wrapper').html('<i class="icon f7-icons">check_round</i>');
     } else {
@@ -733,24 +796,22 @@ function PoSContinueInit(page){
     }
 };
 
-
-
 function cartDetailsToolbarHeader(){
-    $$('.tax-toolbar').html(formatNumberMoney(Invoice.taxAmount));
-    $$('.taxpercent').html((Invoice.taxPercent * 100).toFixed(1) + '%');
-    $$('.delivery-toolbar').html(formatNumberMoney(Invoice.delivery.cost));
-    if(Invoice.delivery.date != '00/00/00'){
-        $$('.delivery-date-toolbar').html(Invoice.delivery.date);
+    $$('.tax-toolbar').html(formatNumberMoney(invoice.taxAmount));
+    $$('.taxpercent').html((invoice.taxPercent * 100).toFixed(1) + '%');
+    $$('.delivery-toolbar').html(formatNumberMoney(invoice.delivery.cost));
+    if(EMPLOYEE.locationid != 0){
+        $$('.invoicelocation-toolbar').html(getLocationNickname(EMPLOYEE.locationid));
     }
-    $$('.subtotal-toolbar').html(formatNumberMoney(Invoice.subtotalAmount));
-    if(Invoice.discount > 0){
-        $$('.discount-toolbar').html('<span style="color:green;">' + formatNumberMoney(Invoice.discount) + '</span>');
+    $$('.subtotal-toolbar').html(formatNumberMoney(invoice.subtotalAmount));
+    if(invoice.discount > 0){
+        $$('.discount-toolbar').html('<span style="color:green;">' + formatNumberMoney(invoice.discount) + '</span>');
         $$('.discount-label-toolbar').show();
     } else {
         $$('.discount-toolbar').html('');
         $$('.discount-label-toolbar').hide();
     }
-    $$('.total-toolbar').html(formatNumberMoney(Invoice.totalAmount + Invoice.delivery.cost));
+    $$('.total-toolbar').html(formatNumberMoney(invoice.totalAmount + invoice.delivery.cost));
 }
 
 
@@ -802,6 +863,68 @@ function roundTo(n, digits) {
  n = parseFloat((n * multiplicator).toFixed(11));
  var test =(Math.round(n) / multiplicator);
  return +(test.toFixed(2));
+}
+
+function getLocationNickname(locationid){
+    switch(locationid){
+        case 'I':
+            //fall through
+        case 1:
+            return 'Store';
+        case 'W':
+            //fall through
+        case 2:
+            return 'Warehouse';
+        case 'O':
+            //fall through
+        case 5:
+            return 'Outlet';
+        case 'H':
+            //fall through
+        case 6:
+            return 'Hospatility';
+        case '45th':
+            //fall through
+        case 7:
+            return '45th St Bedding';
+        case 'BMO':
+            //fall through
+        case 8:
+            return 'B&M Online';
+        case 'P':
+            //fall through
+        case 9:
+            return 'Philanthropy';
+        case 'SO':
+        case 42:
+            return 'Special Order';
+        default:
+            return 'XX';
+    }
+}
+
+function invoiceInit(){
+    invoice.load();
+}
+
+
+function adminmenupopover(){
+    var clickedLink = this;
+    var popoverHTML = '<div class="popover">'+
+                      '<div class="popover-inner">'+
+                        '<div class="list-block">'+
+                          '<ul>'+
+                          '<li><a href="#" class="item-link list-button user-settings">Settings</li>'+
+                          '<li><a href="#" class="item-link list-button user-logout">Logout</li>'+
+                          /*'<li><a href="#" class="item-link list-button">Link 3</li>'+*/
+                          '</ul>'+
+                        '</div>'+
+                      '</div>'+
+                    '</div>';
+    //myApp.popover(popoverHTML, clickedLink);
+
+    //$$('.user-settings').on('click', function(){ myApp.closeModal('.popover'); mainView.router.loadPage('settings.html'); });
+    //$$('.user-logout').on('click', function(e) { myApp.closeModal('.popover'); logoutUser(e)});
 }
 
 var choicelistModal= function(params) {
@@ -1024,6 +1147,268 @@ var choicelistModal= function(params) {
         // No choices... error?
     }
 };
+function serviceActions(){
+    //var less = '<a href="#" class="link icon-only"><i class="icon f7-icons">arrow_left</i></a>';
+    var less = '<-- Draft & Quotes';
+    //var more = '<a href="#" class="link icon-only"><i class="icon f7-icons">arrow_right</i></a>';
+    var more = '--> Invoice Actions';
+    var actions = [less, 'Add Discount', 'Add Fee', 'Clear Discounts', 'Clear Fees', 'Reset Sale', more]; 
+    choicelistModal({
+        type: 'modal',
+        title: 'Services:',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case less:
+                    draftAndQUoteActions();
+                    break;
+                case 'Add Discount':
+                    addDiscountModal();
+                    break;
+                case 'Add Fee':
+                    addDiscountModal();
+                    break;
+                case 'Clear Discounts':
+                    invoice.setDiscounts([]);
+                    cartDetailsToolbarHeader();
+                    break;
+                case 'Clear Fees':
+                    break;
+                case 'Reset Sale':
+                    invoice.reinit();
+                    mainView.router.refreshPage();
+                    break;
+                case more:
+                    invoiceActions();
+                    break;
+            }
+        }
+    });
+}
+
+function invoiceActions(){
+    //var less = '<a href="#" class="link icon-only"><i class="icon f7-icons">arrow_left</i></a>';
+    var less = '<-- Cart Actions';
+    //var more = '<a href="#" class="link icon-only"><i class="icon f7-icons">arrow_right</i></a>';
+    var more = '--> Draft & Quotes';
+    var actions = [less, 'Change Location', 'Transfer Invoice', more]; 
+    choicelistModal({
+        type: 'modal',
+        title: 'Invoice Options:',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case less:
+                    serviceActions();
+                    break;
+               case 'Change Location':
+                    locationChangeChoicelist();
+                    cartDetailsToolbarHeader();
+                    break;
+                case 'Transfer Invoice':
+                    TM.listStations(function(data){
+                        transferInvoiceModal(data.stations);
+                    });
+                    break;
+                case more:
+                    draftAndQUoteActions();
+                    break;
+            }
+        }
+    });
+}
+
+function draftAndQUoteActions(){
+    var less = '<-- Invoice Actions';
+    var more = '--> Cart Actions';
+    var actions = [less, 'Drafts', 'Quotes', more]; 
+    choicelistModal({
+        type: 'modal',
+        title: 'Drafts & Quotes',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case less:
+                    invoiceActions();
+                    break;
+               case 'Drafts':
+                    draftActions();
+                    break;
+                case 'Quotes':
+                    quoteActions();
+                    break;
+                case more:
+                    serviceActions();
+                    break;
+            }
+        }
+    });
+}
+
+function draftActions(){
+    var actions = ['Save Draft', 'Load Draft', 'Delete Draft'];
+    choicelistModal({
+        type: 'modal',
+        title: 'Clear:',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'Save Draft':
+                    saveDraft();
+                    break;
+                case 'Load Draft':
+                    loadDraftChoicelist();
+                    break;
+                case 'Delete Draft':
+                    break;
+            }
+        }
+    });
+}
+
+function quoteActions(){
+    var actions = ['Save Quote', 'Load Quote', 'Delete Quote'];
+    choicelistModal({
+        type: 'modal',
+        title: 'Clear:',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'Save Quote':
+                    saveQuote();
+                    break;
+                case 'Load Quote':
+                    loadQuoteChoicelist();
+                    break;
+                case 'Delete Quote':
+                    break;
+            }
+        }
+    });
+}
+
+function saveDraft(){
+    var saveDraftModal = myApp.modal({
+        title:  'Save Draft?',
+        text: '<input id="draft-name-box">',
+        buttons: [
+          {
+            text: 'Cancel', onClick: function() { }
+          },
+          {
+            text: 'Save', onClick: function() {
+                var proposedName = $$('#draft-name-box').val();
+                var resp = nameNotTaken(proposedName);
+                if(resp){
+                    invoice.setTitle(proposedName);
+                    INVOICES.push(decoupleObj(invoice));
+                    NativeStorage.setItem('invoices', JSON.stringify(INVOICES), noop, consool);
+                } else if(!isNaN(resp)) { // If name is taken, return draft that has conflicting name
+                    consool('name taken');
+                    consool(INVOICES[resp]);
+                }
+            }
+          },
+        ],
+    });
+    $$(saveDraftModal).addClass('save-draft-modal');
+}
+
+function loadDraftChoicelist(){
+    var actions = []; 
+    for (var i = 0; i < INVOICES.length; i++) {
+        actions.push(INVOICES[i].title);
+    }
+    choicelistModal({
+        type: 'modal',
+        data: actions,
+        success: function(index,title,data){
+            invoice = new Invoice(decoupleObj(INVOICES[index]));
+            mainView.router.refreshPage();
+        }
+    });
+}
+
+function saveQuote(){
+    var saveDraftModal = myApp.modal({
+        title:  'Save Quote?',
+        text: '<input id="draft-name-box">',
+        buttons: [
+          {
+            text: 'Cancel', onClick: function() { }
+          },
+          {
+            text: 'Save', onClick: function() {
+                var proposedName = $$('#draft-name-box').val();
+                var resp = nameNotTaken(proposedName);
+                if(resp){
+                    invoice.setTitle(proposedName);
+                    INVOICES.push(decoupleObj(invoice));
+                    NativeStorage.setItem('invoices', JSON.stringify(INVOICES), noop, consool);
+                } else if(!isNaN(resp)) { // If name is taken, return draft that has conflicting name
+                    consool('name taken');
+                    consool(INVOICES[resp]);
+                }
+            }
+          },
+        ],
+    });
+    $$(saveDraftModal).addClass('save-draft-modal');
+}
+
+function loadQuoteChoicelist(){
+    var actions = []; 
+    for (var i = 0; i < INVOICES.length; i++) {
+        actions.push(INVOICES[i].title);
+    }
+    choicelistModal({
+        type: 'modal',
+        data: actions,
+        success: function(index,title,data){
+            invoice = new Invoice(decoupleObj(INVOICES[index]));
+            mainView.router.refreshPage();
+        }
+    });
+}
+
+function nameNotTaken(name){
+    for (var i = 0; i < INVOICES.length; i++) {
+        if(name == INVOICES[i].title){
+            return i;
+        }
+    }
+    return true;
+}
+
+function locationChangeChoicelist() {
+    var actions = ['Store', 'Outlet', 'Hospatility', '45th Street Bedding', 'Bedrooms & More Online', 'Philanthropy']; 
+    choicelistModal({
+        type: 'modal',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'Store':
+                    EMPLOYEE.locationid = 1;
+                    break;
+                case 'Outlet':
+                    EMPLOYEE.locationid = 5;
+                    break;
+                case 'Hospatility':
+                    EMPLOYEE.locationid = 6;
+                    break;
+                case '45th Street Bedding':
+                    EMPLOYEE.locationid = 7;
+                    break;
+                case 'Bedrooms & More Online':
+                    EMPLOYEE.locationid = 8;
+                    break;
+                case 'Philanthropy':
+                    EMPLOYEE.locationid = 9;
+                    break;
+            }
+        }
+    });
+}
 
 function addDiscountModal(){
     choicelistModal({
@@ -1032,13 +1417,13 @@ function addDiscountModal(){
         success: function(index,title,data) {
             switch(data[index]){
                 case 'PMD':
-                    Invoice.addDiscount({type:'PMD'});
+                    invoice.addDiscount({type:'PMD'});
                     break;
                 case 'Tax':
-                    Invoice.addDiscount({type:'Tax'});
+                    invoice.addDiscount({type:'Tax'});
                     break;
                 case 'Troll':
-                    Invoice.addDiscount({type:'Troll'});
+                    invoice.addDiscount({type:'Troll'});
                     break;
             }
             cartDetailsToolbarHeader();
@@ -1051,8 +1436,12 @@ function transferInvoiceModal(stations){
         type: 'modal',
         data: stations,
         success: function(index,title,data) {
-            //TaskMaster.transferInvoice(data[index], Invoice, consool);
-            TaskMaster.debugPost(Invoice, consool);
+            //TM.transferInvoice(data[index], invoice, consool);
+            TM.debugPost(invoice, consool);
         }
     });
+}
+
+function decoupleObj(obj){
+    return JSON.parse(JSON.stringify(obj));
 }

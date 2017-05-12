@@ -14,6 +14,11 @@
 
 .page-content{
   background-color: white;
+  padding-bottom: 90px !important;
+}
+.page[data-page="profile"] > .page-content{
+    padding-bottom: 0 !important;
+    background-color: rgb(71, 183, 195);
 }
 
 .statusbar-overlay {
@@ -32,6 +37,10 @@ div.navbar{
   color: white;
 }
 
+.card{
+  box-shadow: 0 0 2px rgba(0, 0, 0, .6) !important; 
+}
+
 /* Index */
 
 .index-icon{
@@ -41,6 +50,31 @@ div.navbar{
   background: blue;
   color: white;
 }
+.login-page{
+  background-image: url("../media/login.jpg");
+  background-size: cover;
+  height: 100%;
+  background-repeat: none;
+}
+.login-page-content{
+  padding-bottom: 0 !important;
+  padding-top: 0 !important;
+  margin-top: 30px !important;
+}
+.login-symbol{
+  width: 250px;
+}
+.password-login{
+  width: 235px;
+  height: 3em;
+  text-align: center;
+}
+.login-button{
+  width: 250px;
+  height: 3em;
+  font-size: 15px;
+}
+
 
 /* Profile */
 
@@ -194,7 +228,7 @@ tr:nth-child(even) {
 
 .search-result-item{
   font-size: 12px;
-  white-space: normal;
+  white-space: normal !important;
 }
 
 .stock-popup{
@@ -205,6 +239,12 @@ tr:nth-child(even) {
   margin-top: -235px;
   left: 39%;
   width: 350px;
+}
+
+.save-draft-modal{
+  margin-top: -235px;
+  left: 39%;
+  width: 350px; 
 }
 
 /* Delivery */
@@ -259,7 +299,12 @@ tr:nth-child(even) {
   font-size: 18px;
 }
 .summary-section{
-  padding-left: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  margin-bottom: 20px;
+}
+.summary-section p{
+  margin-left: 10px;
 }
 #summary-cart{
   padding-left: 0;
@@ -280,7 +325,7 @@ tr:nth-child(even) {
 }
 #summary-delivery-notes{
   margin: 15px;
-  border: 1px solid black;
+  border: 1px solid rgba(0,0,0,0.3);
   padding: 20px
 }
 
@@ -302,13 +347,31 @@ tr:nth-child(even) {
 .payment-type-button{
   border: 1px solid rgb(205, 205, 205);
   background: white;
-  padding: 10px;
+  padding: 4px;
   border-radius: 10px;
 }
 
 .payment-popup .row{
   height: 50px;
 }
+
+
+/* Thank You */
+
+.rec-method-button{
+  text-align: center;
+  padding: 30px 0;
+}
+
+.rec-method-button span{
+  border: 1px solid black;
+  background-color: rgb(71, 191, 208);
+  color: white;
+  padding: 30px 60px;
+  font-size: 40px;
+  border-radius: 10px;
+}
+
 
 /* Misc */
 
@@ -332,14 +395,14 @@ tr:nth-child(even) {
 .list-block ul:after{
   height: 0px;
 }
-.modal-in{
-
-}
 
 /* Colors */
 
 .low-vis-black{
   color: rgba(0, 0, 0, 0.3);
+}
+.white{
+  color: rgb(255, 255, 255);
 }
 
 /* Utility */
@@ -358,6 +421,14 @@ tr:nth-child(even) {
 }
 .right-float{
   float: right;
+}
+.bottom-center{
+  position: absolute;
+  bottom: 44px;
+  width: 100%;
+}
+.bottom-center div{
+  text-align: center;
 }
 .popup-header{
   background-color: rgb(39, 90, 116);

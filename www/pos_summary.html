@@ -25,40 +25,26 @@
             </div>
             <div class="dividing-line"></div>
             <div id="summary-block">
-                <div class="list-block-title">Customer Information</div>
-                <div id="customer-information-div" class="summary-section">
-                    <p id="summary-customer-name"><span id="summary-customer-name-first"></span><span id="summary-customer-name-last"></span></p>
-                    <p id="summary-customer-phone"></p>
-                    <p id="summary-customer-email"></p>
-                </div>
+
                 <div class="list-block-title">Billing Information</div>
-                <div id="customer-billing-div" class="summary-section">
-                    <p id="summary-billing-info"></p>
+                <div id="summary-div-billingInfo" class="summary-section">
+                    <p id="summary-div-billingInfo-name"></p>
+                    <p id="summary-div-billingInfo-phone"></p>
+                    <p id="summary-div-billingInfo-email"></p>
+                    <p id="summary-div-billingInfo-addr"></p>
                 </div>
-                <div class="list-block-title">Shipping Information</div>
-                <div id="customer-shipping-div" class="summary-section">
-                    <p id="summary-shipping-info"></p>
+
+                <div class="list-block-title">Receiving Information</div>
+                <div id="summary-div-receiving" class="summary-section">
+                    <p id="summary-div-receiving-method-lablel" style="border-bottom: 1px solid rgba(0, 0, 0, 0.3);"> Receiving Method: <span id="summary-div-receiving-method"></span></p>
+                    <p id="summary-div-receiving-addr"> Delivery Address </p>
+                    <p id="summary-div-receiving-date-lablel" style="border-top: 1px solid rgba(0, 0, 0, 0.3);"> Delivery Date: <span id="summary-div-receiving-date"></span></p>
                 </div>
-                <div class="list-block-title">Delivery Information</div>
-                <div id="customer-delivery-div" class="summary-section">
-                    <div class="row">
-                        <div class="col-50">
-                            <p class="summary-delivery-method-class">Method</p>
-                            <p class="summary-delivery-cost-class">Cost</p>
-                            <p class="summary-delivery-date-class">Date</p>
-                        </div>
-                        <div class="col-50">
-                            <p id="summary-delivery-method" class="summary-delivery-method-class"></p>
-                            <p id="summary-delivery-cost" class="summary-delivery-cost-class"></p>
-                            <p id="summary-delivery-date" class="summary-delivery-date-class"></p>
-                        </div>
-                    </div>
-                </div>
+
                 <div id="cart-title" class="list-block-title">Cart</div>
                 <div id="customer-cart-div" class="summary-section">
                     <ul id="summary-cart"></ul>
                     <div class="row">
-                        <div class="col-30"></div>
                         <div class="col-70">
                             <div class="row">
                                 <div class="col-50">
@@ -77,8 +63,10 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-30"></div>
                     </div>
                 </div>
+
                 <p id="summary-delivery-notes"></p>
             </div>
         </div>

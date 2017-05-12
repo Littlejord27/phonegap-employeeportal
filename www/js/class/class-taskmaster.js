@@ -29,6 +29,24 @@ function TaskMaster (){
 	   	});
 	}
 
+	this.login = function(password , onSuccess, onFail){
+		this.ajaxToServer({
+            method: 'POST',
+            url: '/4DACTION/mobile_auth',
+            data: {
+                password: password,
+                device: {},
+            },
+            success: function(data) {       
+                if (data.success) {
+                	onSuccess(data.employee);	
+                } else {
+                	onFail(data.success);
+                }
+            }
+        });
+	}
+
 	this.deliverystatus = function(month, year, zip, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
