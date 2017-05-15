@@ -29,22 +29,18 @@ function TaskMaster (){
 	   	});
 	}
 
-	this.login = function(password , onSuccess, onFail){
-		this.ajaxToServer({
-            method: 'POST',
-            url: '/4DACTION/mobile_auth',
-            data: {
-                password: password,
-                device: {},
-            },
-            success: function(data) {       
-                if (data.success) {
-                	onSuccess(data.employee);	
-                } else {
-                	onFail(data.success);
-                }
-            }
-        });
+	this.deleteQuote = function(quoteId, onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			method: 'POST',
+			data: {
+				action: 'deleteQuote',
+				quoteId: quoteId
+			},
+			success: function(data) {
+				onSuccess(data);		
+			}
+	   	});
 	}
 
 	this.deliverystatus = function(month, year, zip, onSuccess){
@@ -54,8 +50,7 @@ function TaskMaster (){
 				action: 'deliverystatus',
 				month: month,
 				year: year,
-				zip: zip,
-				key:this.key
+				zip: zip
 			},
 			success: function(data) {
 				onSuccess(data);		
@@ -145,8 +140,7 @@ function TaskMaster (){
 			url: '/4DACTION/api',
 			data: {
 				action: 'getItemInfo',
-				sku: sku,
-				key:this.key
+				sku: sku
 			},
 			success: function(data) {
 				onSuccess(data);
@@ -173,6 +167,51 @@ function TaskMaster (){
 			data: {
 				action: 'getNotifications',
 			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
+	this.getConversations = function(onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: {
+				action: 'getConversations'
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
+	this.getQuote = function(quoteId, onSuccess){
+		this.ajaxToServer({ 
+			method: 'POST',
+			url: '/4DACTION/api',
+			data: {
+				action: 'getQuote',
+				quoteId: quoteId
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+	this.getQuoteList = function(onSuccess, employeeId){
+		if(employeeId === undefined){
+			var data = {
+				action: 'getQuoteList'
+			}
+		} else {
+			var data = {
+				action: 'getQuoteList',
+				employeeId: employeeId
+			}
+		}
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: data,
 			success: function(data) {
 				onSuccess(data);
 			}
@@ -208,13 +247,30 @@ function TaskMaster (){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
-				action: 'listStations',
-				key: this.key
+				action: 'listStations'
 			},
 			success: function(data) {
 				onSuccess(data);
 			}
 	   	});
+	}
+
+	this.login = function(password , onSuccess, onFail){
+		this.ajaxToServer({
+            method: 'POST',
+            url: '/4DACTION/mobile_auth',
+            data: {
+                password: password,
+                device: {},
+            },
+            success: function(data) {       
+                if (data.success) {
+                	onSuccess(data.employee);	
+                } else {
+                	onFail(data.success);
+                }
+            }
+        });
 	}
 
 	this.printInvoice = function(invoicenumber, printer, onSuccess){
@@ -231,13 +287,35 @@ function TaskMaster (){
 	   	});
 	}
 
+	this.saveQuote = function(invoiceObj, onSuccess, quoteId){
+		if(quoteId === undefined){
+			var data = {
+				action: 'saveQuote',
+				invoice: invoiceObj
+			}
+		} else {
+			var data = {
+				action: 'saveQuote',
+				invoice: invoiceObj,
+				quoteId: quoteId
+			}
+		}
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			method: 'POST',
+			data: data,
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
 	this.searchInventory = function(q, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
 				action: 'searchInventory',
-				q: q,
-				key: this.key
+				q: q
 			},
 			success: function(data) {
 				onSuccess(data);
@@ -310,8 +388,7 @@ function TaskMaster (){
 				action: 'transferInvoice',
 				method: 'POST',
 				station: station,
-				invoice: invoice,
-				key: this.key
+				invoice: invoice
 			},
 			success: function(data) {
 				onSuccess(data);
@@ -341,8 +418,7 @@ function TaskMaster (){
 				street: street,
 				city: city,
 				state: state,
-				zip: zip,
-				key:this.key
+				zip: zip
 			},
 			success: function(data) {
 				onSuccess(data);
@@ -354,11 +430,10 @@ function TaskMaster (){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			method: 'POST',
-			data: JSON.stringify({	
+			data:{	
 				action: 'debugPost',
-				invoice: invoice,
-				key: this.key
-			}),
+				invoice: invoice
+			},
 			success: function(data) {
 				onSuccess(data);
 			}			
@@ -404,7 +479,15 @@ function TaskMaster (){
 					callbackFunction(data);
 				}
 			};
-			
+
+			$$.ajax({
+				url: serverURL,
+				method: requestMethod,
+				data: requestMethod == 'GET' ? dataObject : JSON.stringify(dataObject),
+				dataType: 'json',
+				success: tempCallBack
+			});
+			/*
 			switch(requestMethod) {
 				case 'GET':
 				case 'get':
@@ -415,18 +498,14 @@ function TaskMaster (){
 				case 'POST':
 				case 'post':
 					
-					$$.ajax({
-						url: serverURL,
-						method: 'POST',
-						data: dataObject,
-						dataType: 'json',
-						success: tempCallBack
-					});
+					
 	
 					break;
 				default:
 					// unsupported other...
 			}
+
+			*/
 		} else {
 			// ERROR: url required...
 		}

@@ -94,6 +94,7 @@
 		this.payments = this.payments.concat(paymentObject);
 		NativeStorage.setItem('payments', JSON.stringify(this.payments), noop, noop);
 	}
+
 	Invoice.prototype.addDiscount = function(discount){
 		for (var i = 0; i < this.discounts.length; i++) {
 			if(this.discounts[i].type == discount.type){
@@ -105,22 +106,7 @@
 		NativeStorage.setItem('discounts', JSON.stringify(this.discounts), noop, noop);
 		this.recalc();
 	}
-	Invoice.prototype.calcDiscount = function(discount){
-		switch(discount.type){
-			case 'PMD':
-				return addPMDDiscount();
-				break;
-		}
-	}
-	function addPMDDiscount(){
-		var discount = 0;
-		for (var i = 0; i < invoice.salesLines.length; i++) {
-			if(invoice.salesLines[i].categoryname == "Latex Mattresses" && invoice.salesLines[i].retailAmount > 699){
-				discount += (69.95 * invoice.salesLines[i].quantity);
-			}
-		}
-		return discount;
-	}
+
 	Invoice.prototype.recalc = function(item){
 		this.subtotalAmount = 0;
 		this.taxAmount 		= 0;
@@ -139,6 +125,26 @@
 		this.discount = roundTo(this.discount, 2);
 		this.totalAmount = roundTo(this.subtotalAmount + this.taxAmount - this.discount, 2);
 	}
+
+	// discount function
+	Invoice.prototype.calcDiscount = function(discount){
+		switch(discount.type){
+			case 'PMD':
+				return addPMDDiscount();
+				break;
+		}
+	}
+	function addPMDDiscount(){
+		var discount = 0;
+		for (var i = 0; i < invoice.salesLines.length; i++) {
+			if((invoice.salesLines[i].categoryname == "Latex Mattresses" || invoice.salesLines[i].categoryname == "Zippered Latex Mattresses") && invoice.salesLines[i].retailAmount > 600){
+				discount += (69.95 * invoice.salesLines[i].quantity);
+			}
+		}
+		return discount;
+	}
+
+	
 
 /* Setters setters */
 
@@ -320,7 +326,7 @@
 					        			(this.salesLines[i].material != '' ? '<span>'+this.salesLines[i].material+'</span><br>' : '')+
 					        			'<p class="location-edit-card" data-id="'+i+'">' + getLocationNickname(this.salesLines[i].location) + '</p>' +
 					        		'</div>' +
-					        		'<div class="col-25">' + discountAmountCalc(this.salesLines[i])+ '</div>' +
+					        		'<div class="col-25">' + discountAmountLine(this.salesLines[i])+ '</div>' +
 					        	'</div>' +
 					        	'<span> Special Note </span>' +
 					        '</div>' +
@@ -336,8 +342,44 @@
 						    '</div>' +
 					    '</div>' +
 					'</div>';
-			 
+			cart += getDiscountHTML(this.salesLines[i]);
 		}
+
+	    //var shippingMethod = (invoice.delivery.method == 'shipping' && );
+	    var shippingMethod = false;
+
+	    if(invoice.delivery.method == 'team' && invoice.getDeliveryDateString() != '00/00/00'){
+	    	cart +=	'<div class="card">' +
+						'<div class="card-content">' +
+		    				'<div class="card-content-inner">In-House Delivery - ' + invoice.getDeliveryDateString() + ' - ' + invoice.delivery.cost + '</div>' +
+		  				'</div>' +
+					'</div>';
+	    } else if(shippingMethod){
+	    	cart +=	'<div class="card">' +
+						'<div class="card-content">' +
+		    				'<div class="card-content-inner">Shipping</div>' +
+		  				'</div>' +
+					'</div>';
+	    }  else if(invoice.delivery.method == 'carryout'){
+	    	cart +=	'<div class="card">' +
+						'<div class="card-content">' +
+		    				'<div class="card-content-inner">Carryout</div>' +
+		  				'</div>' +
+					'</div>';
+	    }  else if(invoice.delivery.method == 'pickup' && invoice.delivery.store != ''){
+	    	cart +=	'<div class="card">' +
+						'<div class="card-content">' +
+		    				'<div class="card-content-inner">Pick Up - ' + invoice.delivery.store + '</div>' +
+		  				'</div>' +
+					'</div>';
+	    }  else if(invoice.delivery.method == 'later'){
+	    	cart +=	'<div class="card">' +
+						'<div class="card-content">' +
+		    				'<div class="card-content-inner">No Delivery Scheduled</div>' +
+		  				'</div>' +
+					'</div>';
+	    }
+
 		if (selector !== undefined) {
 			$$(selector).empty();
 			$$(selector).append(cart);
@@ -347,13 +389,31 @@
 		}
 	};
 
-	function discountAmountCalc(lineItem){
+	function getDiscountHTML(lineItem){
+		var returnHTML = '';
+		for (var i = 0; i < invoice.discounts.length; i++) {
+			switch(invoice.discounts[i].type){
+				case 'PMD':
+					if((lineItem.categoryname == "Latex Mattresses" || lineItem.categoryname == "Zippered Latex Mattresses") && lineItem.retailAmount > 600){
+						returnHTML +='<div class="card">' +
+										'<div class="card-content">' +
+						    				'<div class="card-content-inner">Premium Mattress Discount</div>' +
+						  				'</div>' +
+									'</div>';
+					}
+					break;
+			}
+		}
+		return returnHTML;
+	}
+
+	function discountAmountLine(lineItem){
 		var lineDiscount = 0;
 		for (var i = 0; i < invoice.discounts.length; i++) {
 			switch(invoice.discounts[i].type){
 				case 'PMD':
-					if(lineItem.categoryname == "Latex Mattresses" && lineItem.retailAmount > 600){
-						lineDiscount += (69.99 * lineItem.quantity);
+					if((lineItem.categoryname == "Latex Mattresses" || lineItem.categoryname == "Zippered Latex Mattresses") && lineItem.retailAmount > 600){
+						lineDiscount += (69.95 * lineItem.quantity);
 					}
 					break;
 			}
@@ -697,4 +757,3 @@ Invoice.prototype.load = function(){
 	NativeStorage.getItem('payments', function(obj){ invoice.setPayments(JSON.parse(obj)); }, function(error){ if(error.code == 2){ invoice.setPayments([]); } else { consool(error); }});
 	NativeStorage.getItem('discounts', function(obj){ invoice.setDiscounts(JSON.parse(obj)); }, function(error){ if(error.code == 2){ invoice.setDiscounts([]); } else { consool(error); }});
 };
-

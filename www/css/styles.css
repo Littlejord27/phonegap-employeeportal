@@ -1,3 +1,5 @@
+
+
 /*
    statusbar-overlay sets the background color for the overlay. Black text is the default when the statusbar plugin is not added. When the
    statusbar plugin is added, it also adds default setting to make the content white via:
@@ -242,6 +244,11 @@ tr:nth-child(even) {
 }
 
 .save-draft-modal{
+  margin-top: -235px;
+  left: 39%;
+  width: 350px; 
+}
+.save-quote-modal{
   margin-top: -235px;
   left: 39%;
   width: 350px; 
