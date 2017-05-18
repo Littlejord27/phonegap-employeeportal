@@ -285,7 +285,7 @@ function draftActions(){
     });
 }
 function quoteActions(){
-    var actions = ['<-- Back','Save Quote', 'Load Quote', 'Delete Quote'];
+    var actions = ['<-- Back','Save Quote', 'Load Quote', 'Print Quote', 'Delete Quote'];
     choicelistModal({
         type: 'modal',
         title: 'Clear:',
@@ -300,6 +300,9 @@ function quoteActions(){
                     break;
                 case 'Load Quote':
                     loadQuoteChoicelist('load');
+                    break;
+                case 'Print Quote':
+                    loadQuoteChoicelist('print');
                     break;
                 case 'Delete Quote':
                     loadQuoteChoicelist('delete');
@@ -393,6 +396,26 @@ function loadQuoteChoicelist(optionQuote){
                         TM.getQuote(quotes[index].id, function(data){
                             invoice = new Invoice(data.quote);
                             mainView.router.refreshPage();
+                        });
+                        break;
+                    case 'print':
+                        var quoteToPrint = quotes[index];
+                        TM.listPrinters(function(data){
+                            var printers = [];
+                            var printNames = [];
+                            for (var i = 0; i < data.altnames.length; i++) {
+                                printers.push(data.altnames[i]);
+                                printNames.push(data.names[i]);
+                            }
+                            choicelistModal({
+                                type: 'modal',
+                                data: printers,
+                                success: function(index,title,data){
+                                    consool(quoteToPrint.id);
+                                    consool(printNames[index]);
+                                    TM.printInvoice(quoteToPrint.id, printNames[index], consool);
+                                }
+                            });
                         });
                         break;
                     case 'delete':
