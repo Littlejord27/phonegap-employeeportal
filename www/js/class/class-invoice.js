@@ -24,24 +24,52 @@
 		} else {
 			this.id 		 = draft.id;
 			this.salesperson = draft.salesperson;
-			this.title 		 = draft.title;
 			
+			this.title 		 = draft.title;
+			NativeStorage.setItem('title', draft.customer.first, nsSetNoop, noop);
+
 			this.customer 			= draft.customer;
+			NativeStorage.setItem('first', draft.customer.first, nsSetNoop, noop);
+			NativeStorage.setItem('last', draft.customer.last, nsSetNoop, noop);
+			NativeStorage.setItem('phoneNumber', draft.customer.phoneNumber, nsSetNoop, noop);
+			NativeStorage.setItem('email', draft.customer.email, nsSetNoop, noop);
+
 			this.customer.billing 	= draft.customer.billing;
+			NativeStorage.setItem('streetOne', draft.customer.billing.street, nsSetNoop, noop);
+			NativeStorage.setItem('streetTwo', draft.customer.billing.streetTwo, nsSetNoop, noop);
+			NativeStorage.setItem('city', draft.customer.billing.city, nsSetNoop, noop);
+			NativeStorage.setItem('state', draft.customer.billing.state, nsSetNoop, noop);
+			NativeStorage.setItem('zip', draft.customer.billing.zip, nsSetNoop, noop);
+
 			this.customer.shipping 	= draft.customer.shipping;
+			NativeStorage.setItem('streetOne-shipping', draft.customer.shipping.street, nsSetNoop, noop);
+			NativeStorage.setItem('streetTwo-shipping', draft.customer.shipping.streetTwo, nsSetNoop, noop);
+			NativeStorage.setItem('city-shipping', draft.customer.shipping.city, nsSetNoop, noop);
+			NativeStorage.setItem('state-shipping', draft.customer.shipping.state, nsSetNoop, noop);
+			NativeStorage.setItem('zip-shipping', draft.customer.shipping.zip, nsSetNoop, noop);
 
 			this.delivery			= draft.delivery;
-			
-			this.payments 		= draft.payments;
-			this.salesLines 	= draft.salesLines;
-			this.discounts 		= draft.discounts;
+			NativeStorage.setItem('method', draft.delivery.method, nsSetNoop, noop);
+			NativeStorage.setItem('cost', draft.delivery.cost, nsSetNoop, noop);
+			NativeStorage.setItem('month', draft.delivery.month, nsSetNoop, noop);
+			NativeStorage.setItem('day', draft.delivery.day, nsSetNoop, noop);
+			NativeStorage.setItem('year', draft.delivery.year, nsSetNoop, noop);
+			NativeStorage.setItem('date', draft.delivery.date, nsSetNoop, noop);
+			NativeStorage.setItem('notes', draft.delivery.notes, nsSetNoop, noop);
+			NativeStorage.setItem('location', draft.delivery.location, nsSetNoop, noop);
 
-			this.subtotalAmount = draft.subtotalAmount;
 			this.taxPercent 	= draft.taxPercent;
-			this.taxAmount 		= draft.taxAmount;
-			this.totalAmount 	= draft.totalAmount;
-			this.balance 		= draft.balance;
-			this.discount 		= draft.discount;
+			NativeStorage.setItem('taxPercent', draft.taxPercent, nsSetNoop, noop);
+
+			this.payments 		= draft.payments;
+			NativeStorage.setItem('payments', JSON.stringify(draft.payments), nsSetNoop, noop);
+			this.salesLines  	= draft.salesLines;
+			NativeStorage.setItem('cart', JSON.stringify(draft.salesLines), nsSetNoop, noop);
+			this.discounts 		= draft.discounts;
+			consool(draft.discounts);
+			NativeStorage.setItem('discounts', JSON.stringify(draft.payments), nsSetNoop, noop);
+
+			this.recalc();
 		}
 	}
 
@@ -52,14 +80,14 @@
 	}
 	Invoice.prototype.setTitle = function(title){
 		this.title = title;
-		NativeStorage.setItem('title', this.customer.first, noop, noop);
+		NativeStorage.setItem('title', this.customer.first, nsSetNoop, noop);
 	}
 
 /* Cart Functions */
 
 	Invoice.prototype.changeQuantity = function(id, newQuantity){
 		this.salesLines[id].quantity = newQuantity;
-		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
+		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
 		this.recalc();
 	}
 	Invoice.prototype.changeLocation = function(id, location){
@@ -71,17 +99,17 @@
 				this.salesLines[id].quantity = (this.salesLines[id].quantity > destinationMaxQuantity) ? destinationMaxQuantity : this.salesLines[id].quantity;
 			}
 		}
-		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
+		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
 		this.recalc();
 	}
 	Invoice.prototype.addLine = function(item){
 		this.salesLines.push(item);
-		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
+		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
 		this.recalc();
 	}
 	Invoice.prototype.deleteLine = function(id){
 		this.salesLines.splice(id, 1);
-		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), noop, noop);
+		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
 		this.recalc();
 	}
 	Invoice.prototype.createInvoice = function(){
@@ -92,7 +120,7 @@
 
 	Invoice.prototype.addPayments = function(paymentObject){
 		this.payments = this.payments.concat(paymentObject);
-		NativeStorage.setItem('payments', JSON.stringify(this.payments), noop, noop);
+		NativeStorage.setItem('payments', JSON.stringify(this.payments), nsSetNoop, noop);
 	}
 
 	Invoice.prototype.addDiscount = function(discount){
@@ -103,8 +131,9 @@
 			}
 		}
 		this.discounts.push(discount);
-		NativeStorage.setItem('discounts', JSON.stringify(this.discounts), noop, noop);
+		NativeStorage.setItem('discounts', JSON.stringify(this.discounts), nsSetNoop, noop);
 		this.recalc();
+		cartDetailsToolbarHeader();
 	}
 
 	Invoice.prototype.recalc = function(item){
@@ -126,115 +155,96 @@
 		this.totalAmount = roundTo(this.subtotalAmount + this.taxAmount - this.discount, 2);
 	}
 
-	// discount function
-	Invoice.prototype.calcDiscount = function(discount){
-		switch(discount.type){
-			case 'PMD':
-				return addPMDDiscount();
-				break;
-		}
-	}
-	function addPMDDiscount(){
-		var discount = 0;
-		for (var i = 0; i < invoice.salesLines.length; i++) {
-			if((invoice.salesLines[i].categoryname == "Latex Mattresses" || invoice.salesLines[i].categoryname == "Zippered Latex Mattresses") && invoice.salesLines[i].retailAmount > 600){
-				discount += (69.95 * invoice.salesLines[i].quantity);
-			}
-		}
-		return discount;
-	}
-
-	
-
 /* Setters setters */
 
 	// Customer Information
 
 	Invoice.prototype.setFirstName = function(first){
 		this.customer.first = first;
-		NativeStorage.setItem('first', this.customer.first, noop, noop);
+		NativeStorage.setItem('first', this.customer.first, nsSetNoop, noop);
 	};
 	Invoice.prototype.setLastName = function(last){
 		this.customer.last = last;
-		NativeStorage.setItem('last', this.customer.last, noop, noop);
+		NativeStorage.setItem('last', this.customer.last, nsSetNoop, noop);
 	};
 	Invoice.prototype.setPhoneNumber = function(phoneNumber){
 		this.customer.phoneNumber = phoneNumber;
-		NativeStorage.setItem('phoneNumber', this.customer.phoneNumber, noop, noop);
+		NativeStorage.setItem('phoneNumber', this.customer.phoneNumber, nsSetNoop, noop);
 	};
 	Invoice.prototype.setEmail = function(email){
 		this.customer.email = email;
-		NativeStorage.setItem('email', this.customer.email, noop, noop);
+		NativeStorage.setItem('email', this.customer.email, nsSetNoop, noop);
 	};
 
 	// Billing Information
 
 	Invoice.prototype.setBillingStreet = function(street){
 		this.customer.billing.street = street;
-		NativeStorage.setItem('streetOne', this.customer.billing.street, noop, noop);
+		NativeStorage.setItem('streetOne', this.customer.billing.street, nsSetNoop, noop);
 	};
 	Invoice.prototype.setBillingStreetTwo = function(street){
 		this.customer.billing.streetTwo = street;
-		NativeStorage.setItem('streetTwo', this.customer.billing.streetTwo, noop, noop);
+		NativeStorage.setItem('streetTwo', this.customer.billing.streetTwo, nsSetNoop, noop);
 	};
 	Invoice.prototype.setBillingCity = function(city){
 		this.customer.billing.city = city;
-		NativeStorage.setItem('city', this.customer.billing.city, noop, noop);
+		NativeStorage.setItem('city', this.customer.billing.city, nsSetNoop, noop);
 	};
 	Invoice.prototype.setBillingState = function(state){
 		this.customer.billing.state = state;
-		NativeStorage.setItem('state', this.customer.billing.state, noop, noop);
+		NativeStorage.setItem('state', this.customer.billing.state, nsSetNoop, noop);
 	};
 	Invoice.prototype.setBillingZip = function(zip){
 		this.customer.billing.zip = zip;
-		NativeStorage.setItem('zip', this.customer.billing.zip, noop, noop);
+		NativeStorage.setItem('zip', this.customer.billing.zip, nsSetNoop, noop);
 	};
 
 	// Shipping Information
 
 	Invoice.prototype.setShippingStreet = function(street){
 		this.customer.shipping.street = street;
-		NativeStorage.setItem('streetOne-shipping', this.customer.shipping.street, noop, noop);
+		NativeStorage.setItem('streetOne-shipping', this.customer.shipping.street, nsSetNoop, noop);
 	};
 	Invoice.prototype.setShippingStreetTwo = function(street){
 		this.customer.shipping.streetTwo = street;
-		NativeStorage.setItem('streetTwo-shipping', this.customer.shipping.streetTwo, noop, noop);
+		NativeStorage.setItem('streetTwo-shipping', this.customer.shipping.streetTwo, nsSetNoop, noop);
 	};
 	Invoice.prototype.setShippingCity = function(city){
 		this.customer.shipping.city = city;
-		NativeStorage.setItem('city-shipping', this.customer.shipping.city, noop, noop);
+		NativeStorage.setItem('city-shipping', this.customer.shipping.city, nsSetNoop, noop);
 	};
 	Invoice.prototype.setShippingState = function(state){
 		this.customer.shipping.state = state;
-		NativeStorage.setItem('state-shipping', this.customer.shipping.state, noop, noop);
+		NativeStorage.setItem('state-shipping', this.customer.shipping.state, nsSetNoop, noop);
 	};
 	Invoice.prototype.setShippingZip = function(zip){
 		this.customer.shipping.zip = zip;
-		NativeStorage.setItem('zip-shipping', this.customer.shipping.zip, noop, noop);
+		NativeStorage.setItem('zip-shipping', this.customer.shipping.zip, nsSetNoop, noop);
 	};
 	Invoice.prototype.setDeliveryMethod = function(method) {
 		this.delivery.method = method;
-		NativeStorage.setItem('method', this.delivery.method, noop, noop);
+		NativeStorage.setItem('method', this.delivery.method, nsSetNoop, noop);
 	};
 
 	Invoice.prototype.setDeliveryCost = function(cost) {
 		this.delivery.cost = cost;
-		NativeStorage.setItem('cost', this.delivery.cost, noop, noop);
+		NativeStorage.setItem('cost', this.delivery.cost, nsSetNoop, noop);
 	};
 
 	// Invoice information
 
 	Invoice.prototype.setSalesLines = function(cartObject){
 		this.salesLines = cartObject;
+		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
 		this.recalc();
 	};
 	Invoice.prototype.setPayments = function(paymentObject){
 		this.payments = paymentObject;
-		NativeStorage.setItem('payments', JSON.stringify(this.payments), noop, noop);
+		NativeStorage.setItem('payments', JSON.stringify(this.payments), nsSetNoop, noop);
 	};
 	Invoice.prototype.setDiscounts = function(discountObject){
 		this.discounts = discountObject;
-		NativeStorage.setItem('discounts', JSON.stringify(this.discounts), noop, noop);
+		NativeStorage.setItem('discounts', JSON.stringify(this.discounts), nsSetNoop, noop);
 		this.recalc();
 	};
 
@@ -250,23 +260,23 @@
 		this.delivery.day = day;
 		this.delivery.year = year;
 		this.delivery.date = month+'/'+day+'/'+year;
-		NativeStorage.setItem('month', this.delivery.month, noop, noop);
-		NativeStorage.setItem('day', this.delivery.day, noop, noop);
-		NativeStorage.setItem('year', this.delivery.year, noop, noop);
-		NativeStorage.setItem('date', this.delivery.date, noop, noop);
+		NativeStorage.setItem('month', this.delivery.month, nsSetNoop, noop);
+		NativeStorage.setItem('day', this.delivery.day, nsSetNoop, noop);
+		NativeStorage.setItem('year', this.delivery.year, nsSetNoop, noop);
+		NativeStorage.setItem('date', this.delivery.date, nsSetNoop, noop);
 	};
 	Invoice.prototype.setTaxPercent = function(taxPercent) {
 		this.taxPercent = taxPercent;
-		NativeStorage.setItem('taxPercent', this.taxPercent, noop, noop);
+		NativeStorage.setItem('taxPercent', this.taxPercent, nsSetNoop, noop);
 		this.recalc();
 	};
 	Invoice.prototype.setDeliveryLocation = function(location) {
 		this.delivery.location = location;
-		NativeStorage.setItem('location', this.delivery.location, noop, noop);
+		NativeStorage.setItem('location', this.delivery.location, nsSetNoop, noop);
 	};
 	Invoice.prototype.setDeliveryNotes = function(notes) {
 		this.delivery.notes = notes;
-		NativeStorage.setItem('notes', this.delivery.notes, noop, noop);
+		NativeStorage.setItem('notes', this.delivery.notes, nsSetNoop, noop);
 	};
 
 /* Getters getters */
@@ -318,7 +328,7 @@
 					    '<div class="card-content">' +
 					        '<div class="card-content-inner">' +
 					        	'<div class="row">' +
-					        		'<div class="col-40"><img class="prod-img" src="media/products/no-product-pic_icon.png"></div>' +
+					        		'<div class="col-40"><img class="prod-img" src="'+this.salesLines[i].imageurl+'"></div>' +
 					        		'<div class="col-35" style="text-align: center;">' +
 					        			'<span>'+ formatNumberMoney(this.salesLines[i].retailAmount) +' ea.</span><br>' +
 					        			(this.salesLines[i].size != '' ? '<span>'+this.salesLines[i].size+'</span><br>' : '')+
@@ -345,13 +355,15 @@
 			cart += getDiscountHTML(this.salesLines[i]);
 		}
 
+		cart += getInvoiceDiscountHTML(this.salesLines[i]);
+
 	    //var shippingMethod = (invoice.delivery.method == 'shipping' && );
 	    var shippingMethod = false;
 
 	    if(invoice.delivery.method == 'team' && invoice.getDeliveryDateString() != '00/00/00'){
 	    	cart +=	'<div class="card">' +
 						'<div class="card-content">' +
-		    				'<div class="card-content-inner">In-House Delivery - ' + invoice.getDeliveryDateString() + ' - ' + invoice.delivery.cost + '</div>' +
+		    				'<div class="card-content-inner">In-House Delivery - ' + invoice.getDeliveryDateString() + ' - ' + formatNumberMoney(invoice.delivery.cost) + '</div>' +
 		  				'</div>' +
 					'</div>';
 	    } else if(shippingMethod){
@@ -380,6 +392,41 @@
 					'</div>';
 	    }
 
+	    if(this.discounts.length > 0){
+	    	var discountCard = '';
+	    	cart +=	'<div class="card">' +
+	    				'<div class="card-content">' +
+		    				'<div class="card-content-inner">';
+		    for (var i = 0; i < this.discounts.length; i++) {
+		    	switch(this.discounts[i].type){
+		    		case '2SideCred':
+		    			discountCard += '2-Sided Classics';
+		    			discountCard += ', ';
+		    			break;
+		    		case '45AdjBaseCred':
+		    			discountCard += '45th Adjustable Credit';
+		    			discountCard += ', ';
+		    			break;
+		    		case 'beddingBund':
+		    			discountCard += 'Bedding Bundle';
+		    			discountCard += ', ';
+		    			break;
+		    		case 'instockLighting':
+		    			discountCard += 'In-Stock Lighting';
+		    			discountCard += ', ';
+		    			break;
+		    		default:
+		    			discountCard += this.discounts[i].type;
+		    			discountCard += ', ';
+		    	}
+		    }
+		    discountCard = discountCard.substring(0, discountCard.length-2);
+		    cart += discountCard;
+		    cart += '</div>' +
+		  				'</div>' +
+					'</div>';
+	    }
+
 		if (selector !== undefined) {
 			$$(selector).empty();
 			$$(selector).append(cart);
@@ -388,38 +435,6 @@
 			$$('.cart-list').append(cart);
 		}
 	};
-
-	function getDiscountHTML(lineItem){
-		var returnHTML = '';
-		for (var i = 0; i < invoice.discounts.length; i++) {
-			switch(invoice.discounts[i].type){
-				case 'PMD':
-					if((lineItem.categoryname == "Latex Mattresses" || lineItem.categoryname == "Zippered Latex Mattresses") && lineItem.retailAmount > 600){
-						returnHTML +='<div class="card">' +
-										'<div class="card-content">' +
-						    				'<div class="card-content-inner">Premium Mattress Discount</div>' +
-						  				'</div>' +
-									'</div>';
-					}
-					break;
-			}
-		}
-		return returnHTML;
-	}
-
-	function discountAmountLine(lineItem){
-		var lineDiscount = 0;
-		for (var i = 0; i < invoice.discounts.length; i++) {
-			switch(invoice.discounts[i].type){
-				case 'PMD':
-					if((lineItem.categoryname == "Latex Mattresses" || lineItem.categoryname == "Zippered Latex Mattresses") && lineItem.retailAmount > 600){
-						lineDiscount += (69.95 * lineItem.quantity);
-					}
-					break;
-			}
-		}
-		return (lineDiscount > 0) ? 'Discount: '+formatNumberMoney(lineDiscount) : '';
-	}
 
 	Invoice.prototype.itemPopup = function(item){
 		var stockTable 	= 	createStockTable(item.stock);
@@ -433,7 +448,7 @@
 									'<div class="col-33">'+item.color+'</div>' +
 									'<div class="col-33">'+item.material+'</div>' +
 								'</div>' +
-								'<div><img src="media/products/no-product-pic_icon.png"></div>'+
+								'<div><img src="'+item.imageurl+'"></div>'+
 								'<div><p>'+formatNumberMoney(item.retailAmount)+'</p></div>'+
 								'<div class="stock-table">' +
 									'<div class="list-block-title left-align">Choose Stock</div>' +
@@ -673,6 +688,10 @@
 		$$(selector).append(html+'</ul></div>');
 	}
 
+/* Discount Functions */
+
+// See discount.js
+
 /* Reset Functions */
 
 	Invoice.prototype.resetCustomerInfo = function(){
@@ -715,9 +734,9 @@ Invoice.prototype.reinit = function(){
     this.resetShippingInfo();
     this.resetDeliveryInfo();
     this.salesLines = [];
-    NativeStorage.setItem('cart', '', noop, noop);
+    NativeStorage.setItem('cart', '', nsSetNoop, noop);
     this.payments = [];
-    NativeStorage.setItem('payments', '', noop, noop);
+    NativeStorage.setItem('payments', '', nsSetNoop, noop);
     this.setBalance(0);
     this.setDiscounts([]);
     this.recalc();
@@ -757,3 +776,14 @@ Invoice.prototype.load = function(){
 	NativeStorage.getItem('payments', function(obj){ invoice.setPayments(JSON.parse(obj)); }, function(error){ if(error.code == 2){ invoice.setPayments([]); } else { consool(error); }});
 	NativeStorage.getItem('discounts', function(obj){ invoice.setDiscounts(JSON.parse(obj)); }, function(error){ if(error.code == 2){ invoice.setDiscounts([]); } else { consool(error); }});
 };
+
+
+function nsSetNoop(data){
+	var printTrue = false;
+	if(printTrue){
+		consool(data);
+		if(data.code !== undefined){
+			consool(data.code);
+		}
+	}
+}

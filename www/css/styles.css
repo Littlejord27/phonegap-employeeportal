@@ -15,6 +15,7 @@
 /* Framework 7 Tweaks */
 
 .page-content{
+
   background-color: white;
   padding-bottom: 90px !important;
 }
@@ -311,7 +312,22 @@ tr:nth-child(even) {
   margin-bottom: 20px;
 }
 .summary-section p{
-  margin-left: 10px;
+  margin-left: 25px;
+}
+.summary-section .content-block-title{
+  margin: 15px 10px 15px;
+}
+#summary-div-receiving span{
+  display: block;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  padding-left: 25px;
+  padding-bottom: 10px;
+}
+#summary-div-receiving-date{
+  border-bottom: none;
+}
+#customer-cart-div{
+  border: none;
 }
 #summary-cart{
   padding-left: 0;
@@ -334,6 +350,9 @@ tr:nth-child(even) {
   margin: 15px;
   border: 1px solid rgba(0,0,0,0.3);
   padding: 20px
+}
+#note-card-summary{
+  margin: 0 0 20px;
 }
 
 #balance-input{
@@ -401,6 +420,17 @@ tr:nth-child(even) {
 }
 .list-block ul:after{
   height: 0px;
+}
+
+.custom-discount-modal{
+  margin-top: -235px !important;
+  left: 39%;
+  width: 350px;
+}
+
+#cart-discount-list{
+  padding-left: 0;
+  padding-top: 20px;
 }
 
 /* Colors */

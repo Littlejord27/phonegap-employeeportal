@@ -143,7 +143,25 @@ function TaskMaster (){
 				sku: sku
 			},
 			success: function(data) {
-				onSuccess(data);
+				if(data.ok){
+					onSuccess({
+                        brand:data.item.brand,
+                        categoryname:data.item.categoryname,
+                        color:data.item.color,
+                        customerswaiting:data.item.customerswaiting,
+                        customerswaitinglist:data.item.customerswaitinglist,
+                        material:data.item.material,
+                        model:data.item.model,
+                        name:data.item.name,
+                        retailAmount:data.item.retailAmount,
+                        size:data.item.size,
+                        sku:data.item.sku,
+                        stock:data.item.stock,
+                        vendorsku:data.item.vendorsku,
+                        toplevelcategoryname:data.item.toplevelcategoryname,
+                        imageurl: (data.item.imageurl != '' ? data.item.imageurl : 'media/products/no-product-pic_icon.png')
+                    });
+				}
 			}
 	   	});
 	}
@@ -273,18 +291,32 @@ function TaskMaster (){
         });
 	}
 
-	this.printInvoice = function(invoicenumber, printer, onSuccess){
-		this.ajaxToServer({ 
-			url: '/4DACTION/api',
-			data: {
-				action: 'printInvoice',
-				invoicenumber: invoicenumber,
-				printer: printer
-			},
-			success: function(data) {
-				onSuccess(data);	
-			}
-	   	});
+	this.printInvoice = function(invoicenumber, numberType, printer, onSuccess){
+		if(numberType == 'quote'){
+			this.ajaxToServer({ 
+				url: '/4DACTION/api',
+				data: {
+					action: 'printInvoice',
+					quoteid: invoicenumber,
+					printer: printer
+				},
+				success: function(data) {
+					onSuccess(data);	
+				}
+		   	});
+		} else {
+			this.ajaxToServer({ 
+				url: '/4DACTION/api',
+				data: {
+					action: 'printInvoice',
+					invoiceid: invoicenumber,
+					printer: printer
+				},
+				success: function(data) {
+					onSuccess(data);	
+				}
+		   	});
+		}
 	}
 
 	this.saveQuote = function(invoiceObj, onSuccess, quoteId){

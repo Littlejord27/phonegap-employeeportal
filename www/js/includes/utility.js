@@ -62,7 +62,7 @@ function toast(bread, heat){
           duration: heat, // which is 2000 ms. "long" is 4000. Or specify the nr of ms yourself.
           position: "bottom",
           addPixelsY: -20  // added a negative value to move it up a bit (default 0)
-        },
+        }
     );
 }
 function createStockArray(line){
@@ -133,7 +133,7 @@ function serviceActions(){
                 case less: draftAndQUoteActions(); break;
                 case 'Add Discount': addDiscountModal(); break;
                 case 'Add Fee': addFeeModal(); break;
-                case 'Clear Discounts': invoice.setDiscounts([]); cartDetailsToolbarHeader(); break;
+                case 'Clear Discounts': invoice.setDiscounts([]); mainView.router.refreshPage(); break;
                 case 'Clear Fees': break;
                 case 'Reset Sale': invoice.reinit(); mainView.router.refreshPage(); break;
                 case more: invoiceActions(); break;
@@ -240,7 +240,28 @@ function draftAndQUoteActions(){
 function addDiscountModal(){
     choicelistModal({
         type: 'modal',
-        data: ['PMD', 'Tax Free', 'Toll Bridge', 'Memorial Day'], // TODO : Get tax array from TM
+        data: ['Standard Discount', 'Custom Discount', 'Memorial Day'], // TODO : Get tax array from TM
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'Standard Discount':
+                    standardDiscountModal();
+                    break;
+                case 'Custom Discount':
+                    customDiscountModal();
+                    break;
+                case 'Memorial Day':
+                    memorialDaySale();
+                    break;
+            }
+            mainView.router.refreshPage();
+        }
+    }); 
+}
+
+function standardDiscountModal(){
+    choicelistModal({
+        type: 'modal',
+        data: ['PMD', 'Tax Free', 'Toll Bridge'], // TODO : Get tax array from TM
         success: function(index,title,data) {
             switch(data[index]){
                 case 'PMD':
@@ -250,16 +271,30 @@ function addDiscountModal(){
                     invoice.addDiscount({type:'Tax'});
                     break;
                 case 'Toll Bridge':
-                    invoice.addDiscount({type:'Troll'});
-                    break;
-                case 'Memorial Day':
-                    memorialDaySale();
+                    invoice.addDiscount({type:'Toll'});
                     break;
             }
-            cartDetailsToolbarHeader();
+            mainView.router.refreshPage();
         }
     }); 
 }
+
+function customDiscountModal(){
+    var customDiscountModal = myApp.modal({
+        title:  'Custom Discount',
+        text: '<div class="content-block"><input type="checkbox" id="whole-invoice-discount"><label id="whole-invoice-discount-label" for="whole-invoice-discount">Whole Invoice Discount</label><ul id="cart-discount-list"></ul><div id="custom-discount-section"></div></div>',
+        buttons: [
+          {
+            text: 'Cancel', onClick: function() { }
+          },
+        ],
+    });
+    $$(customDiscountModal).addClass('custom-discount-modal');
+    for (var i = 0; i < invoice.salesLines.length; i++) {
+        $$('#cart-discount-list').append('<input type="checkbox" id="discount-item'+i+'"><label id="discount-item'+i+'-label" for="discount-item'+i+'">'+invoice.salesLines[i].name+'</label>');
+    }
+}
+
 function draftActions(){
     var actions = ['<-- Back','Save Draft', 'Load Draft', 'Delete Draft'];
     choicelistModal({
@@ -369,6 +404,7 @@ function loadDraftChoicelist(optionDraft){
             switch(optionDraft){
                 case 'load':
                     invoice = new Invoice(decoupleObj(INVOICES[index]));
+                    invoice.recalc();
                     mainView.router.refreshPage();
                     break;
                 case 'delete':
@@ -413,7 +449,7 @@ function loadQuoteChoicelist(optionQuote){
                                 success: function(index,title,data){
                                     consool(quoteToPrint.id);
                                     consool(printNames[index]);
-                                    TM.printInvoice(quoteToPrint.id, printNames[index], consool);
+                                    TM.printInvoice(quoteToPrint.id, 'quote', printNames[index], consool);
                                 }
                             });
                         });
@@ -432,7 +468,7 @@ function loadQuoteChoicelist(optionQuote){
 function memorialDaySale(){
     choicelistModal({
         type: 'modal',
-        data: ['2-Sided Classics Credit', 'Botanicore Bedding Bundle', '45th Adjustable Base Credit'],
+        data: ['2-Sided Classics Credit', 'Botanicore Bedding Bundle', '45th Adjustable Base Credit', 'Bedding Bundle', 'In-Stock Lighting', 'In-Stock Seating'],
         success: function(index,title,data) {
             switch(data[index]){
                 case '2-Sided Classics Credit':
@@ -444,7 +480,17 @@ function memorialDaySale(){
                 case '45th Adjustable Base Credit':
                     invoice.addDiscount({type:'45AdjBaseCred'});
                     break;
+                case 'Bedding Bundle':
+                    invoice.addDiscount({type:'beddingBund'});
+                    break;
+                case 'In-Stock Lighting':
+                    invoice.addDiscount({type:'instockLighting'});
+                    break;
+                case 'In-Stock Seating':
+                    invoice.addDiscount({type:'instockSeating'});
+                    break;
             }
+            mainView.router.refreshPage();
         }
     }); 
 }

@@ -28,33 +28,52 @@
 
                 <div class="list-block-title">Billing Information</div>
                 <div id="summary-div-billingInfo" class="summary-section">
+                    <div class="content-block-title">Name</div>
                     <p id="summary-div-billingInfo-name"></p>
+
+                    <div class="content-block-title">Phone Number</div>
                     <p id="summary-div-billingInfo-phone"></p>
+
+                    <div class="content-block-title">Email Address</div>
                     <p id="summary-div-billingInfo-email"></p>
+
+                    <div class="content-block-title">Billing Address</div>
                     <p id="summary-div-billingInfo-addr"></p>
                 </div>
 
                 <div class="list-block-title">Receiving Information</div>
                 <div id="summary-div-receiving" class="summary-section">
-                    <p id="summary-div-receiving-method-lablel" style="border-bottom: 1px solid rgba(0, 0, 0, 0.3);"> Receiving Method: <span id="summary-div-receiving-method"></span></p>
-                    <p id="summary-div-receiving-addr"> Delivery Address </p>
-                    <p id="summary-div-receiving-date-lablel" style="border-top: 1px solid rgba(0, 0, 0, 0.3);"> Delivery Date: <span id="summary-div-receiving-date"></span></p>
+                    <div class="content-block-title">Receiving Method</div>
+                    <span id="summary-div-receiving-method"></span>
+                    <div class="content-block-title">Delivery Address</div>
+                    <span id="summary-div-receiving-addr"></span>
+                    <div class="content-block-title">Delivery Date</div>
+                    <span id="summary-div-receiving-date"></span>
+                </div>
+
+                <div class="card" id="note-card-summary">
+                    <div class="card-header">Additional Notes</div>
+                    <div class="card-content">
+                        <div class="card-content-inner">
+                            <p id="summary-delivery-notes"></p>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="cart-title" class="list-block-title">Cart</div>
                 <div id="customer-cart-div" class="summary-section">
                     <ul id="summary-cart"></ul>
                     <div class="row">
-                        <div class="col-70">
+                        <div class="col-100">
                             <div class="row">
-                                <div class="col-50">
+                                <div class="col-45">
                                     <p>Subtotal</p>
                                     <p>Tax(10.1)</p>
                                     <p>Delivery</p>
                                     <p>Grand Total</p>
                                     <p id="summary-paid-label">Balance</p>
                                 </div>
-                                <div class="col-50">
+                                <div class="col-55">
                                     <p><span id="summary-subtotal"></span></p>
                                     <p><span id="summary-tax"></span></p>
                                     <p><span id="summary-delivery"></span></p>
@@ -63,11 +82,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-30"></div>
                     </div>
                 </div>
-
-                <p id="summary-delivery-notes"></p>
             </div>
         </div>
         <div class="toolbar">

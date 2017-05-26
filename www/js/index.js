@@ -156,24 +156,7 @@ $$(document).on('deviceready', function() {
                         for (var i = 0; i < listNames.length; i++) {
                             var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title search-result-item">'+listNames[i]+'</div></div></li>');
                             searchItem.on('click', function(){
-                                TM.getItemInfo($$(this).data('sku'), function(data){
-                                    var itemLine = {
-                                        brand:data.item.brand,
-                                        categoryname:data.item.categoryname,
-                                        color:data.item.color,
-                                        customerswaiting:data.item.customerswaiting,
-                                        customerswaitinglist:data.item.customerswaitinglist,
-                                        material:data.item.material,
-                                        model:data.item.model,
-                                        name:data.item.name,
-                                        retailAmount:data.item.retailAmount,
-                                        size:data.item.size,
-                                        sku:data.item.sku,
-                                        stock:data.item.stock,
-                                        vendorsku:data.item.vendorsku
-                                    };
-                                    invoice.itemPopup(itemLine);
-                                });
+                                TM.getItemInfo($$(this).data('sku'), invoice.itemPopup);
                             });
                             $$('.search-results').append(searchItem);
                         }
@@ -261,24 +244,7 @@ myApp.onPageInit('profile', function (page) {
                         switch(data[index]){
                             case 'Add to Cart':
                                 mainView.router.loadPage('pos_cart.html');
-                                TM.getItemInfo(sku, function(data){
-                                    var itemLine = {
-                                        brand:data.item.brand,
-                                        categoryname:data.item.categoryname,
-                                        color:data.item.color,
-                                        customerswaiting:data.item.customerswaiting,
-                                        customerswaitinglist:data.item.customerswaitinglist,
-                                        material:data.item.material,
-                                        model:data.item.model,
-                                        name:data.item.name,
-                                        retailAmount:data.item.retailAmount,
-                                        size:data.item.size,
-                                        sku:data.item.sku,
-                                        stock:data.item.stock,
-                                        vendorsku:data.item.vendorsku
-                                    };
-                                    invoice.itemPopup(itemLine);
-                                });
+                                TM.getItemInfo(sku, invoice.itemPopup);
                                 break;
                         }
                     }
@@ -328,24 +294,7 @@ myApp.onPageInit('pos_cart', function (page) {
             function(qrcode) {
                 var needle = qrcode.search('qr/');
                 var sku = qrcode.substr(needle + 3);
-                TM.getItemInfo(sku, function(data){
-                    var itemLine = {
-                        brand:data.item.brand,
-                        categoryname:data.item.categoryname,
-                        color:data.item.color,
-                        customerswaiting:data.item.customerswaiting,
-                        customerswaitinglist:data.item.customerswaitinglist,
-                        material:data.item.material,
-                        model:data.item.model,
-                        name:data.item.name,
-                        retailAmount:data.item.retailAmount,
-                        size:data.item.size,
-                        sku:data.item.sku,
-                        stock:data.item.stock,
-                        vendorsku:data.item.vendorsku
-                    };
-                    invoice.itemPopup(itemLine);
-                });
+                TM.getItemInfo(sku, invoice.itemPopup);
             }
         );
     }
@@ -674,16 +623,17 @@ myApp.onPageInit('pos_delivery', function (page) {
 
 myApp.onPageInit('pos_summary', function (page) {
     invoice.setBalance(roundTo(invoice.totalAmount + invoice.delivery.cost, 2));
+    var emptyVar = '[None Given]';
 
     $$('#summary-div-billingInfo-name').text(invoice.customer.first + ' ' + invoice.customer.last);
-    $$('#summary-div-billingInfo-phone').text(invoice.customer.cell);
-    $$('#summary-div-billingInfo-email').text(invoice.customer.email);
+    $$('#summary-div-billingInfo-phone').text((invoice.customer.phoneNumber == '' ? emptyVar : invoice.customer.phoneNumber));
+    $$('#summary-div-billingInfo-email').text((invoice.customer.email == '' ? emptyVar : invoice.customer.email));
     $$('#summary-div-billingInfo-addr').text(invoice.getBilling());
 
     switch(invoice.delivery.method){
         case 'shipping':
         case 'team':
-            $$('#summary-div-receiving-method').text(invoice.delivery.method);
+            $$('#summary-div-receiving-method').text(invoice.delivery.method == 'team' ? 'In-Home Delivery' : 'Shipping');
             $$('#summary-div-receiving-addr').show();
             $$('#summary-div-receiving-date').text(invoice.delivery.date);
             NativeStorage.getItem('sameBilling', function(obj){ 
@@ -697,13 +647,13 @@ myApp.onPageInit('pos_summary', function (page) {
             });
             break;
         case 'pickup':
-            $$('#summary-div-receiving-method').text(invoice.delivery.method);
+            $$('#summary-div-receiving-method').text('Pick Up');
             $$('#summary-div-receiving-addr').hide();
             $$('#summary-div-receiving-date').text(invoice.delivery.date);
             break;
         case 'carryout':
         case 'later':
-            $$('#summary-div-receiving-method').text(invoice.delivery.method);
+            $$('#summary-div-receiving-method').text('N/A');
             $$('#summary-div-receiving-addr').hide();
             $$('#summary-div-receiving-date').hide();
             break;
@@ -726,7 +676,11 @@ myApp.onPageInit('pos_summary', function (page) {
         }
     }
 
-    $$('#summary-delivery-notes').text(invoice.delivery.notes);
+    if(invoice.delivery.notes.length > 0){
+        $$('#summary-delivery-notes').text(invoice.delivery.notes);
+    } else {
+        $$('#note-card-summary').hide();
+    }
 
     $$('.pos-pay').on('click', function(){
         //invoice.xfactorsModal();
