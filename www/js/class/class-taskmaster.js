@@ -10,7 +10,7 @@ function TaskMaster (){
 				version: version
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -24,7 +24,7 @@ function TaskMaster (){
 				message: message
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -38,7 +38,7 @@ function TaskMaster (){
 				quoteId: quoteId
 			},
 			success: function(data) {
-				onSuccess(data);		
+				loginCheck(data, onSuccess);		
 			}
 	   	});
 	}
@@ -53,7 +53,7 @@ function TaskMaster (){
 				zip: zip
 			},
 			success: function(data) {
-				onSuccess(data);		
+				loginCheck(data, onSuccess);	
 			}
 	   	});
 	}
@@ -67,7 +67,7 @@ function TaskMaster (){
 				zip: zip
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -81,7 +81,7 @@ function TaskMaster (){
 				invoiceNumber: invoiceNumber
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -93,7 +93,7 @@ function TaskMaster (){
 				action: 'getConversations'
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -105,7 +105,7 @@ function TaskMaster (){
 				action: 'getCustomers'
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -117,7 +117,7 @@ function TaskMaster (){
 				action: 'getEmployees'
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -130,7 +130,7 @@ function TaskMaster (){
 				invoicenumber: invoicenumber
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -174,7 +174,7 @@ function TaskMaster (){
 				conversationid: conversationid
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -186,7 +186,7 @@ function TaskMaster (){
 				action: 'getNotifications',
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -198,7 +198,7 @@ function TaskMaster (){
 				action: 'getConversations'
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -212,7 +212,7 @@ function TaskMaster (){
 				quoteId: quoteId
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -231,7 +231,7 @@ function TaskMaster (){
 			url: '/4DACTION/api',
 			data: data,
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -244,7 +244,7 @@ function TaskMaster (){
 				sku: sku,
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -256,7 +256,7 @@ function TaskMaster (){
 				action: 'listPrinters'
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -268,7 +268,7 @@ function TaskMaster (){
 				action: 'listStations'
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -301,7 +301,7 @@ function TaskMaster (){
 					printer: printer
 				},
 				success: function(data) {
-					onSuccess(data);	
+					loginCheck(data, onSuccess);
 				}
 		   	});
 		} else {
@@ -313,7 +313,7 @@ function TaskMaster (){
 					printer: printer
 				},
 				success: function(data) {
-					onSuccess(data);	
+					loginCheck(data, onSuccess);	
 				}
 		   	});
 		}
@@ -337,7 +337,7 @@ function TaskMaster (){
 			method: 'POST',
 			data: data,
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -350,7 +350,7 @@ function TaskMaster (){
 				q: q
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -366,7 +366,7 @@ function TaskMaster (){
 				invoicenumber: invoicenumber
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}			
 	   	});
 	}
@@ -380,13 +380,26 @@ function TaskMaster (){
 				message: message
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});	
 	}
 
-	this.textInvoice = function(number, invoiceNumber, onSuccess){
+	this.taxExempt = function(license, onSuccess){
 		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: {
+				action: 'taxExempt',
+				license: license
+			},
+			success: function(data) {
+				loginCheck(data, onSuccess);
+			}
+	   	});
+	}
+
+	this.textInvoice = function(number, invoiceNumber, onSuccess){
+		this.ajaxToServer({
 			url: '/4DACTION/api',
 			data: {
 				action: 'textInvoice',
@@ -394,8 +407,8 @@ function TaskMaster (){
 				invoiceNumber: invoiceNumber
 			},
 			success: function(data) {
-				onSuccess(data);
-			}	
+				loginCheck(data, onSuccess);
+			}
 	   	});
 	}
 
@@ -408,7 +421,7 @@ function TaskMaster (){
 				clockEvent: clockEvent
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -423,7 +436,7 @@ function TaskMaster (){
 				invoice: invoice
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -437,7 +450,7 @@ function TaskMaster (){
 				skus: skus
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}
 	   	});
 	}
@@ -453,9 +466,20 @@ function TaskMaster (){
 				zip: zip
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}			
 	   	});
+	}
+
+	function loginCheck(data, onSuccess){
+		if(data.ok){
+			onSuccess(data);
+		} else {
+			console.log(data);
+			switch(data.doAction){
+				case 'loginError': break;
+			}
+		}
 	}
 
 	this.debugPost = function(invoice, onSuccess){
@@ -467,7 +491,7 @@ function TaskMaster (){
 				invoice: invoice
 			},
 			success: function(data) {
-				onSuccess(data);
+				loginCheck(data, onSuccess);
 			}			
 	   	});
 	}

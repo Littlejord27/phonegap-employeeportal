@@ -21,6 +21,8 @@
 			this.totalAmount 	= 0;
 			this.balance 		= 0;
 			this.discount 		= 0;
+
+			this.taxFree		= false;
 		} else {
 			this.id 		 = draft.id;
 			this.salesperson = draft.salesperson;
@@ -66,8 +68,10 @@
 			this.salesLines  	= draft.salesLines;
 			NativeStorage.setItem('cart', JSON.stringify(draft.salesLines), nsSetNoop, noop);
 			this.discounts 		= draft.discounts;
-			consool(draft.discounts);
 			NativeStorage.setItem('discounts', JSON.stringify(draft.payments), nsSetNoop, noop);
+
+			this.taxFree		= false;
+			NativeStorage.setItem('taxFree', draft.taxFree, nsSetNoop, noop);
 
 			this.recalc();
 		}
@@ -152,7 +156,17 @@
 		this.subtotalAmount = roundTo(this.subtotalAmount, 2);
 		this.taxAmount = roundTo(this.taxAmount, 2);
 		this.discount = roundTo(this.discount, 2);
-		this.totalAmount = roundTo(this.subtotalAmount + this.taxAmount - this.discount, 2);
+		this.totalAmount = roundTo(this.subtotalAmount - this.discount, 2);
+		if(!this.taxFree){
+			this.totalAmount = roundTo(this.totalAmount + this.taxAmount, 2);
+		}
+	}
+
+	Invoice.prototype.setTaxFree = function(taxFree){
+		this.taxFree = taxFree;
+		NativeStorage.setItem('taxFree', this.taxFree, nsSetNoop, noop);
+		this.recalc();
+		cartDetailsToolbarHeader();
 	}
 
 /* Setters setters */
@@ -328,15 +342,15 @@
 					    '<div class="card-content">' +
 					        '<div class="card-content-inner">' +
 					        	'<div class="row">' +
-					        		'<div class="col-40"><img class="prod-img" src="'+this.salesLines[i].imageurl+'"></div>' +
-					        		'<div class="col-35" style="text-align: center;">' +
+					        		'<div class="col-30"><img class="prod-img lightbox-image" src="'+this.salesLines[i].imageurl+'"></div>' +
+					        		'<div class="col-50" style="text-align: center;">' +
 					        			'<span>'+ formatNumberMoney(this.salesLines[i].retailAmount) +' ea.</span><br>' +
 					        			(this.salesLines[i].size != '' ? '<span>'+this.salesLines[i].size+'</span><br>' : '')+
 					        			(this.salesLines[i].color != '' ? '<span>'+this.salesLines[i].color+'</span><br>' : '')+
 					        			(this.salesLines[i].material != '' ? '<span>'+this.salesLines[i].material+'</span><br>' : '')+
 					        			'<p class="location-edit-card" data-id="'+i+'">' + getLocationNickname(this.salesLines[i].location) + '</p>' +
 					        		'</div>' +
-					        		'<div class="col-25">' + discountAmountLine(this.salesLines[i])+ '</div>' +
+					        		'<div class="col-20">' + discountAmountLine(this.salesLines[i])+ '</div>' +
 					        	'</div>' +
 					        	'<span> Special Note </span>' +
 					        '</div>' +
@@ -692,6 +706,15 @@
 
 // See discount.js
 
+	Invoice.prototype.isTaxFreeDiscountActive = function(){
+		for (var i = 0; i < this.discounts.length; i++) {
+			if(this.discounts[i].type == 'Tax'){
+				return true;
+			}
+		}
+		return false;
+	};
+
 /* Reset Functions */
 
 	Invoice.prototype.resetCustomerInfo = function(){
@@ -729,14 +752,13 @@
 /* Loading */
 
 Invoice.prototype.reinit = function(){
+	NativeStorage.clear( consool, consool );
 	this.resetCustomerInfo();
     this.resetBillingInfo();
     this.resetShippingInfo();
     this.resetDeliveryInfo();
     this.salesLines = [];
-    NativeStorage.setItem('cart', '', nsSetNoop, noop);
     this.payments = [];
-    NativeStorage.setItem('payments', '', nsSetNoop, noop);
     this.setBalance(0);
     this.setDiscounts([]);
     this.recalc();
@@ -775,6 +797,8 @@ Invoice.prototype.load = function(){
 	NativeStorage.getItem('cart', function(obj){ invoice.setSalesLines(JSON.parse(obj)); }, function(error){ if(error.code == 2){ invoice.setSalesLines([]); } else { consool(error); }});
 	NativeStorage.getItem('payments', function(obj){ invoice.setPayments(JSON.parse(obj)); }, function(error){ if(error.code == 2){ invoice.setPayments([]); } else { consool(error); }});
 	NativeStorage.getItem('discounts', function(obj){ invoice.setDiscounts(JSON.parse(obj)); }, function(error){ if(error.code == 2){ invoice.setDiscounts([]); } else { consool(error); }});
+
+	NativeStorage.getItem('taxFree', function(obj){ invoice.setTaxFree(obj); }, function(error){ if(error.code == 2){ invoice.setTaxFree(false); } else { consool(error); }});
 };
 
 

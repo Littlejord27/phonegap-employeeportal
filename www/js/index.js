@@ -25,7 +25,9 @@ var TM = new TaskMaster();
 var invoice = new Invoice();
 
 var DEBUG_MODE = true;
-var HOLIDAYSALE = true;
+
+var SHORT = 'short';
+var LONG = 'long';
 
 var INVOICES = [];
 
@@ -150,6 +152,7 @@ $$(document).on('deviceready', function() {
             (function(search){
                 searchDelayTimer = setTimeout(function() {
                     TM.searchInventory(search, function(data){
+                    	consool(data);
                         $$('.search-results').empty();
                         var listNames = data.inventoryNames;
                         var listSkus = data.inventorySkus;
@@ -209,8 +212,13 @@ $$(document).on('deviceready', function() {
             invoice.setSalesperson(EMPLOYEE.name);
             mainView.router.loadPage({url:'profile.html'});
         }, function(success){
-            toast('Invalid Login', 'short');
+            toast('Invalid Login', SHORT);
         });
+    });
+
+    $$('.framework7-root').on('click', '.lightbox-image', function(){
+    	consool($$(this));
+    	$$(body).append('<div class="img-lightbox"></div>');
     });
 });
 

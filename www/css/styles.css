@@ -255,6 +255,11 @@ tr:nth-child(even) {
   width: 350px; 
 }
 
+.location-edit-card{
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
 /* Delivery */
 
 #section-one .list-block{
@@ -433,6 +438,18 @@ tr:nth-child(even) {
   padding-top: 20px;
 }
 
+#submit-license{
+  border: 1px solid black;
+  text-align: center;
+  margin: auto;
+  width: 25%;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.img-lightbox{
+  
+}
 /* Colors */
 
 .low-vis-black{

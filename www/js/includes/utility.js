@@ -1,5 +1,9 @@
 function cartDetailsToolbarHeader(){
-    $$('.tax-toolbar').html(formatNumberMoney(invoice.taxAmount));
+    if(invoice.taxFree || invoice.isTaxFreeDiscountActive()){
+        $$('.tax-toolbar').html('No Tax');
+    } else {
+        $$('.tax-toolbar').html(formatNumberMoney(invoice.taxAmount));
+    }
     $$('.taxpercent').html((invoice.taxPercent * 100).toFixed(1) + '%');
     $$('.delivery-toolbar').html(formatNumberMoney(invoice.delivery.cost));
     if(EMPLOYEE.locationid != 0){
@@ -123,7 +127,7 @@ function getLocationNickname(locationid){
 function serviceActions(){
     var less = '<-- Draft & Quotes';
     var more = '--> Invoice Actions';
-    var actions = [less, 'Add Discount', 'Add Fee', 'Clear Discounts', 'Clear Fees', 'Reset Sale', more]; 
+    var actions = [less, 'Discount Actions', 'Fee Actions', more]; 
     choicelistModal({
         type: 'modal',
         title: 'Services:',
@@ -131,12 +135,64 @@ function serviceActions(){
         success: function(index,title,data) {
             switch(data[index]){
                 case less: draftAndQUoteActions(); break;
-                case 'Add Discount': addDiscountModal(); break;
-                case 'Add Fee': addFeeModal(); break;
-                case 'Clear Discounts': invoice.setDiscounts([]); mainView.router.refreshPage(); break;
-                case 'Clear Fees': break;
-                case 'Reset Sale': invoice.reinit(); mainView.router.refreshPage(); break;
+                case 'Discount Actions': discountActions(); break;
+                case 'Fee Actions': feeActions(); break;
                 case more: invoiceActions(); break;
+            }
+        }
+    });
+}
+function discountActions(){
+    var actions = ['Add Discount', 'Tax Exempt', 'Clear Discounts', '<-- Back']; 
+    choicelistModal({
+        type: 'modal',
+        title: 'Services:',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'Add Discount': addDiscountModal(); break;
+                case 'Tax Exempt': taxExemptModal();break;
+                case 'Clear Discounts': invoice.setDiscounts([]); invoice.setTaxFree(false); mainView.router.refreshPage(); break;
+                case '<-- Back': serviceActions(); break;
+            }
+        }
+    });
+}
+
+function taxExemptModal(){
+    var taxExemptModalElem = myApp.modal({
+        title:  'Enter Driver\'s License',
+        text: '<input id="driver-license-number"><div id="submit-license">Submit</div>',
+        buttons: [
+          {
+            text: 'Cancel', onClick: function() { }
+          },
+        ],
+    });
+    $$('#submit-license').on('click', function(){
+        var licenseNumber = $$('#driver-license-number').val();
+        TM.taxExempt(licenseNumber, function(data){
+            var taxExemptStatus = data.taxExemptStatus;
+            invoice.setTaxFree(taxExemptStatus);
+            if(taxExemptStatus){
+                myApp.closeModal(taxExemptModalElem);
+            }
+            toast('Not Tax Exempt',SHORT);
+        });
+    });
+    $$(taxExemptModalElem).addClass('save-draft-modal');
+}
+function feeActions(){
+    var actions = ['Add Fee', 'Clear Fees', '<-- Back']; 
+    choicelistModal({
+        type: 'modal',
+        title: 'Services:',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'Add Fee': addFeeModal(); break;
+                case 'Clear Fees': break;
+                case '<-- Back': serviceActions(); break;
             }
         }
     });
@@ -146,7 +202,7 @@ function invoiceActions(){
     var less = '<-- Cart Actions';
     //var more = '<a href="#" class="link icon-only"><i class="icon f7-icons">arrow_right</i></a>';
     var more = '--> Draft & Quotes';
-    var actions = [less, 'Change Location', 'Transfer Invoice', more]; 
+    var actions = [less, 'Change Location', 'Transfer Invoice', 'Reset Sale', more]; 
     choicelistModal({
         type: 'modal',
         title: 'Invoice Options:',
@@ -165,6 +221,7 @@ function invoiceActions(){
                         transferInvoiceModal(data.stations);
                     });
                     break;
+                case 'Reset Sale': invoice.reinit(); mainView.router.refreshPage(); break;
                 case more:
                     draftAndQUoteActions();
                     break;
@@ -240,7 +297,7 @@ function draftAndQUoteActions(){
 function addDiscountModal(){
     choicelistModal({
         type: 'modal',
-        data: ['Standard Discount', 'Custom Discount', 'Memorial Day'], // TODO : Get tax array from TM
+        data: ['Standard Discount', 'Custom Discount', 'Memorial Day', '<-- Back'], // TODO : Get tax array from TM
         success: function(index,title,data) {
             switch(data[index]){
                 case 'Standard Discount':
@@ -252,6 +309,7 @@ function addDiscountModal(){
                 case 'Memorial Day':
                     memorialDaySale();
                     break;
+                case '<-- Back': discountActions(); break;
             }
             mainView.router.refreshPage();
         }
@@ -261,18 +319,19 @@ function addDiscountModal(){
 function standardDiscountModal(){
     choicelistModal({
         type: 'modal',
-        data: ['PMD', 'Tax Free', 'Toll Bridge'], // TODO : Get tax array from TM
+        data: ['PMD', 'Tax Free', 'Toll Bridge', '<-- Back'], // TODO : Get tax array from TM
         success: function(index,title,data) {
             switch(data[index]){
                 case 'PMD':
                     invoice.addDiscount({type:'PMD'});
                     break;
-                case 'Tax':
+                case 'Tax Free':
                     invoice.addDiscount({type:'Tax'});
                     break;
                 case 'Toll Bridge':
                     invoice.addDiscount({type:'Toll'});
                     break;
+                case '<-- Back': standardDiscountModal(); break;
             }
             mainView.router.refreshPage();
         }
@@ -296,16 +355,13 @@ function customDiscountModal(){
 }
 
 function draftActions(){
-    var actions = ['<-- Back','Save Draft', 'Load Draft', 'Delete Draft'];
+    var actions = ['Save Draft', 'Load Draft', 'Delete Draft', '<-- Back'];
     choicelistModal({
         type: 'modal',
         title: 'Clear:',
         data: actions,
         success: function(index,title,data) {
             switch(data[index]){
-                case '<-- Back':
-                    draftAndQUoteActions();
-                    break;
                 case 'Save Draft':
                     saveDraft();
                     break;
@@ -315,21 +371,21 @@ function draftActions(){
                 case 'Delete Draft':
                     loadDraftChoicelist('delete');
                     break;
+                case '<-- Back':
+                    draftAndQUoteActions();
+                    break;
             }
         }
     });
 }
 function quoteActions(){
-    var actions = ['<-- Back','Save Quote', 'Load Quote', 'Print Quote', 'Delete Quote'];
+    var actions = ['Save Quote', 'Load Quote', 'Print Quote', 'Delete Quote', '<-- Back'];
     choicelistModal({
         type: 'modal',
         title: 'Clear:',
         data: actions,
         success: function(index,title,data) {
             switch(data[index]){
-                case '<-- Back':
-                    draftAndQUoteActions();
-                    break;
                 case 'Save Quote':
                     saveQuote();
                     break;
@@ -341,6 +397,9 @@ function quoteActions(){
                     break;
                 case 'Delete Quote':
                     loadQuoteChoicelist('delete');
+                    break;
+                case '<-- Back':
+                    draftAndQUoteActions();
                     break;
             }
         }
