@@ -212,7 +212,8 @@ $$(document).on('deviceready', function() {
             invoice.setSalesperson(EMPLOYEE.name);
             mainView.router.loadPage({url:'profile.html'});
         }, function(success){
-            toast('Invalid Login', SHORT);
+            //toast('Invalid Login', SHORT);
+            mainView.router.loadPage({url:'clk_home.html'});
         });
     });
 
@@ -705,3 +706,12 @@ myApp.onPageInit('pos_summary', function (page) {
 myApp.onPageInit('pos__thankyou', function (page) {
     $$('#text').text('This was added by Jquery');
 });
+
+
+
+myApp.onPageInit('clk_home', function(page){
+    
+});
+
+
+

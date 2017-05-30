@@ -404,6 +404,32 @@ tr:nth-child(even) {
 }
 
 
+/* Clock */
+
+.clock-date{
+  text-align: center;
+  padding: 10px;
+}
+.clock-time{
+  text-align: center;
+  padding: 10px;
+}
+.current-clock-date{
+  font-size: 20px;
+  color: rgba(0, 0, 0, 0.4);
+}
+.current-clock-time{
+  font-size: 30px;
+  color: rgba(0, 0, 0, 0.8);
+}
+.clock-button{
+
+}
+.clock-buttons{
+
+}
+
+
 /* Misc */
 
 .toolbar-header{
