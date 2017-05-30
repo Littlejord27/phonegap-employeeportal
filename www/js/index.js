@@ -143,6 +143,7 @@ $$(document).on('deviceready', function() {
 			invoice.draw('.'+classSelector);
 		}
 		cartDetailsToolbarHeader();
+        cartDetailsSummaryScreen();
 	});
 
     var searchDelayTimer;
@@ -710,7 +711,7 @@ myApp.onPageInit('pos__thankyou', function (page) {
 
 
 myApp.onPageInit('clk_home', function(page){
-    
+
 });
 
 

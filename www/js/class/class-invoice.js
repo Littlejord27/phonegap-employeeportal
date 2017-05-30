@@ -101,6 +101,12 @@
 			if(this.salesLines[id].stock[i].locationletter == location){
 				var destinationMaxQuantity = this.salesLines[id].stock[i].available;
 				this.salesLines[id].quantity = (this.salesLines[id].quantity > destinationMaxQuantity) ? destinationMaxQuantity : this.salesLines[id].quantity;
+				if(destinationMaxQuantity < 1){
+					toast('No Stock at Selected Location', LONG);
+				}
+				if(this.salesLines[id].quantity == 0 && destinationMaxQuantity != 0){
+					toast('Please Select a Quantity', LONG);	
+				}
 			}
 		}
 		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);

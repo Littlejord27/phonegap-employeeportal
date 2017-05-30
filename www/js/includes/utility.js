@@ -19,6 +19,17 @@ function cartDetailsToolbarHeader(){
     }
     $$('.total-toolbar').html(formatNumberMoney(invoice.totalAmount + invoice.delivery.cost));
 }
+function cartDetailsSummaryScreen(){
+    $$('#summary-subtotal').text(formatNumberMoney(invoice.subtotalAmount));
+    $$('#summary-tax').text(formatNumberMoney(invoice.taxAmount));
+    $$('#summary-delivery').text(formatNumberMoney(invoice.delivery.cost));
+    $$('#summary-total').text(formatNumberMoney(invoice.totalAmount + invoice.delivery.cost));
+    if(invoice.totalAmount - invoice.getRemainingBalance() == 0){
+        $$('#summary-paid-label').hide();
+    } else {
+        $$('#summary-paid').text(formatNumberMoney(invoice.getRemainingBalance()));
+    }
+}
 function formatNumberMoney(money){
     return '$' + roundTo(money, 2).toFixed(2);
 }
