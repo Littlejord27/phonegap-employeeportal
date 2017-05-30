@@ -217,9 +217,15 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.lightbox-image', function(){
-    	consool($$(this));
-    	$$(body).append('<div class="img-lightbox"></div>');
+        closeLightbox();
+        $$('.framework7-root').off('click', 'body', closeLightbox);
+        $$('.framework7-root').on('click', 'body', closeLightbox);
+        $$('body').append('<div style="top:150px;" class="img-lightbox"><div class="img-lightbox-inner"><img class="lightbox-img" src="'+$$(this).prop('src')+'"></div></div>');
     });
+
+    function closeLightbox(){
+        $$('.img-lightbox').remove();
+    }
 });
 
 myApp.onPageInit('profile', function (page) {

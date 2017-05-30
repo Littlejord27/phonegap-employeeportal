@@ -162,23 +162,19 @@ function discountActions(){
 function taxExemptModal(){
     var taxExemptModalElem = myApp.modal({
         title:  'Enter Driver\'s License',
-        text: '<input id="driver-license-number"><div id="submit-license">Submit</div>',
+        text: '<input id="driver-license-number">',
         buttons: [
           {
             text: 'Cancel', onClick: function() { }
           },
-        ],
-    });
-    $$('#submit-license').on('click', function(){
-        var licenseNumber = $$('#driver-license-number').val();
-        TM.taxExempt(licenseNumber, function(data){
-            var taxExemptStatus = data.taxExemptStatus;
-            invoice.setTaxFree(taxExemptStatus);
-            if(taxExemptStatus){
-                myApp.closeModal(taxExemptModalElem);
+          {
+            text: 'Okay', onClick: function() {
+                var licenseNumber = $$('#driver-license-number').val();
+                invoice.setTaxFree(true);
+                toast('Tax Exempt',SHORT);
             }
-            toast('Not Tax Exempt',SHORT);
-        });
+          },
+        ],
     });
     $$(taxExemptModalElem).addClass('save-draft-modal');
 }
