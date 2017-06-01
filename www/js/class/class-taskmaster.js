@@ -460,10 +460,12 @@ function TaskMaster (){
 	}
 
 	function loginCheck(data, onSuccess){
+		console.log(data);
 		if(data.ok){
 			onSuccess(data);
+			console.log('data is okay');
 		} else {
-			console.log(data);
+			console.log('Failure');
 			switch(data.doAction){
 				case 'loginError': break;
 			}
@@ -509,27 +511,13 @@ function TaskMaster (){
 			} else {
 				serverURL+= requestURL;
 			}
-			
-			var tempCallBack= function(data) {
-				if (data.hasOwnProperty('invalidsession')) {
-					invalidSessionAfterLoginAjaxCall= {
-						'url': requestURL,
-						'data': dataObject,
-						'success': callbackFunction,
-						'method': requestMethod
-					};
-					logoutUser();
-				} else {
-					callbackFunction(data);
-				}
-			};
 
 			$$.ajax({
 				url: serverURL,
 				method: requestMethod,
 				data: requestMethod == 'GET' ? dataObject : JSON.stringify(dataObject),
 				dataType: 'json',
-				success: tempCallBack
+				success: callbackFunction
 			});
 			/*
 			switch(requestMethod) {

@@ -217,8 +217,8 @@ $$(document).on('deviceready', function() {
             invoice.setSalesperson(EMPLOYEE.name);
             mainView.router.loadPage({url:'profile.html'});
         }, function(success){
-            //toast('Invalid Login', SHORT);
-            mainView.router.loadPage({url:'clk_home.html'});
+            toast('Invalid Login', SHORT);
+            //mainView.router.loadPage({url:'clk_home.html'});
         });
     });
 
@@ -741,6 +741,7 @@ myApp.onPageInit('clk_home', function(page){
     }, 1000);
 
     TM.timeclock(invoice.id, 'STATUS', function(data){
+        var clockHistoryHtml = '';
         if(data.currentlyClockedIn){
             $$('#clockin-button').addClass('inactive');
             $$('#clockout-button').removeClass('inactive');
@@ -748,13 +749,27 @@ myApp.onPageInit('clk_home', function(page){
             $$('#clockin-button').removeClass('inactive');
             $$('#clockout-button').addClass('inactive');
         }
+        clockHistoryHtml += '<div class="list-block-label clockhistory-list-label">'+unixTimeToDateString(data.timecards[0].clockInUnixTimeStamp)+'</div>';
+        for (var i = 0; i < data.timecards.length; i++) {
+            if(i > 0 && data.timecards[i].clockInDate != data.timecards[i - 1].clockInDate){
+                clockHistoryHtml += '<div class="list-block-label clockhistory-list-label">'+unixTimeToDateString(data.timecards[i].clockInUnixTimeStamp)+'</div>';
+            }
+            clockHistoryHtml += '<li class="item-content"><div class="item-inner">' +
+                '<div class="row row-fullwidth">'+
+                    '<div class="col-50 left-align">'+unixToStandard(data.timecards[i].clockInUnixTimeStamp)+''+
+                    '</div>' +
+                    '<div class="col-50 right-align">'+unixToStandard(data.timecards[i].clockOutUnixTimeStamp)+''+
+                    '</div>' +
+                '</div>' +
+            '</div></li>';
+        }
+        $$('.clock-history').append(clockHistoryHtml);
     });
 
     $$('.clock-button').on('click', function(){
-        consool($$(this).hasClass('inactive'));
         if(!$$(this).hasClass('inactive')){
             var event = $$(this).data("clockevent");
-            TM.timeclock(invoice.id, event, function(data){
+            TM.timeclock(EMPLOYEE.id, event, function(data){
                 if(data.ok && event == 'start'){
                     $$('#clockin-button').addClass('inactive');
                     $$('#clockout-button').removeClass('inactive');
@@ -765,7 +780,40 @@ myApp.onPageInit('clk_home', function(page){
             });
         }
     });
+
+    function unixToStandard(unixTime){
+        if(unixTime > 0){
+            var unixDate = new Date(unixTime * 1000);
+            var h = unixDate.getHours();
+            var m = unixDate.getMinutes();
+            var s = unixDate.getSeconds();
+            var pm = false;
+            if(h > 12){
+                pm = true;
+                h-=12;
+            }
+            h=(h<10)?'0'+h : h;
+            m=(m<10)?'0'+m : m;
+            s=(s<10)?'0'+s : s;
+            var time = h+':'+m+':'+s;
+            time+=(pm)?' PM':' AM';
+            return time;
+        } else {
+            return '';
+        }
+    }
+    function unixTimeToDateString(unixTime){
+        if(unixTime > 0){
+            var unixDate = new Date(unixTime * 1000);
+            return (unixDate.getMonth()+1) +'/'+ unixDate.getDate() +'/'+ unixDate.getFullYear();
+            return time;
+        } else {
+            return 'Error getting date';
+        }
+    }
 });
 
+myApp.onPageInit('user_setting', function(page){
 
+});
 

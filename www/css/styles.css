@@ -44,6 +44,11 @@ div.navbar{
   box-shadow: 0 0 2px rgba(0, 0, 0, .6) !important; 
 }
 
+.row-fullwidth{
+  width: 100%;
+  padding-right: 40px;
+}
+
 /* Index */
 
 .index-icon{
@@ -470,6 +475,10 @@ tr:nth-child(even) {
 
 .inactive .circle{
   background-color: grey;
+}
+
+.clockhistory-list-label{
+  margin-bottom: 5px !important;
 }
 
 /* Misc */

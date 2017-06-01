@@ -262,6 +262,7 @@ function locationChangeChoicelist() {
                     EMPLOYEE.invoiceLocationID = 9;
                     break;
             }
+            $$('.invoicelocation-toolbar').html(getLocationNickname(EMPLOYEE.invoiceLocationID));
         }
     });
 }
