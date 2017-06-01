@@ -6,8 +6,8 @@ function cartDetailsToolbarHeader(){
     }
     $$('.taxpercent').html((invoice.taxPercent * 100).toFixed(1) + '%');
     $$('.delivery-toolbar').html(formatNumberMoney(invoice.delivery.cost));
-    if(EMPLOYEE.locationid != 0){
-        $$('.invoicelocation-toolbar').html(getLocationNickname(EMPLOYEE.locationid));
+    if(EMPLOYEE.invoiceLocationID != 0){
+        $$('.invoicelocation-toolbar').html(getLocationNickname(EMPLOYEE.invoiceLocationID));
     }
     $$('.subtotal-toolbar').html(formatNumberMoney(invoice.subtotalAmount));
     if(invoice.discount > 0){
@@ -244,22 +244,22 @@ function locationChangeChoicelist() {
         success: function(index,title,data) {
             switch(data[index]){
                 case 'Store':
-                    EMPLOYEE.locationid = 1;
+                    EMPLOYEE.invoiceLocationID = 1;
                     break;
                 case 'Outlet':
-                    EMPLOYEE.locationid = 5;
+                    EMPLOYEE.invoiceLocationID = 5;
                     break;
                 case 'Hospatility':
-                    EMPLOYEE.locationid = 6;
+                    EMPLOYEE.invoiceLocationID = 6;
                     break;
                 case '45th Street Bedding':
-                    EMPLOYEE.locationid = 7;
+                    EMPLOYEE.invoiceLocationID = 7;
                     break;
                 case 'Bedrooms & More Online':
-                    EMPLOYEE.locationid = 8;
+                    EMPLOYEE.invoiceLocationID = 8;
                     break;
                 case 'Philanthropy':
-                    EMPLOYEE.locationid = 9;
+                    EMPLOYEE.invoiceLocationID = 9;
                     break;
             }
         }
@@ -271,6 +271,7 @@ function transferInvoiceModal(stations){
         data: stations,
         success: function(index,title,data) {
             //TM.transferInvoice(data[index], invoice, consool);
+            invoice.invoiceLocationID = EMPLOYEE.invoiceLocationID;
             TM.debugPost(invoice, consool);
         }
     });

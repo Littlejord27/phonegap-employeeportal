@@ -409,10 +409,11 @@ tr:nth-child(even) {
 .clock-date{
   text-align: center;
   padding: 10px;
+  padding-top: 25px;
 }
 .clock-time{
   text-align: center;
-  padding: 10px;
+  padding: 20px;
 }
 .current-clock-date{
   font-size: 20px;
@@ -422,13 +423,54 @@ tr:nth-child(even) {
   font-size: 30px;
   color: rgba(0, 0, 0, 0.8);
 }
-.clock-button{
+
+.circle {
+  border: 20px solid rgb(255, 255, 255);
+  box-shadow: 0px 0px 5px #888888;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  margin: auto;
+  /* -moz-box-sizing: border-box; */
+  /* box-sizing: border-box; */
+}
+
+.hour-hand{
+  position: absolute;
+  background-color: white;
+  height: 45px;
+  width: 5px;
+  margin-left: 37px;
+}
+
+.minute-hand-in{
+  position: absolute;
+  background-color: white;
+  height: 5px;
+  width: 30px;
+  margin-left: 37px;
+  margin-top: 40px;
+}
+.minute-hand-out{
 
 }
-.clock-buttons{
-
+.clock-button-label{
+  text-align: center;
+  padding-top: 5px;
 }
 
+.history-section-label{
+  text-align: center;
+  font-size: 20px;
+  border-bottom: 1px solid black;
+  width: 80%;
+  margin: auto;
+  margin-top: 10px;
+}
+
+.inactive .circle{
+  background-color: grey;
+}
 
 /* Misc */
 
@@ -486,6 +528,12 @@ tr:nth-child(even) {
 }
 .white{
   color: rgb(255, 255, 255);
+}
+.green{
+  background: green;
+}
+.red{
+  background: red;
 }
 
 /* Utility */

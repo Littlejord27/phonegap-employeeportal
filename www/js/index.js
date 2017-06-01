@@ -36,6 +36,7 @@ var EMPLOYEE = {
     name:'',
     department:'',
     locationid:0,
+    invoiceLocationID:0,
 };
 
 var userSwitch = 0;
@@ -45,12 +46,14 @@ switch(userSwitch){
         EMPLOYEE.name = 'JordanL';
         EMPLOYEE.department = 'IT';
         EMPLOYEE.locationid = 5;
+        EMPLOYEE.invoiceLocationID = 8;
         break;
     case 2:
         EMPLOYEE.id = 16;
         EMPLOYEE.name = 'MattD';
         EMPLOYEE.department = 'IT';
         EMPLOYEE.locationid = 5;
+        EMPLOYEE.invoiceLocationID = 8;
         break;
 }
 
@@ -210,6 +213,7 @@ $$(document).on('deviceready', function() {
             EMPLOYEE.name = employee.name;
             EMPLOYEE.department = employee.department;
             EMPLOYEE.locationid = employee.store;
+            EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
             invoice.setSalesperson(EMPLOYEE.name);
             mainView.router.loadPage({url:'profile.html'});
         }, function(success){
@@ -706,12 +710,61 @@ myApp.onPageInit('pos_summary', function (page) {
 
 myApp.onPageInit('pos__thankyou', function (page) {
     $$('#text').text('This was added by Jquery');
+
+    $$('#none-rec').on('click', function(){
+        mainView.router.loadPage('profile.html');
+    });
 });
 
 
 
 myApp.onPageInit('clk_home', function(page){
+    var currentFullDate = new Date();
+    var currentDate = (currentFullDate.getMonth()+1) +' '+ currentFullDate.getDate() +' '+ currentFullDate.getFullYear();
+    var h = currentFullDate.getHours();
+    h = h > 12 ? h-12 : h;
+    var m = currentFullDate.getMinutes();
+    m = m < 10 ? "0"+m : m;
+    var s = currentFullDate.getSeconds();
+    s = s < 10 ? "0"+s : s;
+    $$('.current-clock-time').text(h+':'+m+':'+s);
 
+    setInterval(function(){
+        var exactDate = new Date();
+        var h = exactDate.getHours();
+        h = h > 12 ? h-12 : h;
+        var m = exactDate.getMinutes();
+        m = m < 10 ? "0"+m : m;
+        var s = exactDate.getSeconds();
+        s = s < 10 ? "0"+s : s;
+        $$('.current-clock-time').text(h+':'+m+':'+s);
+    }, 1000);
+
+    TM.timeclock(invoice.id, 'STATUS', function(data){
+        if(data.currentlyClockedIn){
+            $$('#clockin-button').addClass('inactive');
+            $$('#clockout-button').removeClass('inactive');
+        } else {
+            $$('#clockin-button').removeClass('inactive');
+            $$('#clockout-button').addClass('inactive');
+        }
+    });
+
+    $$('.clock-button').on('click', function(){
+        consool($$(this).hasClass('inactive'));
+        if(!$$(this).hasClass('inactive')){
+            var event = $$(this).data("clockevent");
+            TM.timeclock(invoice.id, event, function(data){
+                if(data.ok && event == 'start'){
+                    $$('#clockin-button').addClass('inactive');
+                    $$('#clockout-button').removeClass('inactive');
+                } else if(data.ok && event == 'stop'){
+                     $$('#clockin-button').removeClass('inactive');
+                    $$('#clockout-button').addClass('inactive');
+                }
+            });
+        }
+    });
 });
 
 

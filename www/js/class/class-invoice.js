@@ -526,6 +526,7 @@
 	function createStockTable(stock){
 		stock.push({
 			"locationid": 42,
+			"invoiceLocationID":42,
 			"locationname": "Special Order",
 			"locationletter": "SO",
 			"available": 1000,

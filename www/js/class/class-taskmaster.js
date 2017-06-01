@@ -385,19 +385,6 @@ function TaskMaster (){
 	   	});	
 	}
 
-	this.taxExempt = function(license, onSuccess){
-		this.ajaxToServer({ 
-			url: '/4DACTION/api',
-			data: {
-				action: 'taxExempt',
-				license: license
-			},
-			success: function(data) {
-				loginCheck(data, onSuccess);
-			}
-	   	});
-	}
-
 	this.textInvoice = function(number, invoiceNumber, onSuccess){
 		this.ajaxToServer({
 			url: '/4DACTION/api',
@@ -418,7 +405,8 @@ function TaskMaster (){
 			data: {
 				action: 'timeclock',
 				employeeId: employeeId,
-				clockEvent: clockEvent
+				clockEvent: clockEvent,
+				key: this.key
 			},
 			success: function(data) {
 				loginCheck(data, onSuccess);
