@@ -813,6 +813,10 @@ myApp.onPageInit('clk_home', function(page){
     }
 });
 
+myApp.onPageInit('tools', function(page){
+
+});
+
 myApp.onPageInit('user_setting', function(page){
 
 });
