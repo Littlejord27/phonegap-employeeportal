@@ -562,6 +562,26 @@ function memorialDaySale(){
         }
     }); 
 }
+
+var loginPopup = function(params){
+    var popupHTML = '<div class="popup login-popup">' +
+                            '<div class="login-popup-content">' +
+                                '<p class="center-align"><img src="media/symbol.png" class="login-symbol"></p>' +
+                                '<h2 class="center-align white">Employee Portal</h2>' +
+                                '<div class="bottom-center">' +
+                                    '<div>' +
+                                        '<p class="center-align"><input type="number" id="password" placeholder="Password" class="password-login"></p>' +
+                                        '<p class="center-align"><button class="login-button">Login</button></p>' +
+                                        '<p class="center-align"> Forgot Password?</p>' +
+                                        '<p class="center-align"> Contact Matt to reset.</p>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+    myApp.popup(popupHTML);
+    
+};
+
 var choicelistModal= function(params) {
     // DEFAULTS
     var ModalParamsObject= {

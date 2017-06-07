@@ -193,7 +193,7 @@ div.navbar{
 .attribute-border{
   margin-bottom: 10px;
 }
-.delete-line{
+.card-header-action-line{
   padding: 0 5px 5px 10px;
 }
 .stock-table{
@@ -584,7 +584,6 @@ tr:nth-child(even) {
 .icon-padding-left{
   padding-left:10px;
 }
-
 .primary-color-text{
   background-color: rgb(66, 137, 139);
   color: white;
@@ -597,6 +596,16 @@ tr:nth-child(even) {
 }
 .secondary-color{
   background-color: rgb(71, 188, 195);
+}
+.login-popup-content{
+  background-image: url("../media/login.jpg");
+  height: 100%;
+}
+.login-popup-content p{
+  margin-top: 0;
+}
+.login-popup{
+  z-index: 100000;
 }
 
 /* RGB Colors */

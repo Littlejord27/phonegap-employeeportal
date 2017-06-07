@@ -68,12 +68,14 @@ var mainView = myApp.addView('.view-main', {
 });
 
 $$(document).on('deviceready', function() {
-    $$('.deviceready').text('Device Ready');
-
     invoice.load();
 
     $$('.framework7-root').on('click', '.home-icon', function(){
         mainView.router.back({url:'profile.html', force:true});
+    });
+
+    $$('.framework7-root').on('click', '.message-list-icon', function(){
+        mainView.router.loadPage('msg_list.html');
     });
 
     $$('.framework7-root').on('click', '.pos-actions', function(){
@@ -149,6 +151,23 @@ $$(document).on('deviceready', function() {
         cartDetailsSummaryScreen();
 	});
 
+    $$('.framework7-root').on('click', '.minimize-line', function(){
+        var elem = $$(this);
+        var elemContent = elem.parent().parent().find('.card-content');
+        elem.removeClass('minimize-line');
+        elem.addClass('restore-line');
+        elem.empty().append('<i class="fa fa-window-restore" aria-hidden="true"></i>');
+        elemContent.hide();
+    });
+    $$('.framework7-root').on('click', '.restore-line', function(){
+        var elem = $$(this);
+        var elemContent = elem.parent().parent().find('.card-content');
+        elem.removeClass('restore-line');
+        elem.addClass('minimize-line');
+        elem.empty().append('<i class="fa fa-window-minimize" aria-hidden="true"></i>');
+        elemContent.show();
+    });
+
     var searchDelayTimer;
     $$('.framework7-root').on('keyup', '#search-box', function(){
         if(this.value.length > 3){
@@ -209,15 +228,26 @@ $$(document).on('deviceready', function() {
     $$('#password').on('focus', function(){$$(this).val('');});
     $$('.framework7-root').on('click', '.login-button', function(){
         TM.login($$('#password').val(), function(employee){
+            notificationTimeoutStart();
+            // TODO turn off notification check when logged out and invalid login.
             EMPLOYEE.id = employee.id;
             EMPLOYEE.name = employee.name;
             EMPLOYEE.department = employee.department;
             EMPLOYEE.locationid = employee.store;
             EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
             invoice.setSalesperson(EMPLOYEE.name);
-            mainView.router.loadPage({url:'profile.html'});
-        }, function(success){
-            toast('Invalid Login', SHORT);
+            if($$('.login-popup').length > 0){
+                myApp.closeModal('.login-popup');
+                toast('Logged In - ' + EMPLOYEE.name, SHORT);
+            } else {
+                mainView.router.loadPage({url:'profile.html'});
+            }
+        }, function(error){
+            if($$('.login-popup').length > 0){
+                toast('Invalid Login - Popup', SHORT);
+            } else {
+                toast('Invalid Login', SHORT);
+            }
             //mainView.router.loadPage({url:'clk_home.html'});
         });
     });
@@ -813,6 +843,57 @@ myApp.onPageInit('clk_home', function(page){
     }
 });
 
+myApp.onPageInit('msg_list', function(page){
+
+    $$('#conversations').on('click', '.conversation', function(){
+        var tarId = $$(this).data('id');
+        mainView.router.load({url:'msg_msg.html', query:{id:tarId}});
+    });
+
+    TM.getConversations(function(data){
+        var conversations = data.conversations;
+        var conversationListHtml = '';
+        for (var i = 0; i < conversations.length; i++) {
+            conversationListHtml += '<li class="conversation" data-id="'+conversations[i].id+'">' +
+              '<a href="#" class="item-link item-content">' +
+                '<div class="item-inner">' +
+                  '<div class="item-title-row">' +
+                    '<div class="item-title">'+conversations[i].membersString+'</div>' +
+                    '<div class="item-after">'+conversations[i].recentMessages[0].timestring+'</div>' +
+                  '</div>';
+            if(conversations[i].newMessageStatusBool){
+                conversationListHtml += '<div class="item-subtitle">New Message from '+conversations[i].recentMessages[0].sendername+'</div>';
+            }
+            conversationListHtml += '<div class="item-text">'+conversations[i].recentMessages[0].message+'</div>' +
+                '</div>' +
+              '</a>' +
+            '</li>';
+        }
+        $$('#conversations').append(conversationListHtml);
+    });
+});
+
+myApp.onPageInit('msg_msg', function(page){
+    var conversationId = page.query.id;
+
+    $$('.messages').empty();
+    TM.getMessages(conversationId, drawMessages);
+
+    $$('#send-message').on('click', function(){
+        var newMessage = $$('#composed-message').val();
+        TM.sendMessage(conversationId, newMessage, function(){
+            var messageHTML =  '<div class="message message-sent">' +
+                '<div class="message-name">'+EMPLOYEE.name+'</div>' +
+                '<div class="message-text">'+newMessage+'</div>' +
+            '</div>';
+            $$('.messages').append(messageHTML);
+            scrollMessageToBottom();
+            $$('#composed-message').val('');
+        });
+    });
+
+});
+
 myApp.onPageInit('tools', function(page){
 
 });
@@ -820,4 +901,8 @@ myApp.onPageInit('tools', function(page){
 myApp.onPageInit('user_setting', function(page){
 
 });
+
+
+
+
 

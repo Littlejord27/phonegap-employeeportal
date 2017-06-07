@@ -10,7 +10,7 @@ function TaskMaster (){
 				version: version
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -24,7 +24,7 @@ function TaskMaster (){
 				message: message
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -38,7 +38,7 @@ function TaskMaster (){
 				quoteId: quoteId
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);		
+				onSuccess(data);		
 			}
 	   	});
 	}
@@ -53,7 +53,7 @@ function TaskMaster (){
 				zip: zip
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);	
+				onSuccess(data);	
 			}
 	   	});
 	}
@@ -67,7 +67,7 @@ function TaskMaster (){
 				zip: zip
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -81,7 +81,7 @@ function TaskMaster (){
 				invoiceNumber: invoiceNumber
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -93,7 +93,7 @@ function TaskMaster (){
 				action: 'getConversations'
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -105,7 +105,7 @@ function TaskMaster (){
 				action: 'getCustomers'
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -117,7 +117,7 @@ function TaskMaster (){
 				action: 'getEmployees'
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -130,7 +130,7 @@ function TaskMaster (){
 				invoicenumber: invoicenumber
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -174,7 +174,7 @@ function TaskMaster (){
 				conversationid: conversationid
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -186,19 +186,7 @@ function TaskMaster (){
 				action: 'getNotifications',
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
-			}
-	   	});
-	}
-
-	this.getConversations = function(onSuccess){
-		this.ajaxToServer({ 
-			url: '/4DACTION/api',
-			data: {
-				action: 'getConversations'
-			},
-			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -212,7 +200,7 @@ function TaskMaster (){
 				quoteId: quoteId
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -231,7 +219,7 @@ function TaskMaster (){
 			url: '/4DACTION/api',
 			data: data,
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -244,7 +232,7 @@ function TaskMaster (){
 				sku: sku,
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -256,7 +244,7 @@ function TaskMaster (){
 				action: 'listPrinters'
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -268,7 +256,7 @@ function TaskMaster (){
 				action: 'listStations'
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -301,7 +289,7 @@ function TaskMaster (){
 					printer: printer
 				},
 				success: function(data) {
-					loginCheck(data, onSuccess);
+					onSuccess(data);
 				}
 		   	});
 		} else {
@@ -313,7 +301,7 @@ function TaskMaster (){
 					printer: printer
 				},
 				success: function(data) {
-					loginCheck(data, onSuccess);	
+					onSuccess(data);	
 				}
 		   	});
 		}
@@ -337,7 +325,7 @@ function TaskMaster (){
 			method: 'POST',
 			data: data,
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -350,7 +338,7 @@ function TaskMaster (){
 				q: q
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -366,7 +354,7 @@ function TaskMaster (){
 				invoicenumber: invoicenumber
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}			
 	   	});
 	}
@@ -380,7 +368,7 @@ function TaskMaster (){
 				message: message
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});	
 	}
@@ -394,7 +382,7 @@ function TaskMaster (){
 				invoiceNumber: invoiceNumber
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -405,11 +393,10 @@ function TaskMaster (){
 			data: {
 				action: 'timeclock',
 				employeeId: employeeId,
-				clockEvent: clockEvent,
-				key: this.key
+				clockEvent: clockEvent
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -424,7 +411,7 @@ function TaskMaster (){
 				invoice: invoice
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -438,7 +425,7 @@ function TaskMaster (){
 				skus: skus
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}
 	   	});
 	}
@@ -454,21 +441,16 @@ function TaskMaster (){
 				zip: zip
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}			
 	   	});
 	}
 
-	function loginCheck(data, onSuccess){
+	function logoutUser(data){
+		console.log('Failed - Need to Login');
 		console.log(data);
-		if(data.ok){
-			onSuccess(data);
-			console.log('data is okay');
-		} else {
-			console.log('Failure');
-			switch(data.doAction){
-				case 'loginError': break;
-			}
+		switch(data.action){
+			case 'errorLogin': loginPopup(); break;
 		}
 	}
 
@@ -481,7 +463,7 @@ function TaskMaster (){
 				invoice: invoice
 			},
 			success: function(data) {
-				loginCheck(data, onSuccess);
+				onSuccess(data);
 			}			
 	   	});
 	}
@@ -511,13 +493,27 @@ function TaskMaster (){
 			} else {
 				serverURL+= requestURL;
 			}
+			
+			var tempCallBack= function(data) {
+				if (data.hasOwnProperty('invalidsession')) {
+					invalidSessionAfterLoginAjaxCall= {
+						'url': requestURL,
+						'data': dataObject,
+						'success': callbackFunction,
+						'method': requestMethod
+					};
+					logoutUser(data);
+				} else {
+					callbackFunction(data);
+				}
+			};
 
 			$$.ajax({
 				url: serverURL,
 				method: requestMethod,
 				data: requestMethod == 'GET' ? dataObject : JSON.stringify(dataObject),
 				dataType: 'json',
-				success: callbackFunction
+				success: tempCallBack
 			});
 			/*
 			switch(requestMethod) {
