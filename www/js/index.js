@@ -860,12 +860,10 @@ myApp.onPageInit('msg_list', function(page){
                 '<div class="item-inner">' +
                   '<div class="item-title-row">' +
                     '<div class="item-title">'+conversations[i].membersString+'</div>' +
-                    '<div class="item-after">'+conversations[i].recentMessages[0].timestring+'</div>' +
-                  '</div>';
-            if(conversations[i].newMessageStatusBool){
-                conversationListHtml += '<div class="item-subtitle">New Message from '+conversations[i].recentMessages[0].sendername+'</div>';
-            }
-            conversationListHtml += '<div class="item-text">'+conversations[i].recentMessages[0].message+'</div>' +
+                    '<div class="item-after">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].timestring : '')+'</div>' +
+                  '</div>' +
+                  '<div class="item-subtitle">'+(conversations[i].newMessageStatusBool ? 'New Message from '+conversations[i].recentMessages[0].sendername : '')+'</div>' +
+                  '<div class="item-text">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].message : '')+'</div>' +
                 '</div>' +
               '</a>' +
             '</li>';
