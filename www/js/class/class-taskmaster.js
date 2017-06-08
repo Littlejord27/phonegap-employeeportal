@@ -2,6 +2,20 @@ function TaskMaster (){
 	this.host 	= "https://taskmaster.bedroomsandmore.com";
 	this.key  	= 'gjkffkd63dkkdmybandm';
 
+	this.checkNewMessages = function(conversationId, latestMessageId, onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: {
+				action: 'checkNewMessages',	
+				conversationId: conversationId,
+				latestMessageId: latestMessageId
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
 	this.checkUpdate = function(version, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',

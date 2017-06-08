@@ -137,18 +137,19 @@ $$(document).on('deviceready', function() {
 	});
 
 	$$('.framework7-root').on('click', '.delete-line', function(){
-		// TODO: Add Modal to confirm delete.
-		var elem = $$(this);
-		invoice.deleteLine(elem.data("id"));
-		var classSelector = elem.parent().parent().parent()[0].className;
-		var idSelector = elem.parent().parent().parent()[0].id;
-		if(idSelector != ''){
-			invoice.draw('#'+idSelector);
-		} else if(classSelector == 'cart-list'){
-			invoice.draw('.'+classSelector);
-		}
-		cartDetailsToolbarHeader();
-        cartDetailsSummaryScreen();
+        var elem = $$(this);
+        var classSelector = elem.parent().parent().parent()[0].className;
+        var idSelector = elem.parent().parent().parent()[0].id;
+        confirmModal('Delete this item?',function(){
+            invoice.deleteLine(elem.data("id"));
+            if(idSelector != ''){
+                invoice.draw('#'+idSelector);
+            } else if(classSelector == 'cart-list'){
+                invoice.draw('.'+classSelector);
+            }
+            cartDetailsToolbarHeader();
+            cartDetailsSummaryScreen();
+        });
 	});
 
     $$('.framework7-root').on('click', '.minimize-line', function(){
@@ -156,7 +157,7 @@ $$(document).on('deviceready', function() {
         var elemContent = elem.parent().parent().find('.card-content');
         elem.removeClass('minimize-line');
         elem.addClass('restore-line');
-        elem.empty().append('<i class="fa fa-window-restore" aria-hidden="true"></i>');
+        elem.empty().append('<i class="icon f7-icons">up</i>');
         elemContent.hide();
     });
     $$('.framework7-root').on('click', '.restore-line', function(){
@@ -164,7 +165,7 @@ $$(document).on('deviceready', function() {
         var elemContent = elem.parent().parent().find('.card-content');
         elem.removeClass('restore-line');
         elem.addClass('minimize-line');
-        elem.empty().append('<i class="fa fa-window-minimize" aria-hidden="true"></i>');
+        elem.empty().append('<i class="icon f7-icons">down</i>');
         elemContent.show();
     });
 
@@ -892,6 +893,10 @@ myApp.onPageInit('msg_msg', function(page){
         });
     });
 
+});
+
+myApp.onPageAfterBack('msg_msg', function(page){
+    clearTimeout(timeoutObj);
 });
 
 myApp.onPageInit('tools', function(page){

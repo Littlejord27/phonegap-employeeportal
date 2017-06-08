@@ -344,7 +344,7 @@
 		var cart = '';
 		for (var i = this.salesLines.length-1; i >= 0; i--) {
 			cart += '<div class="card" data-id="'+i+'">' +
-					    '<div class="card-header">'+this.salesLines[i].brand+' '+this.salesLines[i].model+'<span class="delete-line card-header-action-line" data-id="'+i+'"><i class="icon f7-icons">close_round</i></span><span class="minimize-line card-header-action-line" data-id="'+i+'"><i class="fa fa-window-minimize" aria-hidden="true"></i></span></div>' +
+					    '<div class="card-header">'+this.salesLines[i].brand+' '+this.salesLines[i].model+'<span class="minimize-line card-header-action-line" data-id="'+i+'"><i class="icon f7-icons">down</i></span><span class="delete-line card-header-action-line" data-id="'+i+'"><i class="icon f7-icons">close_round</i></span></div>' +
 					    '<div class="card-content">' +
 					        '<div class="card-content-inner">' +
 					        	'<div class="row">' +
