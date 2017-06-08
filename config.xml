@@ -28,6 +28,7 @@
     <preference name="AutoHideSplashScreen" value="false" />
     <preference name="SplashScreenDelay" value="8000" />
     <engine name="android" spec="~6.1.2" />
+    <engine name="ios" spec="~4.5.0-nightly.2017.5.30.a9532aed" />
     <plugin name="cordova-plugin-whitelist" spec="~1.2.0" />
     <plugin name="cordova-plugin-console" spec="~1.0.1" />
     <plugin name="cordova-plugin-statusbar" spec="~1.0.1" />
