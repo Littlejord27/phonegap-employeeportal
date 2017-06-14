@@ -120,10 +120,9 @@
 	Invoice.prototype.deleteLine = function(id){
 		this.salesLines.splice(id, 1);
 		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
+		invoice.setPayments([]);
+		invoice.getRemainingBalance();
 		this.recalc();
-	}
-	Invoice.prototype.createInvoice = function(){
-		TaskMaster.createInvoice();
 	}
 
 /* Money Functions */
@@ -312,6 +311,7 @@
 		for (var i = 0; i < this.payments.length; i++) {
 			this.balance -= this.payments[i].amount;
 		}
+		this.balance = roundTo(this.balance, 2);
 		return this.balance;
 	}
 	Invoice.prototype.getBilling = function(){
@@ -341,118 +341,150 @@
 
 	// TODO: Show Discounts
 	Invoice.prototype.draw = function(selector){
-		var cart = '';
-		for (var i = this.salesLines.length-1; i >= 0; i--) {
-			cart += '<div class="card" data-id="'+i+'">' +
-					    '<div class="card-header">'+this.salesLines[i].brand+' '+this.salesLines[i].model+'<span class="minimize-line card-header-action-line" data-id="'+i+'"><i class="icon f7-icons">down</i></span><span class="delete-line card-header-action-line" data-id="'+i+'"><i class="icon f7-icons">close_round</i></span></div>' +
-					    '<div class="card-content">' +
-					        '<div class="card-content-inner">' +
-					        	'<div class="row">' +
-					        		'<div class="col-30"><img class="prod-img lightbox-image" src="'+this.salesLines[i].imageurl+'"></div>' +
-					        		'<div class="col-50" style="text-align: center;">' +
-					        			'<span>'+ formatNumberMoney(this.salesLines[i].retailAmount) +' ea.</span><br>' +
-					        			(this.salesLines[i].size != '' ? '<span>'+this.salesLines[i].size+'</span><br>' : '')+
-					        			(this.salesLines[i].color != '' ? '<span>'+this.salesLines[i].color+'</span><br>' : '')+
-					        			(this.salesLines[i].material != '' ? '<span>'+this.salesLines[i].material+'</span><br>' : '')+
-					        			'<p class="location-edit-card" data-id="'+i+'">' + getLocationNickname(this.salesLines[i].location) + '</p>' +
-					        		'</div>' +
-					        		'<div class="col-20">' + discountAmountLine(this.salesLines[i])+ '</div>' +
-					        	'</div>' +
-					        	'<span> Special Note </span>' +
-					        '</div>' +
-					    '</div>' +
-					    '<div class="card-footer">'+
-						    '<div class="row" style="width: 100%;">' +
-						    	'<div class="col-50">' +
-						    		'<p>' + formatNumberMoney(this.salesLines[i].retailAmount * this.salesLines[i].quantity) + '</p>'+
-						    	'</div>' +
-						    	'<div class="col-50 quantity-col-card right-float right-align" data-id="'+i+'">' +
-						    		'<p>QTY:' + this.salesLines[i].quantity + '</p>'+
-						    	'</div>' +
-						    '</div>' +
-					    '</div>' +
-					'</div>';
-			cart += getDiscountHTML(this.salesLines[i]);
-		}
+		//if(this.salesLines.length == 0){
+		if(false){
+			if (selector === undefined || selector == '.cart-list'){
+				var newSaleHTML = '<div id="new-sale"><div id="new-sale-header"></div><div id="returning-customer">Returning</div></div>';
+				$$('.cart-list').empty();
+				$$('.cart-list').append(newSaleHTML);
 
-		cart += getInvoiceDiscountHTML(this.salesLines[i]);
+				$$('#returning-customer').on('click', function(){
 
-	    //var shippingMethod = (invoice.delivery.method == 'shipping' && );
-	    var shippingMethod = false;
+					var searchModal = myApp.modal({
+			            title:  'Search',
+			            text: '<input id="search-returning-box">',
+			            afterText: '<div class="list-block search-result-div"><ul class="search-results"></ul></div>',
+			            buttons: [
+			              {
+			                text: 'Cancel', onClick: function() { }
+			              },
+			            ],
+			        });
 
-	    if(invoice.delivery.method == 'team' && invoice.getDeliveryDateString() != '00/00/00'){
-	    	cart +=	'<div class="card">' +
-						'<div class="card-content">' +
-		    				'<div class="card-content-inner">In-House Delivery - ' + invoice.getDeliveryDateString() + ' - ' + formatNumberMoney(invoice.delivery.cost) + '</div>' +
-		  				'</div>' +
-					'</div>';
-	    } else if(shippingMethod){
-	    	cart +=	'<div class="card">' +
-						'<div class="card-content">' +
-		    				'<div class="card-content-inner">Shipping</div>' +
-		  				'</div>' +
-					'</div>';
-	    }  else if(invoice.delivery.method == 'carryout'){
-	    	cart +=	'<div class="card">' +
-						'<div class="card-content">' +
-		    				'<div class="card-content-inner">Carryout</div>' +
-		  				'</div>' +
-					'</div>';
-	    }  else if(invoice.delivery.method == 'pickup' && invoice.delivery.store != ''){
-	    	cart +=	'<div class="card">' +
-						'<div class="card-content">' +
-		    				'<div class="card-content-inner">Pick Up - ' + invoice.delivery.store + '</div>' +
-		  				'</div>' +
-					'</div>';
-	    }  else if(invoice.delivery.method == 'later'){
-	    	cart +=	'<div class="card">' +
-						'<div class="card-content">' +
-		    				'<div class="card-content-inner">No Delivery Scheduled</div>' +
-		  				'</div>' +
-					'</div>';
-	    }
+			        $$(searchModal).addClass('search-modal');
 
-	    if(this.discounts.length > 0){
-	    	var discountCard = '';
-	    	cart +=	'<div class="card">' +
-	    				'<div class="card-content">' +
-		    				'<div class="card-content-inner">';
-		    for (var i = 0; i < this.discounts.length; i++) {
-		    	switch(this.discounts[i].type){
-		    		case '2SideCred':
-		    			discountCard += '2-Sided Classics';
-		    			discountCard += ', ';
-		    			break;
-		    		case '45AdjBaseCred':
-		    			discountCard += '45th Adjustable Credit';
-		    			discountCard += ', ';
-		    			break;
-		    		case 'beddingBund':
-		    			discountCard += 'Bedding Bundle';
-		    			discountCard += ', ';
-		    			break;
-		    		case 'instockLighting':
-		    			discountCard += 'In-Stock Lighting';
-		    			discountCard += ', ';
-		    			break;
-		    		default:
-		    			discountCard += this.discounts[i].type;
-		    			discountCard += ', ';
-		    	}
-		    }
-		    discountCard = discountCard.substring(0, discountCard.length-2);
-		    cart += discountCard;
-		    cart += '</div>' +
-		  				'</div>' +
-					'</div>';
-	    }
-
-		if (selector !== undefined) {
-			$$(selector).empty();
-			$$(selector).append(cart);
+			        $$('#search-returning-box').on('keyup', function(){
+				        if(this.value.length > 3){
+				            consool(this);
+				        }
+				    });
+				});
+			}
 		} else {
-			$$('.cart-list').empty();
-			$$('.cart-list').append(cart);
+			var cart = '';
+			for (var i = this.salesLines.length-1; i >= 0; i--) {
+				// if(this.salesLines[i].minimized)
+				cart += '<div class="card" data-id="'+i+'">' +
+						    '<div class="card-header">'+this.salesLines[i].brand+' '+this.salesLines[i].model+'<span class="'+(this.salesLines[i].minimized ? 'restore-line' : 'minimize-line')+' card-header-action-line" data-id="'+i+'"><i class="icon f7-icons">'+(this.salesLines[i].minimized ? 'up' : 'down')+'</i></span><span class="delete-line card-header-action-line" data-id="'+i+'"><i class="icon f7-icons">close_round</i></span></div>' +
+						    '<div class="card-content" '+(this.salesLines[i].minimized ? 'style="display:none;' : '')+'">' +
+						        '<div class="card-content-inner">' +
+						        	'<div class="row">' +
+						        		'<div class="col-30"><img class="prod-img lightbox-image" src="'+this.salesLines[i].imageurl+'"></div>' +
+						        		'<div class="col-50" style="text-align: center;">' +
+						        			'<span>'+ formatNumberMoney(this.salesLines[i].retailAmount) +' ea.</span><br>' +
+						        			(this.salesLines[i].size != '' ? '<span>'+this.salesLines[i].size+'</span><br>' : '')+
+						        			(this.salesLines[i].color != '' ? '<span>'+this.salesLines[i].color+'</span><br>' : '')+
+						        			(this.salesLines[i].material != '' ? '<span>'+this.salesLines[i].material+'</span><br>' : '')+
+						        			'<p class="location-edit-card" data-id="'+i+'">' + getLocationNickname(this.salesLines[i].location) + '</p>' +
+						        		'</div>' +
+						        		'<div class="col-20">' + discountAmountLine(this.salesLines[i])+ '</div>' +
+						        	'</div>' +
+						        	// '<span> Special Note </span>' + TODO add making special notes for each item
+						        '</div>' +
+						    '</div>' +
+						    '<div class="card-footer">'+
+							    '<div class="row" style="width: 100%;">' +
+							    	'<div class="col-50">' +
+							    		'<p>' + formatNumberMoney(this.salesLines[i].retailAmount * this.salesLines[i].quantity) + '</p>'+
+							    	'</div>' +
+							    	'<div class="col-50 quantity-col-card right-float right-align" data-id="'+i+'">' +
+							    		'<p>QTY:' + this.salesLines[i].quantity + '</p>'+
+							    	'</div>' +
+							    '</div>' +
+						    '</div>' +
+						'</div>';
+				cart += getDiscountHTML(this.salesLines[i]);
+			}
+
+			cart += getInvoiceDiscountHTML(this.salesLines[i]);
+
+		    //var shippingMethod = (invoice.delivery.method == 'shipping' && );
+		    var shippingMethod = false;
+
+		    if(invoice.delivery.method == 'team' && invoice.getDeliveryDateString() != '00/00/00'){
+		    	cart +=	'<div class="card">' +
+							'<div class="card-content">' +
+			    				'<div class="card-content-inner">In-House Delivery - ' + invoice.getDeliveryDateString() + ' - ' + formatNumberMoney(invoice.delivery.cost) + '</div>' +
+			  				'</div>' +
+						'</div>';
+		    } else if(shippingMethod){
+		    	cart +=	'<div class="card">' +
+							'<div class="card-content">' +
+			    				'<div class="card-content-inner">Shipping</div>' +
+			  				'</div>' +
+						'</div>';
+		    }  else if(invoice.delivery.method == 'carryout'){
+		    	cart +=	'<div class="card">' +
+							'<div class="card-content">' +
+			    				'<div class="card-content-inner">Carryout</div>' +
+			  				'</div>' +
+						'</div>';
+		    }  else if(invoice.delivery.method == 'pickup' && invoice.delivery.store != ''){
+		    	cart +=	'<div class="card">' +
+							'<div class="card-content">' +
+			    				'<div class="card-content-inner">Pick Up - ' + invoice.delivery.store + '</div>' +
+			  				'</div>' +
+						'</div>';
+		    }  else if(invoice.delivery.method == 'later'){
+		    	cart +=	'<div class="card">' +
+							'<div class="card-content">' +
+			    				'<div class="card-content-inner">No Delivery Scheduled</div>' +
+			  				'</div>' +
+						'</div>';
+		    }
+
+		    if(this.discounts.length > 0){
+		    	var discountCard = '';
+		    	cart +=	'<div class="card">' +
+		    				'<div class="card-content">' +
+			    				'<div class="card-content-inner">';
+			    for (var i = 0; i < this.discounts.length; i++) {
+			    	switch(this.discounts[i].type){
+			    		case '2SideCred':
+			    			discountCard += '2-Sided Classics';
+			    			discountCard += ', ';
+			    			break;
+			    		case '45AdjBaseCred':
+			    			discountCard += '45th Adjustable Credit';
+			    			discountCard += ', ';
+			    			break;
+			    		case 'beddingBund':
+			    			discountCard += 'Bedding Bundle';
+			    			discountCard += ', ';
+			    			break;
+			    		case 'instockLighting':
+			    			discountCard += 'In-Stock Lighting';
+			    			discountCard += ', ';
+			    			break;
+			    		default:
+			    			discountCard += this.discounts[i].type;
+			    			discountCard += ', ';
+			    	}
+			    }
+			    discountCard = discountCard.substring(0, discountCard.length-2);
+			    cart += discountCard;
+			    cart += '</div>' +
+			  				'</div>' +
+						'</div>';
+		    }
+
+			if (selector !== undefined) {
+				$$(selector).empty();
+				$$(selector).append(cart);
+			} else {
+				$$('.cart-list').empty();
+				$$('.cart-list').append(cart);
+			}
 		}
 	};
 
@@ -490,8 +522,9 @@
 			for (var i = 0; i < stockOptions.length; i++) {
 				if(stockOptions[i].value > 0){
 					var lineItem = JSON.parse(JSON.stringify(item));
-					lineItem.quantity = stockOptions[i].value;
-					lineItem.location = $$(stockOptions[i]).data('location');
+					lineItem.quantity  = stockOptions[i].value;
+					lineItem.location  = $$(stockOptions[i]).data('location');
+					lineItem.minimized = false;
 					invoice.addLine(lineItem);
 				}
 			}
@@ -589,10 +622,11 @@
 	Invoice.prototype.paymentPopup = function(){
 		var balance = this.balance;
 		var payments = [];
+		var todayDate = new Date().toDateString();
 		var popupHTML = '<div class="popup payment-popup" id="payment-pop">'+
 							'<div class="popup-header"><h1>Payment Received Today</h1></div>'+
 							'<div class="content-block center-align">'+
-								'<div id="date-payment-div">Date:<b>4/24/17</b></div>'+
+								'<div id="date-payment-div">Date:<b>'+todayDate+'</b></div>'+
 								'<div id="balance-payment-div">Balance:<b><span id="remaining-balance">'+formatNumberMoney(balance)+'</span></b></div>'+
 								'<div>Amount:<input id="balance-input" type="number"><span class="payment-type-button" data-type="Full"><-- Pay in Full</span></div>'+
 								'<div class="row">' +
@@ -636,7 +670,7 @@
 		$$('.payment-type-button').on('click', function(){
 			var amount = $$('#balance-input').val();
 			var type = $$(this).data('type');
-			if(type == "Full" || amount > 0 && !isNaN(amount) && type != "Full"){
+			if(type == "Full" || type == "Charge" || type == "Finance" || amount > 0 && !isNaN(amount) && type != "Full"){
 				switch(type){
 					case 'Cash':
 						payments.push({type:type, amount:amount});
@@ -645,10 +679,86 @@
 						payments.push({type:type, amount:amount});
 						break;
 					case 'Charge':
-						payments.push({type:type, amount:amount});
+					    var buttons = [
+					        {
+					            text: 'Amex',
+					            onClick: function () {
+					            	payments.push({type:'Amex', amount:amount});
+					            	balance = Math.abs(balance - amount);
+									$$('#remaining-balance').text(formatNumberMoney(balance));
+									invoice.drawPayments(payments, '#payment-pop');
+									$$('#balance-input').val('');
+					            }
+					        },
+					        {
+					            text: 'Discover',
+					            onClick: function () {
+					            	payments.push({type:'Discover', amount:amount});
+					            	balance = Math.abs(balance - amount);
+									$$('#remaining-balance').text(formatNumberMoney(balance));
+									invoice.drawPayments(payments, '#payment-pop');
+									$$('#balance-input').val('');
+					            }
+					        },
+					        {
+					            text: 'Mastercard',
+					            onClick: function () {
+					            	payments.push({type:'Mastercard', amount:amount});
+					            	balance = Math.abs(balance - amount);
+									$$('#remaining-balance').text(formatNumberMoney(balance));
+									invoice.drawPayments(payments, '#payment-pop');
+									$$('#balance-input').val('');
+					            }
+					        },
+					        {
+					            text: 'Visa',
+					            onClick: function () {
+					            	payments.push({type:'Visa', amount:amount});
+					            	balance = Math.abs(balance - amount);
+									$$('#remaining-balance').text(formatNumberMoney(balance));
+									invoice.drawPayments(payments, '#payment-pop');
+									$$('#balance-input').val('');
+					            }
+					        },
+					        {
+					            text: 'Cancel',
+					            color: 'red',
+					            onClick: function () {
+					            }
+					        },
+					    ];
+					    myApp.actions(buttons);
 						break;
 					case 'Finance':
-						payments.push({type:type, amount:amount});
+						var buttons = [
+					        {
+					            text: 'Synchrony (GE)',
+					            onClick: function () {
+					            	payments.push({type:'Synchrony (GE)', amount:amount});
+					            	balance = Math.abs(balance - amount);
+									$$('#remaining-balance').text(formatNumberMoney(balance));
+									invoice.drawPayments(payments, '#payment-pop');
+									$$('#balance-input').val('');
+					            }
+					        },
+					        {
+					            text: 'ITEX',
+					            onClick: function () {
+					            	payments.push({type:'ITEX', amount:amount});
+					            	balance = Math.abs(balance - amount);
+									$$('#remaining-balance').text(formatNumberMoney(balance));
+									invoice.drawPayments(payments, '#payment-pop');
+									$$('#balance-input').val('');
+					            }
+					        },
+					        {
+					            text: 'Cancel',
+					            color: 'red',
+					            onClick: function () {
+					            }
+					        },
+					    ];
+					    myApp.actions(buttons);
 						break;
 					case 'Paypal':
 						payments.push({type:type, amount:amount});
@@ -672,7 +782,7 @@
 						$$('#balance-input').val(balance);
 						break;
 				}
-				if(type != 'Full'){
+				if(type != 'Full' && type != "Finance" && type != 'Charge'){
 					balance = Math.abs(balance - amount);
 					$$('#remaining-balance').text(formatNumberMoney(balance));
 					invoice.drawPayments(payments, '#payment-pop');
@@ -688,7 +798,12 @@
 			if(invoice.getRemainingBalance() > 0){
 				invoice.drawPayments(payments, '#customer-cart-div');
 			} else {
-				mainView.router.loadPage('pos__thankyou.html');
+				invoice.employee = EMPLOYEE;
+				TM.createInvoice(invoice, function(invoiceData){
+					console.log(invoiceData);
+			        mainView.router.load({url:'pos__thankyou.html', query:{data:invoiceData, email:invoice.customer.email}});
+			        invoice.reinit();
+			    });
 			}
 		});
 	};

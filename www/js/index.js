@@ -154,6 +154,7 @@ $$(document).on('deviceready', function() {
 
     $$('.framework7-root').on('click', '.minimize-line', function(){
         var elem = $$(this);
+        invoice.salesLines[elem.data('id')].minimized = true;
         var elemContent = elem.parent().parent().find('.card-content');
         elem.removeClass('minimize-line');
         elem.addClass('restore-line');
@@ -162,6 +163,7 @@ $$(document).on('deviceready', function() {
     });
     $$('.framework7-root').on('click', '.restore-line', function(){
         var elem = $$(this);
+        invoice.salesLines[elem.data('id')].minimized = false;
         var elemContent = elem.parent().parent().find('.card-content');
         elem.removeClass('restore-line');
         elem.addClass('minimize-line');
@@ -176,7 +178,6 @@ $$(document).on('deviceready', function() {
             (function(search){
                 searchDelayTimer = setTimeout(function() {
                     TM.searchInventory(search, function(data){
-                    	consool(data);
                         $$('.search-results').empty();
                         var listNames = data.inventoryNames;
                         var listSkus = data.inventorySkus;
@@ -740,14 +741,47 @@ myApp.onPageInit('pos_summary', function (page) {
 });
 
 myApp.onPageInit('pos__thankyou', function (page) {
-    $$('#text').text('This was added by Jquery');
+    invoice.employee = EMPLOYEE;
+
+    var invoiceno = page.query.data.invoicenumber;
+
+    $$('#ty_invoice_number').text(page.query.data.invoicenumber);
+
+    $$('#email-rec').on('click', function(){
+        var searchModal = myApp.modal({
+            title:  'Email Receipt',
+            text: '<input id="email-rec-input">',
+            afterText: '',
+            buttons: [
+              {
+                text: 'Cancel', onClick: function() { }
+              },
+              {
+                text: 'Send', onClick: function() {
+                    TM.emailInvoice($$('#email-rec-input').val(), invoiceno, consool);
+                }
+              },
+            ],
+        });
+        $$('#email-rec-input').val(page.query.email);
+    });
+
+    $$('#print-rec').on('click', function(){
+        TM.listPrinters(function(printerData){
+            choicelistModal({
+                type: 'modal',
+                data: printerData.altnames,
+                success: function(index,title,data) {
+                    TM.printInvoice(invoiceno, 'invoice', printerData.names[index], consool);
+                }
+            });
+        });
+    });
 
     $$('#none-rec').on('click', function(){
         mainView.router.loadPage('profile.html');
     });
 });
-
-
 
 myApp.onPageInit('clk_home', function(page){
     var currentFullDate = new Date();
@@ -804,9 +838,11 @@ myApp.onPageInit('clk_home', function(page){
                 if(data.ok && event == 'start'){
                     $$('#clockin-button').addClass('inactive');
                     $$('#clockout-button').removeClass('inactive');
+                    toast('Clocked In', SHORT);
                 } else if(data.ok && event == 'stop'){
-                     $$('#clockin-button').removeClass('inactive');
+                    $$('#clockin-button').removeClass('inactive');
                     $$('#clockout-button').addClass('inactive');
+                    toast('Clocked Out', SHORT);
                 }
             });
         }

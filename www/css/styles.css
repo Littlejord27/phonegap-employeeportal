@@ -229,6 +229,17 @@ tr:nth-child(even) {
   background-color: initial;
 }
 
+#search-returning-box{
+  width: 80%;
+  border-right:  none;
+  border-left:  none;
+  border-top:  none;
+  height: 2em;
+  font-size: 16px;
+  padding-top: 15px;
+  background-color: initial;
+}
+
 .search-results{
   height: 300px;
   overflow: auto
@@ -263,6 +274,20 @@ tr:nth-child(even) {
 .location-edit-card{
   border: 1px solid black;
   border-radius: 5px;
+}
+
+#new-sale{
+  padding-top: 50%;
+  text-align: center;
+}
+#returning-customer{
+  background-color: rgb(71, 188, 195);
+  font-size: 18px;
+  padding: 10px;
+  width: 250px;
+  border-radius: 10px;
+  color: white;
+  margin: auto;
 }
 
 /* Delivery */
@@ -383,8 +408,11 @@ tr:nth-child(even) {
 .payment-type-button{
   border: 1px solid rgb(205, 205, 205);
   background: white;
-  padding: 4px;
+  padding: 10px;
   border-radius: 10px;
+}
+.charge-type{
+
 }
 
 .payment-popup .row{
@@ -394,18 +422,21 @@ tr:nth-child(even) {
 
 /* Thank You */
 
-.rec-method-button{
+#rec-methods{
   text-align: center;
-  padding: 30px 0;
+  padding-top: 30%;
 }
 
-.rec-method-button span{
+.rec-method-button{
+  width: 200px;
+  height: 60px;
+  padding-top: 15px;
+  font-size: 30px;
+  border-radius: 10px;
+  margin: 15px auto;
   border: 1px solid black;
   background-color: rgb(71, 191, 208);
   color: white;
-  padding: 30px 60px;
-  font-size: 40px;
-  border-radius: 10px;
 }
 
 
@@ -481,6 +512,11 @@ tr:nth-child(even) {
   margin-bottom: 5px !important;
 }
 
+/* Clock */
+.message.active .message-text{
+  background-color: #bdbdc1;
+}
+
 /* Misc */
 
 .toolbar-header{
@@ -506,14 +542,57 @@ tr:nth-child(even) {
 
 .custom-discount-modal{
   margin-top: -235px !important;
+  background-color: white;
   left: 39%;
   width: 350px;
 }
+.custom-discount-list-item{
+  border: 1px solid black;
+  height: 20px;
+  max-width: 20px;
+}
+.custom-discount-item-select{
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(0,0,0,0.2);
+}
+.custom-discount-amount-div{
+  text-align: center;
+  margin-top: 10px;
+}
+#custom-discount-amount{
+  width: 50%;
+  border: 1px solid rgba(0,0,0,0.3);
+  border-radius: 10px;
+  display: inline;
+  text-align: right;
+  padding-right: 15px;
+}
+.custom-discount-type{
+  border: 1px solid black;
+  padding: 15px;
+  font-size: 40px;
+}
+.custom-discount-type-div{
+  margin-top: 45px;
+  padding-bottom: 25px;
+}
+.custom-discount-type.active{
+  background-color: rgb(71, 188, 195);
+}
 
+.active .custom-discount-list-item{
+  background-color: rgb(71, 188, 195);
+}
+
+.custome-discount-or{
+  font-size: 15px;
+  margin: 10px;
+}
 #cart-discount-list{
   padding-left: 0;
   padding-top: 20px;
 }
+
 
 .img-lightbox{
   position: absolute;

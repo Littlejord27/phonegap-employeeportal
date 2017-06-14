@@ -35,12 +35,32 @@ function drawMessages(data){
 }
 
 var timeoutObj;
+var newestMessageId;
 function startMessageCheck(conversationId, messageId){
     timeoutObj = setTimeout(function(){
         TM.checkNewMessages(conversationId, messageId, function(data){
-            console.log(data);
+            for (var i = 0; i < data.messages.length; i++) {
+                var messageHTML = 'Error loading Message - '+data.messages[i].id;
+                if(data.messages[i].sender == EMPLOYEE.id){
+                    messageHTML = '<div class="message message-sent '+(i == data.messages.length ? 'active': '')+'">' +
+                        '<div class="message-name">'+data.messages[i].sendername+'</div>' +
+                        '<div class="message-text">'+data.messages[i].message+'</div>' +
+                    '</div>';
+                } else {
+                    messageHTML = '<div class="message message-with-avatar message-received '+(i == data.messages.length ? 'active': '')+'">' +
+                        '<div class="message-name">'+data.messages[i].sendername+'</div>' +
+                        '<div class="message-text">'+data.messages[i].message+'</div>' +
+                        '<div style="background-image:url(http://lorempixel.com/output/people-q-c-100-100-9.jpg)" class="message-avatar"></div>' +
+                    '</div>';
+                }
+                $$('.messages').append(messageHTML);
+            }
+            if(data.messages.length > 0){
+                startMessageCheck(conversationId, data.messages[data.messages.length-1].id);
+            } else{
+                startMessageCheck(conversationId, messageId);
+            }
         });
-        startMessageCheck(conversationId, messageId);
     }, 5000);
 }
 

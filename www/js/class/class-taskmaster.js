@@ -43,6 +43,20 @@ function TaskMaster (){
 	   	});
 	}
 
+	this.createInvoice = function(invoice, onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			method: 'POST',
+			data: {	
+				action: 'createInvoice',
+				invoice: invoice
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
 	this.deleteQuote = function(quoteId, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
@@ -311,7 +325,7 @@ function TaskMaster (){
 				url: '/4DACTION/api',
 				data: {
 					action: 'printInvoice',
-					invoiceid: invoicenumber,
+					invoicenumber: invoicenumber,
 					printer: printer
 				},
 				success: function(data) {
@@ -418,9 +432,9 @@ function TaskMaster (){
 	this.transferInvoice = function(station, invoice, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
+			method: 'POST',
 			data: {	
 				action: 'transferInvoice',
-				method: 'POST',
 				station: station,
 				invoice: invoice
 			},

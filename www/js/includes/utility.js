@@ -141,7 +141,8 @@ function getLocationNickname(locationid){
 function serviceActions(){
     var less = '<-- Draft & Quotes';
     var more = '--> Invoice Actions';
-    var actions = [less, 'Discount Actions', 'Fee Actions', more]; 
+    //var actions = [less, 'Discount Actions', 'Fee Actions', more];
+    var actions = [less, 'Discount Actions', more];
     choicelistModal({
         type: 'modal',
         title: 'Services:',
@@ -274,9 +275,9 @@ function transferInvoiceModal(stations){
         type: 'modal',
         data: stations,
         success: function(index,title,data) {
-            //TM.transferInvoice(data[index], invoice, consool);
             invoice.invoiceLocationID = EMPLOYEE.invoiceLocationID;
-            TM.debugPost(invoice, consool);
+            invoice.employee = EMPLOYEE;
+            TM.transferInvoice(data[index], invoice, consool);
         }
     });
 }
@@ -351,18 +352,94 @@ function standardDiscountModal(){
 }
 
 function customDiscountModal(){
+    var items = [], type = "", amt = "";
+    var customItemSelectionHtml = '<div class="list-block">' +
+      '<ul class="custom-discount-item-select">' +
+        '<li class="accordion-item"><a href="#" class="item-content item-link">' +
+            '<div class="item-inner">' +
+              '<div class="item-title">Select Items</div>' +
+            '</div></a>' +
+          '<div class="accordion-item-content">' +
+            '<div class="content-block">' +
+              '<ul id="cart-discount-list">' +
+              '</ul>' +
+            '</div>' +
+          '</div>' +
+        '</li>' +
+      '</ul>' +
+      '<div class="custom-discount-type-div"><span class="custom-discount-type" data-type="dollar">$</span><span class="custom-discount-or">OR</span><span class="custom-discount-type" data-type="percent">%</span></div>' +
+      '<div class="custom-discount-amount-div"><input type="number" id="custom-discount-amount"></div>' +
+    '</div>';
+
     var customDiscountModal = myApp.modal({
         title:  'Custom Discount',
-        text: '<div class="content-block"><input type="checkbox" id="whole-invoice-discount"><label id="whole-invoice-discount-label" for="whole-invoice-discount">Whole Invoice Discount</label><ul id="cart-discount-list"></ul><div id="custom-discount-section"></div></div>',
+        text: customItemSelectionHtml,
         buttons: [
           {
             text: 'Cancel', onClick: function() { }
           },
+          {
+            text: 'Add', onClick: function() { }
+          },
         ],
     });
+
     $$(customDiscountModal).addClass('custom-discount-modal');
+
+    var addButton = $$(customDiscountModal).find('.modal-button')[1];
+    
+    $$(addButton).attr('disabled',true);
+
     for (var i = 0; i < invoice.salesLines.length; i++) {
-        $$('#cart-discount-list').append('<input type="checkbox" id="discount-item'+i+'"><label id="discount-item'+i+'-label" for="discount-item'+i+'">'+invoice.salesLines[i].name+'</label>');
+        var customItem = '<div class="row item-select" data-id="'+i+'">' +
+            '<div class="col-15">' +
+                '<div class="custom-discount-list-item"></div>' +
+            '</div>' +
+            '<div class="col-85">' +
+                '<span class="custom-discount-list-item-label">'+invoice.salesLines[i].name+'</span>' +
+            '</div>' +
+        '</div>';
+        $$('#cart-discount-list').append(customItem);
+    }
+    $$('.item-select').on('click', function(){
+        var elem = $$(this);
+        var lineId = $$(this).data('id');
+        if(elem.hasClass('active')){
+            elem.removeClass('active');
+            for(var i = 0; i < items.length; i++){
+                if(items[i] == lineId){
+                    items.splice(i, 1);
+                }
+            }
+            task(items, type, amt, addButton);
+        } else {
+            items.push(lineId);
+            elem.addClass('active');
+            task(items, type, amt, addButton);
+        }
+    });
+
+    $$('.custom-discount-type').on('click', function(){
+        $$('.custom-discount-type').removeClass('active');
+        $$(this).addClass('active');
+        type = $$(this).data('type');
+        task(items, type, amt, addButton);
+    });
+
+    $$('#custom-discount-amount').on('keyup', function(){
+        amt = $$(this).val();
+        task(items, type, amt, addButton);
+    });
+}
+
+function task(items, type, amt, addButton){
+    if(items.length > 0 && type != '' && amt > 0 && amt != ''){
+        consool(items);
+        consool(type);
+        consool(amt);
+        $$(addButton).attr('disabled',false);
+    } else {
+        $$(addButton).attr('disabled',true);
     }
 }
 
@@ -455,6 +532,7 @@ function saveQuote(){
             text: 'Save', onClick: function() {
                 var proposedName = $$('#quote-name-box').val();
                 invoice.setTitle(proposedName);
+                invoice.setPayments([]);
                 TM.saveQuote(invoice, function(data){
                 });
             }
@@ -573,7 +651,7 @@ var loginPopup = function(params){
                                 '<h2 class="center-align white">Employee Portal</h2>' +
                                 '<div class="bottom-center">' +
                                     '<div>' +
-                                        '<p class="center-align"><input type="number" id="password" placeholder="Password" class="password-login" pattern="\d*" inputmode="numeric"></p>' +
+                                        '<p class="center-align"><input type="number" id="password" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
                                         '<p class="center-align"><button class="login-button">Login</button></p>' +
                                         '<p class="center-align"> Forgot Password?</p>' +
                                         '<p class="center-align"> Contact Matt to reset.</p>' +
