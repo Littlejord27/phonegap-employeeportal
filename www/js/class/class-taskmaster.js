@@ -358,33 +358,19 @@ function TaskMaster (){
 	   	});
 	}
 
-	this.searchInventory = function(q, onSuccess){
+	this.sendFeedback = function(page, feedback, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
+			method: 'POST',
 			data: {
-				action: 'searchInventory',
-				q: q
+				action: 'sendFeedback',
+				page: page,
+				feedback: feedback
 			},
 			success: function(data) {
 				onSuccess(data);
 			}
-	   	});
-	}
-
-	this.searchinvoices = function(customerlastname, customerfirstname, customerphone, invoicenumber, onSuccess){
-		this.ajaxToServer({ 
-			url: '/4DACTION/api',
-			data: {
-				action: 'searchinvoices',
-				customerlastname: customerlastname,
-				customerfirstname: customerfirstname,
-				customerphone: customerphone,
-				invoicenumber: invoicenumber
-			},
-			success: function(data) {
-				onSuccess(data);
-			}			
-	   	});
+	   	});	
 	}
 
 	this.sendMessage = function(conversationid, message, onSuccess){
@@ -399,6 +385,35 @@ function TaskMaster (){
 				onSuccess(data);
 			}
 	   	});	
+	}
+
+	this.searchInventory = function(q, onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: {
+				action: 'searchInventory',
+				q: q
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
+	this.searchInvoices = function(customerlastname, customerfirstname, customerphone, invoicenumber, onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: {
+				action: 'searchInvoices',
+				customerlastname: customerlastname,
+				customerfirstname: customerfirstname,
+				customerphone: customerphone,
+				invoicenumber: invoicenumber
+			},
+			success: function(data) {
+				onSuccess(data);
+			}			
+	   	});
 	}
 
 	this.textInvoice = function(number, invoiceNumber, onSuccess){

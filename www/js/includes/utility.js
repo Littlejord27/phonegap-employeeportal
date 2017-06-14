@@ -73,6 +73,9 @@ function nameNotTaken(name){
 function decoupleObj(obj){
     return JSON.parse(JSON.stringify(obj));
 }
+function getPagename(){
+    return $$('.page-on-center').data('page');
+}
 function toast(bread, heat){
     window.plugins.toast.showWithOptions(
         {

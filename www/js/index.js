@@ -70,6 +70,35 @@ var mainView = myApp.addView('.view-main', {
 $$(document).on('deviceready', function() {
     invoice.load();
 
+    $$('.framework7-root').on('click', '.send-feedback', function(){
+        var pageName = myApp.getCurrentView().activePage.name;
+        var popupHTML = '<div class="popup feedback-popup center-align" id="feedback-pop">' +
+            '<div class="popup-header"><h1>Feedback</h1></div>' +
+            '<div class="content-block center-align">'+
+                '<p>Thank you for submitting your feedback. All Feedback will be reviewed by Matt and Jordan</p>' +
+                '<div class="left-align">Page:'+pageName+'</div>' +
+                '<textarea class="feedback-input"></textarea>' +
+                '<div id="submit-feedback">Submit</div>' +
+                '<i id="feedback-close" class="icon f7-icons">close</i>' +
+            '</div>' +
+        '</div>';
+        myApp.popup(popupHTML);
+        $$('#submit-feedback').on('click', function(){
+            var feedback = $$('.feedback-input').val();
+            if(feedback.length > 0){
+                TM.sendFeedback(pageName, feedback, function(){
+                    toast('Feedback Submitted', SHORT);
+                    $$('.feedback-input').val('');
+                });
+            } else {
+                toast('No Feedback', SHORT);
+            }
+        });
+        $$('#feedback-close').on('click', function(){
+            myApp.closeModal('#feedback-pop');
+        });
+    });
+
     $$('.framework7-root').on('click', '.home-icon', function(){
         mainView.router.back({url:'profile.html', force:true});
     });
@@ -230,7 +259,7 @@ $$(document).on('deviceready', function() {
     $$('#password').on('focus', function(){$$(this).val('');});
     $$('.framework7-root').on('click', '.login-button', function(){
         TM.login($$('#password').val(), function(employee){
-            notificationTimeoutStart();
+            notificationTimeoutStart(0,0,0,0);
             // TODO turn off notification check when logged out and invalid login.
             EMPLOYEE.id = employee.id;
             EMPLOYEE.name = employee.name;
@@ -736,7 +765,9 @@ myApp.onPageInit('pos_summary', function (page) {
 
     $$('.pos-pay').on('click', function(){
         //invoice.xfactorsModal();
-        invoice.paymentPopup();
+        if(invoice.totalAmount + invoice.delivery.cost > 0){
+        	invoice.paymentPopup();
+        }
     });
 });
 
@@ -906,6 +937,20 @@ myApp.onPageInit('msg_list', function(page){
         }
         $$('#conversations').append(conversationListHtml);
     });
+
+    $$('.compose-new-message').on('click', function(){
+    	var popupHTML = '<div class="popup payment-popup" id="payment-pop">' +
+			'<div class="popup-header"><h1>New Message</h1></div>' +
+			'<div class="content-block center-align"></div>' +
+			'<div class="toolbar messagebar">' +
+	          '<div class="toolbar-inner">' +
+	            '<textarea id="composed-message" placeholder="Message"></textarea><a id="send-message" href="#" class="link">Send</a>' +
+	          '</div>' +
+	        '</div>' +
+		'</div>';
+		myApp.popup(popupHTML);
+    });
+
 });
 
 myApp.onPageInit('msg_msg', function(page){

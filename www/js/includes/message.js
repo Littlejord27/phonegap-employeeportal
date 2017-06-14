@@ -64,12 +64,32 @@ function startMessageCheck(conversationId, messageId){
     }, 5000);
 }
 
-function notificationTimeoutStart(){
+function notificationTimeoutStart(eNum, mNum, pNum, tNum){
+    var message = '';
     TM.getNotifications(function(data){
-        if(data.total > 0){
-            //has notification
+        var eNumNew = data.notifications[0].amount;
+        var mNumNew = data.notifications[1].amount;
+        var pNumNew = data.notifications[2].amount;
+        var tNumNew = data.total;
+        if(data.total > 0 && tNumNew > tNum){
+            if(eNumNew > 0 && eNumNew > eNum){
+                message += (eNumNew-eNum) + ' new email'+(eNumNew-eNum > 1 ? 's' : '')+'. ' + eNumNew + ' total email'+(eNumNew > 1 ? 's' : '')+'.<br>';
+            }
+            if(mNumNew > 0 && mNumNew > mNum){
+                message += (mNumNew-mNum) + ' new email'+(mNumNew-mNum > 1 ? 's' : '')+'. ' + mNumNew + ' total email'+(mNumNew > 1 ? 's' : '')+'.<br>';
+            }
+            if(pNumNew > 0 && pNumNew > pNum){
+                message += (pNumNew-pNum) + ' new email'+(pNumNew-pNum > 1 ? 's' : '')+'. ' + pNumNew + ' total email'+(pNumNew > 1? 's' : '')+'.<br>';
+            }
+            myApp.addNotification({
+                title: 'Notifications',
+                message: message
+            });
         }
-        setTimeout(notificationTimeoutStart, 15000);
+        setTimeout(function(){
+            tNum = data.total;
+            notificationTimeoutStart(eNumNew, mNumNew, pNumNew, tNum);
+        }, 15000);
     });
 }
 

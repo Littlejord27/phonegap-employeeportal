@@ -652,7 +652,7 @@
 								'<div class="row popup-action-button-div">' +
 									'<div class="col-30 popup-action-button close-popup" style="background-color:red;"><p>Close</p></div>'+
 									'<div class="col-10"></div>'+
-									'<div class="col-30 popup-action-button"><p>No Payment</p></div>'+
+									'<div class="col-30 popup-action-button skip-payment"><p>No Payment</p></div>'+
 									'<div class="col-30 popup-action-button add-payments"><p>Okay</p></div>'+
 								'</div>' +
 							'</div>'+
@@ -667,7 +667,23 @@
 			}
 		});
 
+		$$('.skip-payment').on('click', function(){
+
+			invoice.addPayments(payments);
+
+			myApp.closeModal('#payment-pop');
+
+			invoice.employee = EMPLOYEE;
+			TM.createInvoice(invoice, function(invoiceData){
+				console.log(invoiceData);
+		        mainView.router.load({url:'pos__thankyou.html', query:{data:invoiceData, email:invoice.customer.email}});
+		        invoice.reinit();
+		    });
+
+		});
+
 		$$('.payment-type-button').on('click', function(){
+			$$('.skip-payment').text('Down Payment');
 			var amount = $$('#balance-input').val();
 			var type = $$(this).data('type');
 			if(type == "Full" || type == "Charge" || type == "Finance" || amount > 0 && !isNaN(amount) && type != "Full"){
