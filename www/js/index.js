@@ -70,6 +70,8 @@ var mainView = myApp.addView('.view-main', {
 $$(document).on('deviceready', function() {
     invoice.load();
 
+    var deviceInfo = {model:device.model,platform:device.platform,version:device.version,manufacturer:device.manufacturer, resolution:{height:window.innerHeight,width:window.innerWidth}};
+
     $$('.framework7-root').on('click', '.send-feedback', function(){
         var pageName = myApp.getCurrentView().activePage.name;
         var popupHTML = '<div class="popup feedback-popup center-align" id="feedback-pop">' +
@@ -79,23 +81,19 @@ $$(document).on('deviceready', function() {
                 '<div class="left-align">Page:'+pageName+'</div>' +
                 '<textarea class="feedback-input"></textarea>' +
                 '<div id="submit-feedback">Submit</div>' +
-                '<i id="feedback-close" class="icon f7-icons">close</i>' +
             '</div>' +
         '</div>';
         myApp.popup(popupHTML);
         $$('#submit-feedback').on('click', function(){
             var feedback = $$('.feedback-input').val();
             if(feedback.length > 0){
-                TM.sendFeedback(pageName, feedback, function(){
+                TM.sendFeedback(pageName, feedback, deviceInfo, function(){
+                    myApp.closeModal('#feedback-pop');
                     toast('Feedback Submitted', SHORT);
-                    $$('.feedback-input').val('');
                 });
             } else {
                 toast('No Feedback', SHORT);
             }
-        });
-        $$('#feedback-close').on('click', function(){
-            myApp.closeModal('#feedback-pop');
         });
     });
 
@@ -258,6 +256,7 @@ $$(document).on('deviceready', function() {
 
     $$('#password').on('focus', function(){$$(this).val('');});
     $$('.framework7-root').on('click', '.login-button', function(){
+        myApp.showIndicator();
         TM.login($$('#password').val(), function(employee){
             notificationTimeoutStart(0,0,0,0);
             // TODO turn off notification check when logged out and invalid login.
@@ -267,6 +266,7 @@ $$(document).on('deviceready', function() {
             EMPLOYEE.locationid = employee.store;
             EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
             invoice.setSalesperson(EMPLOYEE.name);
+            myApp.hideIndicator();
             if($$('.login-popup').length > 0){
                 myApp.closeModal('.login-popup');
                 toast('Logged In - ' + EMPLOYEE.name, SHORT);
@@ -274,6 +274,7 @@ $$(document).on('deviceready', function() {
                 mainView.router.loadPage({url:'profile.html'});
             }
         }, function(error){
+            myApp.hideIndicator();
             if($$('.login-popup').length > 0){
                 toast('Invalid Login - Popup', SHORT);
             } else {
@@ -352,7 +353,7 @@ myApp.onPageInit('pos_cart', function (page) {
     function startSearch(){
         var searchModal = myApp.modal({
             title:  'Search',
-            text: '<input id="search-box">',
+            text: '<input id="search-box" placeholder="Search">',
             afterText: '<div class="list-block search-result-div"><ul class="search-results"></ul></div>',
             buttons: [
               {
@@ -361,6 +362,7 @@ myApp.onPageInit('pos_cart', function (page) {
             ],
         });
         $$(searchModal).addClass('search-modal');
+        $$('#search-box').focus();
     }
 
     function startScan(){
@@ -745,16 +747,16 @@ myApp.onPageInit('pos_summary', function (page) {
     if(invoice.salesLines.length < 1){
         $$('#customer-cart-div').hide();
         $$('#cart-title').hide();
-    } else {
-        $$('#summary-subtotal').text(formatNumberMoney(invoice.subtotalAmount));
-        $$('#summary-tax').text(formatNumberMoney(invoice.taxAmount));
-        $$('#summary-delivery').text(formatNumberMoney(invoice.delivery.cost));
-        $$('#summary-total').text(formatNumberMoney(invoice.totalAmount + invoice.delivery.cost));
-        if(invoice.totalAmount - invoice.getRemainingBalance() == 0){
-            $$('#summary-paid-label').hide();
-        } else {
-            $$('#summary-paid').text(formatNumberMoney(invoice.getRemainingBalance()));
-        }
+    }
+
+    $$('#summary-subtotal').text(formatNumberMoney(invoice.subtotalAmount));
+    $$('#summary-tax').text(formatNumberMoney(invoice.taxAmount));
+    $$('#summary-delivery').text(formatNumberMoney(invoice.delivery.cost));
+    $$('#summary-total').text(formatNumberMoney(invoice.totalAmount + invoice.delivery.cost));
+    $$('#summary-paid').text(formatNumberMoney(invoice.getRemainingBalance()));
+
+    if(invoice.payments.length > 0){
+        invoice.drawPayments(invoice.payments, '#customer-cart-div');
     }
 
     if(invoice.delivery.notes.length > 0){
@@ -939,14 +941,12 @@ myApp.onPageInit('msg_list', function(page){
     });
 
     $$('.compose-new-message').on('click', function(){
-    	var popupHTML = '<div class="popup payment-popup" id="payment-pop">' +
-			'<div class="popup-header"><h1>New Message</h1></div>' +
-			'<div class="content-block center-align"></div>' +
-			'<div class="toolbar messagebar">' +
-	          '<div class="toolbar-inner">' +
-	            '<textarea id="composed-message" placeholder="Message"></textarea><a id="send-message" href="#" class="link">Send</a>' +
-	          '</div>' +
-	        '</div>' +
+    	var popupHTML = '<div class="popup payment-popup" id="compose-pop">' +
+			'<div class="popup-header"><h1 style="margin-bottom: 0;">New Message</h1></div>' +
+			'<div class="compose-body"></div>' +
+            '<div class="compose-message-bar">' +
+                '<textarea id="composed-message" placeholder="Message"></textarea><a id="send-message" href="#" class="link">Send</a>' +
+            '</div>' +
 		'</div>';
 		myApp.popup(popupHTML);
     });

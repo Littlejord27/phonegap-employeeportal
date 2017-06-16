@@ -419,6 +419,10 @@ tr:nth-child(even) {
 
 }
 
+.skip-payment{
+  min-height: 47px;
+}
+
 .payment-popup .row{
   height: 50px;
 }
@@ -519,6 +523,21 @@ tr:nth-child(even) {
 /* Clock */
 .message.active .message-text{
   background-color: #bdbdc1;
+}
+
+/* Message */
+
+.compose-message-bar{
+  position: absolute;
+  width: 100%;
+  bottom: 0px;
+}
+.compose-body{
+  height: 100%;
+  background: white;
+}
+#composed-message{
+  width: 80%
 }
 
 /* Feedback */

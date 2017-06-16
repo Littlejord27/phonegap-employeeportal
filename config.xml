@@ -18,6 +18,17 @@
     <platform name="android">
         <preference name="android-minSdkVersion" value="14" />
         <allow-intent href="market:*" />
+        <icon src="www/res/icon/android/icon-drawable-ldpi.png" qualifier="ldpi" />
+        <icon src="www/res/icon/android/icon-drawable-mdpi.png" qualifier="mdpi" />
+        <icon src="www/res/icon/android/icon-drawable-hdpi.png" qualifier="hdpi" />
+        <icon src="www/res/icon/android/icon-drawable-xhdpi.png" qualifier="xhdpi" />
+        <icon src="www/res/icon/android/icon-drawable-xxhdpi.png" qualifier="xxhdpi" />
+        <splash src="www/res/screen/android/splashscreen-drawable-ldpi.png" platform="android" qualifier="ldpi" />
+        <splash src="www/res/screen/android/splashscreen-drawable-mdpi.png" platform="android" qualifier="mdpi" />
+        <splash src="www/res/screen/android/splashscreen-drawable-hdpi.png" platform="android" qualifier="hdpi" />
+        <splash src="www/res/screen/android/splashscreen-drawable-xhdpi.png" platform="android" qualifier="xhdpi" />
+        <splash src="www/res/screen/android/splashscreen-drawable-xxhdpi.png" platform="android" qualifier="xxhdpi" />
+        <splash src="www/res/screen/android/splashscreen-drawable-xxxhdpi.png" platform="android" qualifier="xxxhdpi" />
     </platform>
     <platform name="ios">
         <allow-intent href="itms:*" />

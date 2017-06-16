@@ -132,6 +132,12 @@
 		NativeStorage.setItem('payments', JSON.stringify(this.payments), nsSetNoop, noop);
 	}
 
+	Invoice.prototype.deletePayment = function(id){
+		this.payments.splice(id, 1);
+		this.getRemainingBalance();
+		NativeStorage.setItem('payments', JSON.stringify(this.payments), nsSetNoop, noop);
+	}
+
 	Invoice.prototype.addDiscount = function(discount){
 		for (var i = 0; i < this.discounts.length; i++) {
 			if(this.discounts[i].type == discount.type){
@@ -490,6 +496,16 @@
 
 	Invoice.prototype.itemPopup = function(item){
 		var stockTable 	= 	createStockTable(item.stock);
+		console.log(stockTable);
+		console.log(item.model);
+		console.log(item.brand);
+		console.log(item.categoryname);
+		console.log(item.size);
+		console.log(item.color);
+		console.log(item.material);
+		console.log(item.imageurl);
+		console.log(formatNumberMoney(item.retailAmount));
+		console.log(item.sku);
 		var popupHTML = '<div class="popup stock-popup">'+
 							'<div class="content-block center-align">'+
 								'<div><h1>'+item.model+'</h1></div>'+
@@ -572,10 +588,14 @@
 									'<th></th>' +
 								'</tr>';
 		for (var i = 0; i < stock.length; i++) {
+			console.log(stockTable);
 			if(stock[i].locationid!=42){
-				stock[length-1].onorderavailable += stock[i].onorderavailable;
+				consool('Before first');
+				//stock[stock.length-1].onorderavailable += stock[i].onorderavailable;
+				consool('After First');
 			}
 			if(stock[i].available > 0){
+				consool('Before Second');
 				var locationNickname = getLocationNickname(stock[i].locationid);
 				var stockLocationLine =	'<tr id="locationLine'+i+'" class="locationLine">' +
 											'<td>'+locationNickname+ ' ' +((stock[i].locationid==42) ? '<span class="orange">'+(stock[i].onorderavailable > 0 ? '- '+stock[i].onorderavailable : '' )+'</span>' : '- '+stock[i].available)+'</td>' +
@@ -588,11 +608,18 @@
 											'</div></td>' +
 										'</tr>';
 				stockTable += stockLocationLine;
+				consool('After Second');
+				console.log(stockTable);
 			} else {
+				consool('Before Third');
 				stockTable += '<tr id="locationLine'+i+'" class="locationLine"><td colspan="3" style="text-align: center;">'+stock[i].locationname+' - Out Of Stock</td></tr>';
+				consool('After Third');
+				console.log(stockTable);
 			}
 		}
+		console.log(stockTable);
 		stockTable += '</table>';
+		console.log(stockTable);
 		return stockTable;
 	}
 
@@ -650,16 +677,20 @@
 									'<div class="col-50"><p class="payment-type-button left-float" data-type="Multi">Multi</p></div>'+
 								'</div>' +
 								'<div class="row popup-action-button-div">' +
-									'<div class="col-30 popup-action-button close-popup" style="background-color:red;"><p>Close</p></div>'+
+									'<div class="col-30 popup-action-button close-popup close-payment-popup" style="background-color:red;"><p>Close</p></div>'+
 									'<div class="col-10"></div>'+
 									'<div class="col-30 popup-action-button skip-payment"><p>No Payment</p></div>'+
-									'<div class="col-30 popup-action-button add-payments"><p>Okay</p></div>'+
+									'<div class="col-30 popup-action-button add-payments"><p>Record</p></div>'+
 								'</div>' +
 							'</div>'+
 						'</div>';
 		myApp.popup(popupHTML);
 
 		invoice.drawPayments(invoice.payments, '#payment-pop');
+
+		$$('.close-payment-popup').on('click', function(){
+			invoice.drawPayments(invoice.payments, '#customer-cart-div');
+		});
 
 		$$('#balance-input').on('keyup', function(){
 			if(this.value > balance){
@@ -684,6 +715,7 @@
 
 		$$('.payment-type-button').on('click', function(){
 			$$('.skip-payment').text('Down Payment');
+			$$('.skip-payment').css('padding-top','5px');
 			var amount = $$('#balance-input').val();
 			var type = $$(this).data('type');
 			if(type == "Full" || type == "Charge" || type == "Finance" || amount > 0 && !isNaN(amount) && type != "Full"){
@@ -808,11 +840,10 @@
 		});
 		$$('.add-payments').on('click', function(){
 			invoice.addPayments(payments);
-			$$('#summary-paid').text(formatNumberMoney(invoice.getRemainingBalance()));
-			$$('#summary-paid-label').show();
+			$$('#summary-paid-label').show(); // TODO check this line out later
 			myApp.closeModal('#payment-pop');
 			if(invoice.getRemainingBalance() > 0){
-				invoice.drawPayments(payments, '#customer-cart-div');
+				invoice.drawPayments(invoice.payments, '#customer-cart-div');
 			} else {
 				invoice.employee = EMPLOYEE;
 				TM.createInvoice(invoice, function(invoiceData){
@@ -829,7 +860,11 @@
 		var html = '<div id="payment-popup-div" class="list-block"><ul>';
 		for (var i = payments.length - 1; i >= 0 ; i--) {
 			var paymentLine = 	'<li class="item-content">' +
-									'<div class="item-media"></div>' +
+									'<div class="item-media">'+
+										'<a href="#" class="link icon-only delete-payment" data-id="'+i+'">'+
+											'<i class="icon f7-icons">delete_round</i>'+
+										'</a>'+
+									'</div>' +
 									'<div class="item-inner">' +
 										'<div class="item-title">'+payments[i].amount+'</div>' +
 										'<div class="item-after">'+payments[i].type+'</div>' +
@@ -838,6 +873,13 @@
 			html += paymentLine;
 		}
 		$$(selector).append(html+'</ul></div>');
+		$$('#summary-paid').text(formatNumberMoney(this.getRemainingBalance()));
+		$$('.delete-payment').on('click', function(){
+			var elem = $$(this);
+			var id = elem.data('id');
+			invoice.deletePayment(id);
+			invoice.drawPayments(invoice.payments, selector);
+		});
 	}
 
 /* Discount Functions */

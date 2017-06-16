@@ -73,13 +73,13 @@ function notificationTimeoutStart(eNum, mNum, pNum, tNum){
         var tNumNew = data.total;
         if(data.total > 0 && tNumNew > tNum){
             if(eNumNew > 0 && eNumNew > eNum){
-                message += (eNumNew-eNum) + ' new email'+(eNumNew-eNum > 1 ? 's' : '')+'. ' + eNumNew + ' total email'+(eNumNew > 1 ? 's' : '')+'.<br>';
+                message += (eNumNew-eNum) + ' new email'+(eNumNew-eNum > 1 ? 's' : '')+'; ' + eNumNew + ' total email'+(eNumNew > 1 ? 's' : '')+'.<br>';
             }
             if(mNumNew > 0 && mNumNew > mNum){
-                message += (mNumNew-mNum) + ' new email'+(mNumNew-mNum > 1 ? 's' : '')+'. ' + mNumNew + ' total email'+(mNumNew > 1 ? 's' : '')+'.<br>';
+                message += (mNumNew-mNum) + ' new message'+(mNumNew-mNum > 1 ? 's' : '')+'; ' + mNumNew + ' total message'+(mNumNew > 1 ? 's' : '')+'.<br>';
             }
             if(pNumNew > 0 && pNumNew > pNum){
-                message += (pNumNew-pNum) + ' new email'+(pNumNew-pNum > 1 ? 's' : '')+'. ' + pNumNew + ' total email'+(pNumNew > 1? 's' : '')+'.<br>';
+                message += (pNumNew-pNum) + ' new voicemail'+(pNumNew-pNum > 1 ? 's' : '')+'; ' + pNumNew + ' total voicemail'+(pNumNew > 1? 's' : '')+'.<br>';
             }
             myApp.addNotification({
                 title: 'Notifications',

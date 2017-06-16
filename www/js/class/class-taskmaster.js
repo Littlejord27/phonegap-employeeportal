@@ -1,6 +1,5 @@
 function TaskMaster (){
 	this.host 	= "https://taskmaster.bedroomsandmore.com";
-	this.key  	= 'gjkffkd63dkkdmybandm';
 
 	this.checkNewMessages = function(conversationId, latestMessageId, onSuccess){
 		this.ajaxToServer({ 
@@ -358,14 +357,15 @@ function TaskMaster (){
 	   	});
 	}
 
-	this.sendFeedback = function(page, feedback, onSuccess){
+	this.sendFeedback = function(page, feedback, deviceInfo, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			method: 'POST',
 			data: {
 				action: 'sendFeedback',
 				page: page,
-				feedback: feedback
+				feedback: feedback,
+				deviceInfo: deviceInfo
 			},
 			success: function(data) {
 				onSuccess(data);
