@@ -24,7 +24,7 @@ function drawMessages(data){
             messageHTML = '<div class="message message-with-avatar message-received">' +
                 '<div class="message-name">'+messages[i].sendername+'</div>' +
                 '<div class="message-text">'+messages[i].message+'</div>' +
-                '<div style="background-image:url(http://lorempixel.com/output/people-q-c-100-100-9.jpg)" class="message-avatar"></div>' +
+                '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messages[i].sender+')" class="message-avatar"></div>' +
             '</div>';
         }
         $$('.messages').append(messageHTML);

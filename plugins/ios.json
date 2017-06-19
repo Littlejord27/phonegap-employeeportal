@@ -40,6 +40,14 @@
         },
         "cordova-plugin-x-toast": {
             "PACKAGE_NAME": "com.bedroomsandmore.employeeportal"
+        },
+        "cordova-plugin-camera": {
+            "CAMERA_USAGE_DESCRIPTION": " ",
+            "PHOTOLIBRARY_USAGE_DESCRIPTION": " ",
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "cordova-plugin-inappbrowser": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
         }
     },
     "dependent_plugins": {

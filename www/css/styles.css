@@ -16,6 +16,8 @@
 
 .fa-bug{
   color: white;
+  font-size: 25px;
+  padding-top: 5px;
 }
 
 .page-content{
@@ -262,6 +264,7 @@ tr:nth-child(even) {
   margin-top: -235px;
   left: 39%;
   width: 350px;
+  background-color: rgb(255,255,255);
 }
 
 .save-draft-modal{
@@ -446,6 +449,28 @@ tr:nth-child(even) {
   background-color: rgb(71, 191, 208);
   color: white;
 }
+
+/* Settings */
+
+.setting-popover{
+  width: 130px !important;
+}
+
+.setting-section{
+  padding: 0px 0 20px 20px;
+}
+
+.setting-section .inner-section{
+  padding: 0 10px 0 15px;
+}
+#change-profile{
+  background-color: rgb(71, 188, 195);
+  color: white;
+  border-radius: 10px;
+  margin-top: 10px;
+  font-size: 20px;
+}
+
 
 
 /* Clock */

@@ -59,12 +59,7 @@ switch(userSwitch){
 
 var mainView = myApp.addView('.view-main', {
     dynamicNavbar: true,
-    onAjaxStart: function (xhr) {
-        myApp.showIndicator();
-    },
-    onAjaxComplete: function (xhr) {
-        myApp.hideIndicator();
-    }
+    pushState : true
 });
 
 $$(document).on('deviceready', function() {
@@ -75,7 +70,7 @@ $$(document).on('deviceready', function() {
     $$('.framework7-root').on('click', '.send-feedback', function(){
         var pageName = myApp.getCurrentView().activePage.name;
         var popupHTML = '<div class="popup feedback-popup center-align" id="feedback-pop">' +
-            '<div class="popup-header"><h1>Feedback</h1></div>' +
+            '<div class="popup-header"><h1>Feedback</h1><i id="feedback-close" class="icon f7-icons">close</i></div>' +
             '<div class="content-block center-align">'+
                 '<p>Thank you for submitting your feedback. All Feedback will be reviewed by Matt and Jordan</p>' +
                 '<div class="left-align">Page:'+pageName+'</div>' +
@@ -95,6 +90,47 @@ $$(document).on('deviceready', function() {
                 toast('No Feedback', SHORT);
             }
         });
+        $$('#feedback-close').on('click', function(){
+            myApp.closeModal('#feedback-pop');
+        });
+    });
+
+    $$('.framework7-root').on('click', '.settings', function(){
+        var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
+        var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
+        var menu = '';
+
+        for (var i = 0; i < menuItems.length; i++) {
+            menu += '<li class="item-content" id="'+selectors[i]+'"><div class="item-inner"><div class="item-title">'+menuItems[i]+'</div></div></li>';
+        }
+
+        var clickedLink = this;
+        var popoverHTML = '<div class="popover setting-popover">' +
+                          '<div class="popover-inner">' +
+                            '<div class="list-block">' +
+                                menu +
+                            '</div>' +
+                          '</div>' +
+                        '</div>';
+        myApp.popover(popoverHTML, clickedLink);
+
+        $$('#print-setting-menu').on('click', function(){ // Print -- print-setting-menu
+            consool(this);
+        });
+
+        $$('#settinglink-setting-menu').on('click', function(){ // Settings -- settinglink-setting-menu
+            mainView.router.loadPage('settings.html');
+            myApp.closeModal('.setting-popover');
+        });
+
+        $$('#update-setting-menu').on('click', function(){ // Update -- update-setting-menu
+            consool(this);
+        });
+
+        $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu
+            logout();
+        });
+
     });
 
     $$('.framework7-root').on('click', '.home-icon', function(){
@@ -256,32 +292,7 @@ $$(document).on('deviceready', function() {
 
     $$('#password').on('focus', function(){$$(this).val('');});
     $$('.framework7-root').on('click', '.login-button', function(){
-        myApp.showIndicator();
-        TM.login($$('#password').val(), function(employee){
-            notificationTimeoutStart(0,0,0,0);
-            // TODO turn off notification check when logged out and invalid login.
-            EMPLOYEE.id = employee.id;
-            EMPLOYEE.name = employee.name;
-            EMPLOYEE.department = employee.department;
-            EMPLOYEE.locationid = employee.store;
-            EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
-            invoice.setSalesperson(EMPLOYEE.name);
-            myApp.hideIndicator();
-            if($$('.login-popup').length > 0){
-                myApp.closeModal('.login-popup');
-                toast('Logged In - ' + EMPLOYEE.name, SHORT);
-            } else {
-                mainView.router.loadPage({url:'profile.html'});
-            }
-        }, function(error){
-            myApp.hideIndicator();
-            if($$('.login-popup').length > 0){
-                toast('Invalid Login - Popup', SHORT);
-            } else {
-                toast('Invalid Login', SHORT);
-            }
-            //mainView.router.loadPage({url:'clk_home.html'});
-        });
+        login($$('#password').val());
     });
 
     $$('.framework7-root').on('click', '.lightbox-image', function(){
@@ -304,6 +315,14 @@ myApp.onPageInit('profile', function (page) {
 
     $$('.employee-name').text(EMPLOYEE.name);
     $$('.employee-department').text(EMPLOYEE.department);
+
+    $$('.email-popup').on('click', function(){
+        window.open('message://', '_system');
+    });
+
+    $$('.phone-dial').on('click', function(){
+       window.open('tel://', '_system'); 
+    });
 
     var mySwiper = myApp.swiper('.profile-swiper', {
     });
@@ -604,8 +623,10 @@ myApp.onPageInit('pos_delivery', function (page) {
         NativeStorage.getItem('sameBilling', function(obj){
             if(invoice.delivery.method == 'team' || invoice.delivery.method == 'shipping'){
                 if(obj){
+                    consool('set from billing');
                     setShippingFromBilling();
                 } else {
+                    consool('set from saved');
                     setShippingFromSaved();
                 }
             }
@@ -982,7 +1003,47 @@ myApp.onPageInit('tools', function(page){
 
 });
 
-myApp.onPageInit('user_setting', function(page){
+myApp.onPageInit('settings', function(page){
+
+    var camera = navigator.camera;
+    
+    $$('#change-profile').on('click', function(){
+        var options = {
+            quality: 90,
+            destinationType: camera.DestinationType.FILE_URI,
+            sourceType: camera.PictureSourceType.CAMERA, 
+            allowEdit: false,
+            encodingType: camera.EncodingType.JPEG,
+            mediaType: camera.MediaType.PICTURE,
+            correctOrientation: true,
+            saveToPhotoAlbum: true, 
+            cameraDirection: camera.Direction.FRONT
+        };
+        consool('options');
+        navigator.camera.getPicture(cameraCallback, cameraErrorback, options)
+    });
+
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fs) {
+        fs.root.getFile("newPersistentFile.txt", { create: true, exclusive: false }, function (fileEntry) {
+
+            console.log("fileEntry is file?" + fileEntry.isFile.toString());
+            // fileEntry.name == 'someFile.txt'
+            // fileEntry.fullPath == '/ someFile.txt'
+            writeFile(fileEntry, null);
+        }, function(){
+            consool('creating file error');
+        });
+    }, function(){
+        consool('Loading Filesystem Error');
+    });
+
+
+    function cameraCallback(success){
+        consool(success);
+    }
+    function cameraErrorback(error){
+        consool(error);
+    }
 
 });
 

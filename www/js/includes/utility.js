@@ -666,6 +666,39 @@ var loginPopup = function(params){
     
 };
 
+var login = function(password){
+    myApp.showIndicator();
+    TM.login(password, function(employee){
+        notificationTimeoutStart(0,0,0,0);
+        // TODO turn off notification check when logged out and invalid login.
+        EMPLOYEE.id = employee.id;
+        EMPLOYEE.name = employee.name;
+        EMPLOYEE.department = employee.department;
+        EMPLOYEE.locationid = employee.store;
+        EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
+        invoice.setSalesperson(EMPLOYEE.name);
+        myApp.hideIndicator();
+        if($$('.login-popup').length > 0){
+            myApp.closeModal('.login-popup');
+            toast('Logged In - ' + EMPLOYEE.name, SHORT);
+        } else {
+            mainView.router.loadPage({url:'profile.html'});
+        }
+    }, function(error){
+        myApp.hideIndicator();
+        if($$('.login-popup').length > 0){
+            toast('Invalid Login - Popup', SHORT);
+        } else {
+            toast('Invalid Login', SHORT);
+        }
+        //mainView.router.loadPage({url:'clk_home.html'});
+    });
+};
+
+var logout = function(){
+    
+}
+
 var choicelistModal= function(params) {
     // DEFAULTS
     var ModalParamsObject= {

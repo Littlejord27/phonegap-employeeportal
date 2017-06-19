@@ -347,8 +347,8 @@
 
 	// TODO: Show Discounts
 	Invoice.prototype.draw = function(selector){
-		//if(this.salesLines.length == 0){
-		if(false){
+		if(this.salesLines.length == 0){
+		//if(false){
 			if (selector === undefined || selector == '.cart-list'){
 				var newSaleHTML = '<div id="new-sale"><div id="new-sale-header"></div><div id="returning-customer">Returning</div></div>';
 				$$('.cart-list').empty();
@@ -357,9 +357,9 @@
 				$$('#returning-customer').on('click', function(){
 
 					var searchModal = myApp.modal({
-			            title:  'Search',
+			            title:  'Customer Lookup',
 			            text: '<input id="search-returning-box">',
-			            afterText: '<div class="list-block search-result-div"><ul class="search-results"></ul></div>',
+			            afterText: '<div class="list-block search-result-div"><ul class="search-results-lookup"></ul></div>',
 			            buttons: [
 			              {
 			                text: 'Cancel', onClick: function() { }
@@ -369,9 +369,25 @@
 
 			        $$(searchModal).addClass('search-modal');
 
+			        var lookupDelayTimer;
 			        $$('#search-returning-box').on('keyup', function(){
 				        if(this.value.length > 3){
-				            consool(this);
+				            clearTimeout(lookupDelayTimer);
+				            (function(search){
+				                lookupDelayTimer = setTimeout(function() {
+				                    TM.searchCustomer(search, function(data){
+				                        $$('.search-results-lookup').empty();
+				                        for (var i = 0; i < listNames.length; i++) {
+				                            //var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title search-result-item">'+listNames[i]+'</div></div></li>');
+				                            searchItem.on('click', function(){
+				                                //TM.getItemInfo($$(this).data('sku'), invoice.itemPopup);
+				                                consool(this);
+				                            });
+				                            //$$('.search-results-lookup').append(searchItem);
+				                        }
+				                    });
+				                }, 500); // Will do the ajax stuff after 1000 ms, or 1 s
+				            })(this.value);
 				        }
 				    });
 				});
@@ -588,11 +604,8 @@
 									'<th></th>' +
 								'</tr>';
 		for (var i = 0; i < stock.length; i++) {
-			console.log(stockTable);
 			if(stock[i].locationid!=42){
-				consool('Before first');
 				//stock[stock.length-1].onorderavailable += stock[i].onorderavailable;
-				consool('After First');
 			}
 			if(stock[i].available > 0){
 				consool('Before Second');
@@ -608,18 +621,11 @@
 											'</div></td>' +
 										'</tr>';
 				stockTable += stockLocationLine;
-				consool('After Second');
-				console.log(stockTable);
 			} else {
-				consool('Before Third');
 				stockTable += '<tr id="locationLine'+i+'" class="locationLine"><td colspan="3" style="text-align: center;">'+stock[i].locationname+' - Out Of Stock</td></tr>';
-				consool('After Third');
-				console.log(stockTable);
 			}
 		}
-		console.log(stockTable);
 		stockTable += '</table>';
-		console.log(stockTable);
 		return stockTable;
 	}
 
@@ -655,7 +661,7 @@
 							'<div class="content-block center-align">'+
 								'<div id="date-payment-div">Date:<b>'+todayDate+'</b></div>'+
 								'<div id="balance-payment-div">Balance:<b><span id="remaining-balance">'+formatNumberMoney(balance)+'</span></b></div>'+
-								'<div>Amount:<input id="balance-input" type="number"><span class="payment-type-button" data-type="Full"><-- Pay in Full</span></div>'+
+								'<div>Amount:<input id="balance-input" type="number"><span class="payment-type-button" data-type="Full" style="font-size: 30px; font-size: 3.5vw;"><-- Pay in Full</span></div>'+
 								'<div class="row">' +
 									'<div class="col-50"><p class="payment-type-button right-float" data-type="Cash">Cash</p></div>'+
 									'<div class="col-50"><p class="payment-type-button left-float" data-type="Check">Check</p></div>'+
