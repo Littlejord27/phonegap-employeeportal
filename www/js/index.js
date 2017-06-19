@@ -124,7 +124,7 @@ $$(document).on('deviceready', function() {
         });
 
         $$('#update-setting-menu').on('click', function(){ // Update -- update-setting-menu
-            consool(this);
+            window.open('https://bedroomsandmore.com/app', '_system');
         });
 
         $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu
@@ -964,6 +964,7 @@ myApp.onPageInit('msg_list', function(page){
     $$('.compose-new-message').on('click', function(){
     	var popupHTML = '<div class="popup payment-popup" id="compose-pop">' +
 			'<div class="popup-header"><h1 style="margin-bottom: 0;">New Message</h1></div>' +
+            '<div class="add-contacts">Add Contacts</div>' +
 			'<div class="compose-body"></div>' +
             '<div class="compose-message-bar">' +
                 '<textarea id="composed-message" placeholder="Message"></textarea><a id="send-message" href="#" class="link">Send</a>' +
