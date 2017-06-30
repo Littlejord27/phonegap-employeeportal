@@ -313,7 +313,8 @@ function draftAndQUoteActions(){
 function addDiscountModal(){
     choicelistModal({
         type: 'modal',
-        data: ['Standard Discount', 'Custom Discount', 'Memorial Day', '<-- Back'], // TODO : Get tax array from TM
+        //data: ['Standard Discount', 'Custom Discount', 'Memorial Day', '<-- Back'], // TODO : Get tax array from TM
+        data: ['Standard Discount', '<-- Back'],
         success: function(index,title,data) {
             switch(data[index]){
                 case 'Standard Discount':
@@ -654,7 +655,7 @@ var loginPopup = function(params){
                                 '<h2 class="center-align white">Employee Portal</h2>' +
                                 '<div class="bottom-center">' +
                                     '<div>' +
-                                        '<p class="center-align"><input type="number" id="password" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
+                                        '<p class="center-align"><input type="password" id="password" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
                                         '<p class="center-align"><button class="login-button">Login</button></p>' +
                                         '<p class="center-align"> Forgot Password?</p>' +
                                         '<p class="center-align"> Contact Matt to reset.</p>' +
@@ -686,6 +687,7 @@ var login = function(password){
         }
     }, function(error){
         myApp.hideIndicator();
+        consool(error);
         if($$('.login-popup').length > 0){
             toast('Invalid Login - Popup', SHORT);
         } else {

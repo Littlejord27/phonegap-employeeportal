@@ -347,8 +347,8 @@
 
 	// TODO: Show Discounts
 	Invoice.prototype.draw = function(selector){
-		if(this.salesLines.length == 0){
-		//if(false){
+		//if(this.salesLines.length == 0){
+		if(false){
 			if (selector === undefined || selector == '.cart-list'){
 				var newSaleHTML = '<div id="new-sale"><div id="new-sale-header"></div><div id="returning-customer">Returning</div></div>';
 				$$('.cart-list').empty();
@@ -416,10 +416,13 @@
 						    '</div>' +
 						    '<div class="card-footer">'+
 							    '<div class="row" style="width: 100%;">' +
-							    	'<div class="col-50">' +
+							    	'<div class="col-33">' +
 							    		'<p>' + formatNumberMoney(this.salesLines[i].retailAmount * this.salesLines[i].quantity) + '</p>'+
 							    	'</div>' +
-							    	'<div class="col-50 quantity-col-card right-float right-align" data-id="'+i+'">' +
+							    	'<div class="col-33 product-menu" data-id="'+i+'">' +
+							    		'<p class="center-align"><i class="icon f7-icons">bars</i></p>'+
+							    	'</div>' +
+							    	'<div class="col-33 quantity-col-card right-float right-align" data-id="'+i+'">' +
 							    		'<p>QTY:' + this.salesLines[i].quantity + '</p>'+
 							    	'</div>' +
 							    '</div>' +
@@ -512,19 +515,10 @@
 
 	Invoice.prototype.itemPopup = function(item){
 		var stockTable 	= 	createStockTable(item.stock);
-		console.log(stockTable);
-		console.log(item.model);
-		console.log(item.brand);
-		console.log(item.categoryname);
-		console.log(item.size);
-		console.log(item.color);
-		console.log(item.material);
-		console.log(item.imageurl);
-		console.log(formatNumberMoney(item.retailAmount));
-		console.log(item.sku);
 		var popupHTML = '<div class="popup stock-popup">'+
 							'<div class="content-block center-align">'+
 								'<div><h1>'+item.model+'</h1></div>'+
+								(item.collection != '' ? '<div><h3>'+item.collection+'</h3></div>' : '') +
 								'<div><h3>'+item.brand+'</h3></div>'+
 								'<div><p class="low-vis-black">'+item.categoryname+'</p></div>'+
 								'<div class="row attribute-border">' +
@@ -586,6 +580,24 @@
 				locationLine.find('input').val(inputAmt + 1);
 			}
 		});
+
+		$$('.attribute-border').on('click', function(){
+			var resizeModal = myApp.modal({
+	            title:  'Variation',
+	            text: '<div id="variation-chart"></div>',
+	            afterText: '<div>Change</div>',
+	            buttons: [
+	              {
+	                text: 'Cancel', onClick: function() { }
+	              },
+	            ],
+	        });
+	        $$(resizeModal).addClass('resize-modal');
+
+	        console.log(item.relatedVariations);
+	        var variationsHTML = '';
+	        $$('#variation-chart').append(variationsHTML);
+		});
 	};
 
 	function createStockTable(stock){
@@ -608,7 +620,6 @@
 				//stock[stock.length-1].onorderavailable += stock[i].onorderavailable;
 			}
 			if(stock[i].available > 0){
-				consool('Before Second');
 				var locationNickname = getLocationNickname(stock[i].locationid);
 				var stockLocationLine =	'<tr id="locationLine'+i+'" class="locationLine">' +
 											'<td>'+locationNickname+ ' ' +((stock[i].locationid==42) ? '<span class="orange">'+(stock[i].onorderavailable > 0 ? '- '+stock[i].onorderavailable : '' )+'</span>' : '- '+stock[i].available)+'</td>' +

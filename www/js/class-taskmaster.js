@@ -31,6 +31,7 @@ function TaskMaster (){
 	this.createConversation = function(users, message, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
+			method: 'POST',
 			data: {
 				action: 'createConversation',
 				users: users,
@@ -163,6 +164,7 @@ function TaskMaster (){
 	}
 
 	this.getItemInfo = function(sku, onSuccess){
+		myApp.showIndicator();
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
@@ -170,6 +172,7 @@ function TaskMaster (){
 				sku: sku
 			},
 			success: function(data) {
+				myApp.hideIndicator();
 				if(data.ok){
 					onSuccess({
                         brand:data.item.brand,
@@ -185,6 +188,8 @@ function TaskMaster (){
                         sku:data.item.sku,
                         stock:data.item.stock,
                         vendorsku:data.item.vendorsku,
+                        relatedVariations: data.item.relatedVariations,
+                        collection:data.item.collection,
                         toplevelcategoryname:data.item.toplevelcategoryname,
                         imageurl: (data.item.imageurl != '' ? data.item.imageurl : 'media/products/no-product-pic_icon.png')
                     });
@@ -268,7 +273,7 @@ function TaskMaster (){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
-				action: 'listPrinters'
+				action: 'a'
 			},
 			success: function(data) {
 				onSuccess(data);
@@ -371,6 +376,7 @@ function TaskMaster (){
 	}
 
 	this.searchInventory = function(q, onSuccess){
+		myApp.showIndicator();
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
@@ -378,6 +384,7 @@ function TaskMaster (){
 				q: q
 			},
 			success: function(data) {
+				myApp.hideIndicator();
 				onSuccess(data);
 			}
 	   	});
@@ -502,14 +509,6 @@ function TaskMaster (){
 	   	});
 	}
 
-	function logoutUser(data){
-		console.log('Failed - Need to Login');
-		console.log(data);
-		switch(data.action){
-			case 'errorLogin': loginPopup(); break;
-		}
-	}
-
 	this.debugPost = function(invoice, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
@@ -594,4 +593,13 @@ function TaskMaster (){
 			// ERROR: url required...
 		}
 	};
+
+	function logoutUser(data){
+		console.log('Failed - Need to Login');
+		console.log(data);
+		switch(data.action){
+			case 'errorLogin': loginPopup(); break;
+		}
+	}
+	
 }

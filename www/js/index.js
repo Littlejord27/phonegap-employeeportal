@@ -65,6 +65,8 @@ var mainView = myApp.addView('.view-main', {
 $$(document).on('deviceready', function() {
     invoice.load();
 
+    document.addEventListener("backbutton", function(){ consool('back captured');}, false);
+
     var deviceInfo = {model:device.model,platform:device.platform,version:device.version,manufacturer:device.manufacturer, resolution:{height:window.innerHeight,width:window.innerWidth}};
 
     $$('.framework7-root').on('click', '.send-feedback', function(){
@@ -96,8 +98,10 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.settings', function(){
-        var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
-        var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
+        //var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
+        //var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
+        var menuItems = ['Update', 'Logout'];
+        var selectors = ['update-setting-menu', 'logout-setting-menu'];
         var menu = '';
 
         for (var i = 0; i < menuItems.length; i++) {
@@ -127,8 +131,15 @@ $$(document).on('deviceready', function() {
             window.open('https://bedroomsandmore.com/app', '_system');
         });
 
-        $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu
-            logout();
+        $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu 
+            var EMPLOYEE = {
+                id:0,
+                name:'',
+                department:'',
+                locationid:0,
+                invoiceLocationID:0,
+            };
+            loginPopup();
         });
 
     });
@@ -143,7 +154,21 @@ $$(document).on('deviceready', function() {
 
     $$('.framework7-root').on('click', '.pos-actions', function(){
         serviceActions();
-    });
+    });	
+
+   	$$('.framework7-root').on('click', '.product-menu', function(){
+		var elem = $$(this);
+		var id = elem.data("id");
+		TM.getItemInfo(invoice.salesLines[id].sku, invoice.itemPopup);
+		/*
+		choicelistModal({
+            type: 'modal',
+            data: [],
+            success: function(index,title,data) {
+            }
+        });
+        */
+	});
 
     $$('.framework7-root').on('click', '.quantity-col-card', function(){
 		var elem = $$(this);
@@ -309,6 +334,16 @@ $$(document).on('deviceready', function() {
 
 myApp.onPageInit('profile', function (page) {
 
+    TM.getNotifications(function(data){
+        var eNum = data.notifications[0].amount;
+        var mNum = data.notifications[1].amount;
+        var pNum = data.notifications[2].amount;
+
+        $$('.email-popup .badge-notification').html('<span class="badge '+(eNum > 0 ? 'bg-green' : 'bg-red')+'">'+eNum+'</span>');
+        $$('.message-list-icon .badge-notification').html('<span class="badge '+(mNum > 0 ? 'bg-green' : 'bg-red')+'">'+mNum+'</span>');
+        $$('.phone-dial .badge-notification').html('<span class="badge '+(pNum > 0 ? 'bg-green' : 'bg-red')+'">'+pNum+'</span>');
+    });
+    
     $$('.admin-setting-link').on('click', function(){
         //adminmenupopover();
     });
@@ -354,6 +389,7 @@ myApp.onPageInit('profile', function (page) {
         );
     });
     navigator.splashscreen.hide();
+
 });
 
 myApp.onPageInit('pos_cart pos_customer pos_delivery pos_summary', function(page){
@@ -936,6 +972,10 @@ myApp.onPageInit('clk_home', function(page){
 
 myApp.onPageInit('msg_list', function(page){
 
+    $$('.msg-list-back').on('click', function(){
+        mainView.router.loadPage('profile.html');
+    });
+
     $$('#conversations').on('click', '.conversation', function(){
         var tarId = $$(this).data('id');
         mainView.router.load({url:'msg_msg.html', query:{id:tarId}});
@@ -952,7 +992,7 @@ myApp.onPageInit('msg_list', function(page){
                     '<div class="item-title">'+conversations[i].membersString+'</div>' +
                     '<div class="item-after">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].timestring : '')+'</div>' +
                   '</div>' +
-                  '<div class="item-subtitle">'+(conversations[i].newMessageStatusBool ? 'New Message from '+conversations[i].recentMessages[0].sendername : '')+'</div>' +
+                  '<div class="item-subtitle">'+(conversations[i].newMessageStatusBool ? '<span class="green-text">New Message</span> from '+conversations[i].recentMessages[0].sendername : '')+'</div>' +
                   '<div class="item-text">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].message : '')+'</div>' +
                 '</div>' +
               '</a>' +
@@ -962,21 +1002,17 @@ myApp.onPageInit('msg_list', function(page){
     });
 
     $$('.compose-new-message').on('click', function(){
-    	var popupHTML = '<div class="popup payment-popup" id="compose-pop">' +
-			'<div class="popup-header"><h1 style="margin-bottom: 0;">New Message</h1></div>' +
-            '<div class="add-contacts">Add Contacts</div>' +
-			'<div class="compose-body"></div>' +
-            '<div class="compose-message-bar">' +
-                '<textarea id="composed-message" placeholder="Message"></textarea><a id="send-message" href="#" class="link">Send</a>' +
-            '</div>' +
-		'</div>';
-		myApp.popup(popupHTML);
+        mainView.router.loadPage('msg_compose.html');
     });
 
 });
 
 myApp.onPageInit('msg_msg', function(page){
     var conversationId = page.query.id;
+
+    $$('.msg-msg-back').on('click', function(){
+        mainView.router.loadPage('msg_list.html');
+    });
 
     $$('.messages').empty();
     TM.getMessages(conversationId, drawMessages);
@@ -995,6 +1031,56 @@ myApp.onPageInit('msg_msg', function(page){
     });
 
 });
+
+myApp.onPageInit('msg_compose', function(page){
+    var selectedContacts = [];
+    TM.getEmployees(function(data){
+        var employees = data.employees;
+        var autocompleteStandaloneMultiple = myApp.autocomplete({
+            openIn: 'page', //open in page
+            opener: $$('#autocomplete-standalone-multiple'), //link that opens autocomplete
+            multiple: true, //allow multiple values
+            valueProperty: 'id',
+            textProperty: 'name',
+            source: function (autocomplete, query, render) {
+                var results = [];
+                if (query.length === 0) {
+                    render(results);
+                    return;
+                }
+                // Find matched items
+                for (var i = 0; i < employees.length; i++) {
+                    //if (employees[i].name.toLowerCase().indexOf(query.toLowerCase()) >= 0) results.push(employees[i].name + " (" + employees[i].id + ")");
+                    if (employees[i].name.toLowerCase().indexOf(query.toLowerCase()) >= 0) results.push(employees[i]);
+                }
+                // Render items by passing array with result items
+                render(results);
+            },
+            onChange: function (autocomplete, value) {
+                var selected = [];
+                selectedContacts = [];
+                for (var i = 0; i < value.length; i++) {
+                    selected.push(value[i].name);
+                    selectedContacts.push(value[i].id);
+                }
+                // Add item text value to item-after
+                $$('#autocomplete-standalone-multiple').find('.item-after').text(selected.join(', '));
+                // Add item value to input value
+                $$('#autocomplete-standalone-multiple').find('input').val(selected.join(', '));
+            }
+        });
+    });
+
+
+
+    $$('#send-message').on('click', function(){
+        var newMessage = $$('#composed-message').val();
+        TM.createConversation(selectedContacts, newMessage, function(data){
+            mainView.router.load({url:'msg_msg.html', query:{id:data.conversationId}});
+        });
+    });
+
+}); 
 
 myApp.onPageAfterBack('msg_msg', function(page){
     clearTimeout(timeoutObj);

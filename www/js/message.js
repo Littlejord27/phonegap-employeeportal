@@ -71,25 +71,36 @@ function notificationTimeoutStart(eNum, mNum, pNum, tNum){
         var mNumNew = data.notifications[1].amount;
         var pNumNew = data.notifications[2].amount;
         var tNumNew = data.total;
-        if(data.total > 0 && tNumNew > tNum){
-            if(eNumNew > 0 && eNumNew > eNum){
-                message += (eNumNew-eNum) + ' new email'+(eNumNew-eNum > 1 ? 's' : '')+'; ' + eNumNew + ' total email'+(eNumNew > 1 ? 's' : '')+'.<br>';
-            }
-            if(mNumNew > 0 && mNumNew > mNum){
-                message += (mNumNew-mNum) + ' new message'+(mNumNew-mNum > 1 ? 's' : '')+'; ' + mNumNew + ' total message'+(mNumNew > 1 ? 's' : '')+'.<br>';
-            }
-            if(pNumNew > 0 && pNumNew > pNum){
-                message += (pNumNew-pNum) + ' new voicemail'+(pNumNew-pNum > 1 ? 's' : '')+'; ' + pNumNew + ' total voicemail'+(pNumNew > 1? 's' : '')+'.<br>';
-            }
-            myApp.addNotification({
-                title: 'Notifications',
+
+        $$('.email-popup .badge-notification').html('<span class="badge '+(eNumNew > 0 ? 'bg-green' : 'bg-red')+'">'+eNumNew+'</span>');
+        $$('.message-list-icon .badge-notification').html('<span class="badge '+(mNumNew > 0 ? 'bg-green' : 'bg-red')+'">'+mNumNew+'</span>');
+        $$('.phone-dial .badge-notification').html('<span class="badge '+(pNumNew > 0 ? 'bg-green' : 'bg-red')+'">'+pNumNew+'</span>');
+
+        if(eNumNew > eNum){
+            message += (eNumNew-eNum) + ' new Email'+(eNumNew-eNum > 1 ? 's' : '')+'<br>';
+        }
+        if(mNumNew > mNum){
+            message += (mNumNew-mNum) + ' new Message'+(mNumNew-mNum > 1 ? 's' : '')+'<br>';
+        }
+        if(pNumNew > pNum){
+            message += (pNumNew-pNum) + ' new Voicemail'+(pNumNew-pNum > 1 ? 's' : '')+'<br>';
+        }
+
+        if(message != ''){
+            var notificationAlert = myApp.addNotification({
+                title: data.notificationsAlert,
                 message: message
             });
+
+            setTimeout(function(){
+                myApp.closeNotification(notificationAlert);
+            }, 4000);
         }
+
         setTimeout(function(){
             tNum = data.total;
             notificationTimeoutStart(eNumNew, mNumNew, pNumNew, tNum);
-        }, 15000);
+        }, 10000);
     });
 }
 

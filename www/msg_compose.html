@@ -1,0 +1,37 @@
+<!-- Top Navbar-->
+<div class="navbar">
+    <div class="navbar-inner">
+        <div class="left">
+            <a href="#" class="link back white"><i class="icon icon-back"></i><span>Back</span></a>
+        </div>
+        <div class="center">New Message</div>
+        <div class="right">
+            <a href="#" class="link icon-only send-feedback"><i class="fa fa-bug fa-2x" aria-hidden="true"></i></a>
+        </div>
+    </div>
+</div>
+<div class="pages">
+    <div data-page="msg_compose" class="page toolbar-fixed">
+        <div class="toolbar messagebar">
+          <div class="toolbar-inner">
+            <textarea id="composed-message" placeholder="Message"></textarea><a id="send-message" href="#" class="link">Send</a>
+          </div>
+        </div>
+        <div class="page-content messages-content">
+            <div class="list-block" style="margin-top: 5px;">
+              <ul>
+                <li>
+                  <a href="#" id="autocomplete-standalone-multiple" class="item-link item-content autocomplete-opener">
+                    <input type="hidden">
+                    <div class="item-inner">
+                      <div class="item-title">Send to</div>
+                      <div class="item-after"></div>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="messages"></div>
+        </div>
+    </div>
+</div>

@@ -97,16 +97,21 @@ div.navbar{
   padding: 20px 0;
 }
 
+#profile-header p{
+	color: white;
+}
+
 #contact-bar{
-  background-color: rgb(71, 183, 195);
-  padding-bottom: 10px;
+  background-color: rgb(66, 137, 139);
+  padding: 10px 0;
+  color: white;
 }
 
 .profile-swiper {
   max-height: 75%;
 }
 .swiper-slide {
-  background:lightblue;
+  background-color: white;
   padding: 10px 0;
 }
 .flex-container{
@@ -120,18 +125,24 @@ div.navbar{
   margin-bottom: 20px;
 }
 
-.flex-item.coming-soon{
+.coming-soon{
   opacity: 0.2;
 }
 
 .app-ico{
-  width: 80px;
+  height: 70px;
+  max-width: 90px;
 }
 .app-ico-title{
-
+  color: white;
 }
 #after-swiper{
 
+}
+.subapp{
+  background-color: rgb(97, 196, 201);
+  margin: 5px 10px;
+  padding: 5px 0;
 }
 
 /* PoS CSS */
@@ -276,6 +287,10 @@ tr:nth-child(even) {
   margin-top: -235px;
   left: 39%;
   width: 350px; 
+}
+.resize-modal{
+  z-index: 100001;
+  border: 1px solid grey;
 }
 
 .location-edit-card{
@@ -684,6 +699,9 @@ tr:nth-child(even) {
 .white{
   color: rgb(255, 255, 255);
 }
+.green-text{
+  color: green;
+}
 .green{
   background: green;
 }
@@ -760,15 +778,56 @@ Dark Teal: (66, 137, 139);
 Light Teal: (71, 188, 195);
 */
 
+#app-set0-landscape{
+	display: none;
+}
+#app-set1-landscape{
+	display: none;
+}
 /* iPad testing */
-@media screen and (orientation:portrait) and (min-width: 481px){
-  .ipad-test{
-    color: red;
-  }
+@media screen and (min-width: 481px){
+	#profile-image{
+		width: 160px;
+	}
+	#profile-header p{
+		font-size: 24px;
+	}
+	.app-ico{
+		height: 100px;
+		max-width: 120px;
+	}
+	.app-ico-title{
+		font-size: 30px;
+	}
+	#contact-bar i{
+		font-size: 40px
+	}
+}
+
+@media screen and (orientation:portrait){
+
 }
 
 @media screen and (orientation:landscape) and (min-width: 481px){
-  .ipad-test{
-    color: purple;
-  }
+  	#app-set0-landscape{
+		display: initial;
+	}
+	#app-set1-landscape{
+		display: initial;
+	}
+  	#app-set0-portrait{
+		display: none;
+	}
+	#app-set1-portrait{
+		display: none;
+	}
+
+	#app-set0-landscape .flex-item{
+	  flex-basis: 25%;
+	}
+
+	#app-set1-landscape .flex-item{
+	  flex-basis: 25%;
+	}
+
 }
