@@ -17,8 +17,8 @@ if [ "$#" -gt 0 ]
             phonegap build android --release -- --keystore=key.jks --storePassword=latona --alias=bnmkey --password=latona
             zipalign -v 4 platforms/android/build/outputs/apk/android-release.apk bnmportal.apk
 
-            scp B\&M\ Portal.ipa jordan@bedroomsandmore.com:/var/www/bedroomsandmore.com/app/ios/bnmportal.ipa
-            scp bnmportal.apk jordan@bedroomsandmore.com:/var/www/bedroomsandmore.com/app/android/bnmportal.apk
+            scp B\&M\ Portal.ipa jordan@10.1.10.13:/var/www/bedroomsandmore.com/app/ios/bnmportal.ipa
+            scp bnmportal.apk jordan@10.1.10.13:/var/www/bedroomsandmore.com/app/android/bnmportal.apk
     fi
     if [ "$1" == "min" ] 
         then
