@@ -303,7 +303,7 @@ function TaskMaster (){
             },
             success: function(data) {       
                 if (data.success) {
-                	onSuccess(data.employee);	
+                	onSuccess(data.employee);
                 } else {
                 	onFail(data.success);
                 }

@@ -39,28 +39,55 @@ var EMPLOYEE = {
     invoiceLocationID:0,
 };
 
-var userSwitch = 0;
-switch(userSwitch){
-    case 1:
-        EMPLOYEE.id = 42;
-        EMPLOYEE.name = 'JordanL';
-        EMPLOYEE.department = 'IT';
-        EMPLOYEE.locationid = 5;
-        EMPLOYEE.invoiceLocationID = 8;
-        break;
-    case 2:
-        EMPLOYEE.id = 16;
-        EMPLOYEE.name = 'MattD';
-        EMPLOYEE.department = 'IT';
-        EMPLOYEE.locationid = 5;
-        EMPLOYEE.invoiceLocationID = 8;
-        break;
-}
-
 var mainView = myApp.addView('.view-main', {
     dynamicNavbar: true,
     pushState : true
 });
+
+function setupPush(){
+    var push = PushNotification.init({
+        android: {},
+        browser: {},
+        ios: {
+            alert: "true",
+            badge: true,
+            sound: 'false'
+        },
+        windows: {}
+    });
+
+    push.on('registration', function(data){
+        var newRegId = data.registrationId;
+        if(EMPLOYEE.id == 42){
+            alert(newRegId);
+        }
+        NativeStorage.getItem('registrationId', function(obj){
+            var oldRegId = obj;
+            if(oldRegId !== newRegId){
+                NativeStorage.setItem('registrationId', newRegId, noop, noop);
+            }
+        }, function(error){
+            if(error.code == 2){
+                NativeStorage.setItem('registrationId', newRegId, noop, noop);
+            } else{
+                alert(error);
+            }
+        });
+    });
+
+    push.on('notification', function(data) {
+        if(EMPLOYEE.id == 42){
+            alert(JSON.stringify(data));
+        }
+    });
+
+
+    push.on('error', function(data) {
+        if(EMPLOYEE.id == 42){
+            alert(JSON.stringify(data));
+        }
+    });
+}
 
 $$(document).on('deviceready', function() {
     invoice.load();

@@ -671,6 +671,9 @@ var login = function(password){
     myApp.showIndicator();
     TM.login(password, function(employee){
         notificationTimeoutStart(0,0,0,0);
+
+        setupPush();
+
         // TODO turn off notification check when logged out and invalid login.
         EMPLOYEE.id = employee.id;
         EMPLOYEE.name = employee.name;
