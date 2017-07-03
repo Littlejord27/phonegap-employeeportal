@@ -655,8 +655,8 @@ var loginPopup = function(params){
                                 '<h2 class="center-align white">Employee Portal</h2>' +
                                 '<div class="bottom-center">' +
                                     '<div>' +
-                                        '<p class="center-align"><input type="password" id="password" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
-                                        '<p class="center-align"><button class="login-button">Login</button></p>' +
+                                        '<p class="center-align"><input type="password" id="password-popup" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
+                                        '<p class="center-align"><button class="login-popup-button">Login</button></p>' +
                                         '<p class="center-align"> Forgot Password?</p>' +
                                         '<p class="center-align"> Contact Matt to reset.</p>' +
                                     '</div>' +
@@ -664,7 +664,9 @@ var loginPopup = function(params){
                             '</div>' +
                         '</div>';
     myApp.popup(popupHTML);
-    
+    $$('.login-popup-button').on('click', function(){
+        login($$('#password-popup').val());
+    });
 };
 
 var login = function(password){
@@ -672,7 +674,9 @@ var login = function(password){
     TM.login(password, function(employee){
         notificationTimeoutStart(0,0,0,0);
 
-        setupPush();
+        if(!isAndroid){
+            setupPush();
+        }
 
         // TODO turn off notification check when logged out and invalid login.
         EMPLOYEE.id = employee.id;
@@ -699,10 +703,6 @@ var login = function(password){
         //mainView.router.loadPage({url:'clk_home.html'});
     });
 };
-
-var logout = function(){
-    
-}
 
 var choicelistModal= function(params) {
     // DEFAULTS

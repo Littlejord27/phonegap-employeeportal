@@ -58,9 +58,6 @@ function setupPush(){
 
     push.on('registration', function(data){
         var newRegId = data.registrationId;
-        if(EMPLOYEE.id == 42){
-            alert(newRegId);
-        }
         NativeStorage.getItem('registrationId', function(obj){
             var oldRegId = obj;
             if(oldRegId !== newRegId){
@@ -76,16 +73,13 @@ function setupPush(){
     });
 
     push.on('notification', function(data) {
-        if(EMPLOYEE.id == 42){
-            alert(JSON.stringify(data));
-        }
+        // TODO:
+        console.log(data);
     });
 
 
     push.on('error', function(data) {
-        if(EMPLOYEE.id == 42){
-            alert(JSON.stringify(data));
-        }
+        console.log(data);
     });
 }
 
@@ -155,7 +149,7 @@ $$(document).on('deviceready', function() {
         });
 
         $$('#update-setting-menu').on('click', function(){ // Update -- update-setting-menu
-            window.open('https://bedroomsandmore.com/app', '_system');
+            window.open('https://bedroomsandmore.com/app?noPassword=true', '_system');
         });
 
         $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu 
