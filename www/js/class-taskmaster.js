@@ -115,6 +115,7 @@ function TaskMaster (){
 	}
 
 	this.getConversations = function(onSuccess){
+		myApp.showIndicator();
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
@@ -122,6 +123,7 @@ function TaskMaster (){
 			},
 			success: function(data) {
 				onSuccess(data);
+				myApp.hideIndicator();
 			}
 	   	});
 	}
@@ -150,6 +152,21 @@ function TaskMaster (){
 	   	});
 	}
 
+	this.getEvents = function(onSuccess){
+		/*
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: {
+				action: 'getEvents',
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	   	*/
+	   	onSuccess([{startdate: '', enddate:'', title:'Tech Meeting', period:'BIWEEKLY'},{startdate: '', enddate: '', title:'Morning Meeting', period:'DAILY'},{startdate: '', enddate:'', title:'Meeting with Thane', period:'ONETIME'}]);
+	}
+
 	this.getinvoice = function(invoicenumber, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
@@ -172,7 +189,6 @@ function TaskMaster (){
 				sku: sku
 			},
 			success: function(data) {
-				myApp.hideIndicator();
 				if(data.ok){
 					onSuccess({
                         brand:data.item.brand,
@@ -193,12 +209,14 @@ function TaskMaster (){
                         toplevelcategoryname:data.item.toplevelcategoryname,
                         imageurl: (data.item.imageurl != '' ? data.item.imageurl : 'media/products/no-product-pic_icon.png')
                     });
+                    myApp.hideIndicator();
 				}
 			}
 	   	});
 	}
 
 	this.getMessages = function(conversationid, onSuccess){
+		myApp.showIndicator();
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
@@ -207,6 +225,7 @@ function TaskMaster (){
 			},
 			success: function(data) {
 				onSuccess(data);
+				myApp.hideIndicator();
 			}
 	   	});
 	}
@@ -269,6 +288,21 @@ function TaskMaster (){
 	   	});
 	}
 
+	this.getVariationSku = function(sku, options, onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			method: 'POST',
+			data: {
+				action: 'getVariationSku',
+				sku: sku,
+				options: options
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
 	this.listPrinters = function(onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
@@ -293,13 +327,13 @@ function TaskMaster (){
 	   	});
 	}
 
-	this.login = function(password , onSuccess, onFail){
+	this.login = function(password, pushRegistrationId, onSuccess, onFail){
 		this.ajaxToServer({
             method: 'POST',
             url: '/4DACTION/mobile_auth',
             data: {
                 password: password,
-                device: {},
+                pushRegistrationId: pushRegistrationId,
             },
             success: function(data) {       
                 if (data.success) {
@@ -384,8 +418,8 @@ function TaskMaster (){
 				q: q
 			},
 			success: function(data) {
-				myApp.hideIndicator();
 				onSuccess(data);
+				myApp.hideIndicator();
 			}
 	   	});
 	}
@@ -422,13 +456,14 @@ function TaskMaster (){
 	   	});	
 	}
 
-	this.sendMessage = function(conversationid, message, onSuccess){
+	this.sendMessage = function(conversationid, message, images, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
 				action: 'sendMessage',
 				conversationid: conversationid,
-				message: message
+				message: message,
+				images: images
 			},
 			success: function(data) {
 				onSuccess(data);
@@ -451,6 +486,7 @@ function TaskMaster (){
 	}
 
 	this.timeclock = function(employeeId, clockEvent, onSuccess){
+		myApp.showIndicator();
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
@@ -460,6 +496,7 @@ function TaskMaster (){
 			},
 			success: function(data) {
 				onSuccess(data);
+				myApp.hideIndicator();
 			}
 	   	});
 	}

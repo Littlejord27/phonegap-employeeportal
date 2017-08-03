@@ -103,7 +103,23 @@ function notificationTimeoutStart(eNum, mNum, pNum, tNum){
         }, 10000);
     });
 }
-
+function sendImage(imageData){
+    appendImage(imageData);
+}
+function sendImageError(message){
+    console.log(message);
+}
+function retrieveImage(imageData){
+    appendImage(imageData);
+}
+function retrieveImageError(message){
+    console.log(message);
+}
+function appendImage(imageData){
+    var prevImageCount = $$('.sending-image-div').length + 1;
+    $$('.toolbar-image-inner-area').append('<div id="held-image'+prevImageCount+'" class="sending-image-div"><i data-target="held-image'+prevImageCount+'" class="fa fa-times-circle-o delete-sending-image" aria-hidden="true"></i><img class="sending-image lightbox-image" height="100" width="70"></div>');
+    $$('#held-image'+prevImageCount+' img').attr('src', imageData);
+}
 function scrollMessageToBottom(){
     var lastMessage = $$( ".message" ).filter( 
         function(index){

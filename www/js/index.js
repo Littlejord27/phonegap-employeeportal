@@ -44,9 +44,15 @@ var mainView = myApp.addView('.view-main', {
     pushState : true
 });
 
+var push;
+var pushRegistrationId;
+
 function setupPush(){
-    var push = PushNotification.init({
-        android: {},
+    push = PushNotification.init({
+        android: {
+            sound: true,
+            vibrate: true,
+        },
         browser: {},
         ios: {
             alert: "true",
@@ -58,6 +64,7 @@ function setupPush(){
 
     push.on('registration', function(data){
         var newRegId = data.registrationId;
+        pushRegistrationId = newRegId;
         NativeStorage.getItem('registrationId', function(obj){
             var oldRegId = obj;
             if(oldRegId !== newRegId){
@@ -73,7 +80,15 @@ function setupPush(){
     });
 
     push.on('notification', function(data) {
-        // TODO:
+        var notificationData = data.additionalData;
+        var notificationType = notificationData.type;
+        switch(notificationType){
+            case 'message':
+                if(!notificationData.foreground){
+                    mainView.router.load({url:'msg_msg.html', query:{id:notificationData.conversationId}});
+                }
+                break;
+        }
         console.log(data);
     });
 
@@ -86,6 +101,8 @@ function setupPush(){
 $$(document).on('deviceready', function() {
     invoice.load();
 
+    setupPush();
+
     document.addEventListener("backbutton", function(){ consool('back captured');}, false);
 
     var deviceInfo = {model:device.model,platform:device.platform,version:device.version,manufacturer:device.manufacturer, resolution:{height:window.innerHeight,width:window.innerWidth}};
@@ -93,7 +110,7 @@ $$(document).on('deviceready', function() {
     $$('.framework7-root').on('click', '.send-feedback', function(){
         var pageName = myApp.getCurrentView().activePage.name;
         var popupHTML = '<div class="popup feedback-popup center-align" id="feedback-pop">' +
-            '<div class="popup-header"><h1>Feedback</h1><i id="feedback-close" class="icon f7-icons">close</i></div>' +
+            '<div class="popup-header"><h1>Feedback</h1><span id="feedback-close"><i class="icon f7-icons">close</i></span></div>' +
             '<div class="content-block center-align">'+
                 '<p>Thank you for submitting your feedback. All Feedback will be reviewed by Matt and Jordan</p>' +
                 '<div class="left-align">Page:'+pageName+'</div>' +
@@ -180,15 +197,21 @@ $$(document).on('deviceready', function() {
    	$$('.framework7-root').on('click', '.product-menu', function(){
 		var elem = $$(this);
 		var id = elem.data("id");
-		TM.getItemInfo(invoice.salesLines[id].sku, invoice.itemPopup);
-		/*
+        var product = invoice.salesLines[id];
 		choicelistModal({
             type: 'modal',
-            data: [],
+            data: ['Pick Stock Screen', 'Change Variation'],
             success: function(index,title,data) {
+                switch(data[index]){
+                    case 'Pick Stock Screen':
+                        TM.getItemInfo(product.sku, invoice.itemPopup);
+                        break;
+                    case 'Change Variation':
+                        changeVariation(product, id);
+                        break;
+                }
             }
         });
-        */
 	});
 
     $$('.framework7-root').on('click', '.quantity-col-card', function(){
@@ -345,10 +368,18 @@ $$(document).on('deviceready', function() {
         closeLightbox();
         $$('.framework7-root').off('click', 'body', closeLightbox);
         $$('.framework7-root').on('click', 'body', closeLightbox);
-        $$('body').append('<div style="top:150px;" class="img-lightbox"><div class="img-lightbox-inner"><img class="lightbox-img" src="'+$$(this).prop('src')+'"></div></div>');
+        $$('body').append('<div style="top:150px;" class="img-lightbox"><div class="img-lightbox-inner"><img class="lightbox-img" src="'+$$(this).prop('src')+'"></div></div><div class="modal-overlay modal-overlay-visible"></div>');
+    });
+
+    $$('.framework7-root').on('click', '.delete-sending-image', function(){
+        var target = $$(this).data('target');
+        var targetElem = $$('#'+target);
+		targetElem.addClass('dont-send');
+		$$('#'+target+' img').addClass('dont-send');
     });
 
     function closeLightbox(){
+        $$('.modal-overlay').remove();
         $$('.img-lightbox').remove();
     }
 });
@@ -1040,15 +1071,92 @@ myApp.onPageInit('msg_msg', function(page){
 
     $$('#send-message').on('click', function(){
         var newMessage = $$('#composed-message').val();
-        TM.sendMessage(conversationId, newMessage, function(){
-            var messageHTML =  '<div class="message message-sent">' +
-                '<div class="message-name">'+EMPLOYEE.name+'</div>' +
-                '<div class="message-text">'+newMessage+'</div>' +
-            '</div>';
-            $$('.messages').append(messageHTML);
-            scrollMessageToBottom();
-            $$('#composed-message').val('');
+        
+        var sendingImages = [];
+
+        var sendingImageLength = $$('.sending-image:not(.dont-send)').length;
+        
+        $$('.sending-image:not(.dont-send)').each(function(){
+    		var src = $$(this).attr('src');
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", src, true); 
+            xhr.responseType = "blob";
+            xhr.onload = function (e) {
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                       var res = event.target.result;
+                       sendingImages.push(res);
+                    }
+                    var file = this.response;
+                    reader.readAsDataURL(file);
+            };
+            xhr.send();
         });
+
+        if(sendingImageLength != 0){
+        	sendImageWait();
+        } else {
+        	sendMessage();
+        }
+
+        function sendImageWait(){
+			setTimeout(function(){
+				if(sendingImages.length != sendingImageLength){
+					sendImageWait();
+				} else {
+					sendMessage();
+				}
+			}, 1000);
+        }
+
+        function sendMessage(){
+        	if(newMessage.length > 0 || sendingImageLength != 0){
+				console.log(sendingImages);
+	            TM.sendMessage(conversationId, newMessage, sendingImages, function(){
+	                var messageHTML =  '<div class="message message-sent">' +
+	                    '<div class="message-name">'+EMPLOYEE.name+'</div>' +
+	                    '<div class="message-text">'+newMessage+'</div>' +
+	                '</div>';
+	                $$('.messages').append(messageHTML);
+	                scrollMessageToBottom();
+	                $$('#composed-message').val('');
+	            });
+	        }
+        }
+
+    });
+
+    $$('.send-image').on('click', function(){
+        var cameraOptions = {
+            quality: 90,
+            destinationType: navigator.camera.DestinationType.FILE_URI,
+            sourceType: navigator.camera.PictureSourceType.CAMERA, 
+            allowEdit: false,
+            encodingType: navigator.camera.EncodingType.JPEG,
+            mediaType: navigator.camera.MediaType.PICTURE,
+            correctOrientation: true,
+            saveToPhotoAlbum: true, 
+            cameraDirection: navigator.camera.Direction.BACK
+        };
+        navigator.camera.getPicture(sendImage, sendImageError, cameraOptions);
+    });
+    $$('.send-file').on('click', function(){
+        var cameraOptions = {
+            quality: 90,
+            destinationType: navigator.camera.DestinationType.FILE_URI,
+            sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY, 
+            allowEdit: false,
+            encodingType: navigator.camera.EncodingType.JPEG,
+            mediaType: navigator.camera.MediaType.PICTURE,
+            correctOrientation: true,
+        };
+        navigator.camera.getPicture(retrieveImage, retrieveImageError, cameraOptions);
+    });
+    $$('.send-video').on('click', function(){
+        myApp.alert('Not yet in.');
+    });
+    $$('.send-voice').on('click', function(){
+        myApp.alert('Not yet in.');
     });
 
 });
@@ -1111,6 +1219,58 @@ myApp.onPageInit('tools', function(page){
 
 });
 
+myApp.onPageInit('calendar', function(page){
+	TM.getEvents(function(data){
+		for (var i = 0; i < data.length; i++) {
+			console.log(data[i]);
+			var event = '<li class="accordion-item"><a href="#" class="item-content item-link">' +
+			    '<div class="item-inner">' +
+			      '<div class="item-title">'+data[i].title+'</div>' +
+			    '</div></a>' +
+			  '<div class="accordion-item-content">' +
+			    '<div class="content-block">' +
+			      '<p>Item 2 content. Lorem ipsum dolor sit amet...</p>' +
+			    '</div>' +
+			  '</div>' +
+			'</li>';
+			$$('#event-list').append(event);
+		}
+	});
+
+	var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August' , 'September' , 'October', 'November', 'December'];
+	var calendarInline = myApp.calendar({
+    	container: '#my-calendar',
+	    value: [new Date()],
+	    weekHeader: false,
+	    toolbarTemplate: 
+	        '<div class="toolbar calendar-custom-toolbar">' +
+	            '<div class="toolbar-inner">' +
+	                '<div class="left">' +
+	                    '<a href="#" class="link icon-only"><i class="icon icon-back"></i></a>' +
+	                '</div>' +
+	                '<div class="center"></div>' +
+	                '<div class="right">' +
+	                    '<a href="#" class="link icon-only"><i class="icon icon-forward"></i></a>' +
+	                '</div>' +
+	            '</div>' +
+	        '</div>',
+	    onOpen: function (p) {
+	    	console.log(p.currentMonth);
+	    	console.log(p.currentYear);
+	        $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +', ' + p.currentYear);
+	        $$('.calendar-custom-toolbar .left .link').on('click', function () {
+	            calendarInline.prevMonth();
+	        });
+	        $$('.calendar-custom-toolbar .right .link').on('click', function () {
+	            calendarInline.nextMonth();
+	        });
+	    },
+	    onMonthYearChangeStart: function (p) {
+	        $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +', ' + p.currentYear);
+	    }
+	}); 
+});
+
 myApp.onPageInit('settings', function(page){
 
     var camera = navigator.camera;
@@ -1127,13 +1287,11 @@ myApp.onPageInit('settings', function(page){
             saveToPhotoAlbum: true, 
             cameraDirection: camera.Direction.FRONT
         };
-        consool('options');
         navigator.camera.getPicture(cameraCallback, cameraErrorback, options)
     });
 
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fs) {
         fs.root.getFile("newPersistentFile.txt", { create: true, exclusive: false }, function (fileEntry) {
-
             console.log("fileEntry is file?" + fileEntry.isFile.toString());
             // fileEntry.name == 'someFile.txt'
             // fileEntry.fullPath == '/ someFile.txt'
@@ -1145,17 +1303,10 @@ myApp.onPageInit('settings', function(page){
         consool('Loading Filesystem Error');
     });
 
-
     function cameraCallback(success){
         consool(success);
     }
     function cameraErrorback(error){
         consool(error);
     }
-
 });
-
-
-
-
-

@@ -113,9 +113,21 @@
 		this.recalc();
 	}
 	Invoice.prototype.addLine = function(item){
-		this.salesLines.push(item);
-		NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
-		this.recalc();
+		var inCartAlready = false;
+		for (var i = 0; i < this.salesLines.length; i++) {
+			if(this.salesLines[i].sku == item.sku && this.salesLines[i].location == item.location){
+				inCartAlready = true;
+				this.salesLines[i].quantity = parseInt(this.salesLines[i].quantity) + parseInt(item.quantity);
+				NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
+				this.recalc();
+				break;
+			}
+		}
+		if(!inCartAlready){
+			this.salesLines.push(item);
+			NativeStorage.setItem('cart', JSON.stringify(this.salesLines), nsSetNoop, noop);
+			this.recalc();
+		}
 	}
 	Invoice.prototype.deleteLine = function(id){
 		this.salesLines.splice(id, 1);
@@ -423,7 +435,7 @@
 							    		'<p class="center-align"><i class="icon f7-icons">bars</i></p>'+
 							    	'</div>' +
 							    	'<div class="col-33 quantity-col-card right-float right-align" data-id="'+i+'">' +
-							    		'<p>QTY:' + this.salesLines[i].quantity + '</p>'+
+							    		'<p><span class="qty-button-grey">' + this.salesLines[i].quantity + '<i class="fa fa-sort" aria-hidden="true"></i></span></p>'+
 							    	'</div>' +
 							    '</div>' +
 						    '</div>' +
