@@ -348,7 +348,7 @@ function standardDiscountModal(){
                 case 'Toll Bridge':
                     invoice.addDiscount({type:'Toll'});
                     break;
-                case '<-- Back': standardDiscountModal(); break;
+                case '<-- Back': addDiscountModal(); break;
             }
             mainView.router.refreshPage();
         }
@@ -545,6 +545,7 @@ function saveQuote(){
     });
     $$(saveQuoteModal).addClass('save-quote-modal');
 }
+
 function loadDraftChoicelist(optionDraft){
     var actions = []; 
     for (var i = 0; i < INVOICES.length; i++) {
@@ -655,8 +656,8 @@ var loginPopup = function(params){
                                 '<h2 class="center-align white">Employee Portal</h2>' +
                                 '<div class="bottom-center">' +
                                     '<div>' +
-                                        '<p class="center-align"><input type="password" id="password" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
-                                        '<p class="center-align"><button class="login-button">Login</button></p>' +
+                                        '<p class="center-align"><input type="password" id="password-popup" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
+                                        '<p class="center-align"><button class="login-popup-button">Login</button></p>' +
                                         '<p class="center-align"> Forgot Password?</p>' +
                                         '<p class="center-align"> Contact Matt to reset.</p>' +
                                     '</div>' +
@@ -664,12 +665,13 @@ var loginPopup = function(params){
                             '</div>' +
                         '</div>';
     myApp.popup(popupHTML);
-    
+    $$('.login-popup-button').on('click', function(){
+        login($$('#password-popup').val());
+    });
 };
 
 var login = function(password){
-    myApp.showIndicator();
-    TM.login(password, function(employee){
+    TM.login(password, pushRegistrationId, function(employee){
         notificationTimeoutStart(0,0,0,0);
         // TODO turn off notification check when logged out and invalid login.
         EMPLOYEE.id = employee.id;
@@ -678,7 +680,6 @@ var login = function(password){
         EMPLOYEE.locationid = employee.store;
         EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
         invoice.setSalesperson(EMPLOYEE.name);
-        myApp.hideIndicator();
         if($$('.login-popup').length > 0){
             myApp.closeModal('.login-popup');
             toast('Logged In - ' + EMPLOYEE.name, SHORT);
@@ -686,7 +687,6 @@ var login = function(password){
             mainView.router.loadPage({url:'profile.html'});
         }
     }, function(error){
-        myApp.hideIndicator();
         consool(error);
         if($$('.login-popup').length > 0){
             toast('Invalid Login - Popup', SHORT);
@@ -697,9 +697,84 @@ var login = function(password){
     });
 };
 
-var logout = function(){
-    
-}
+var changeVariation = function(product, id){
+    var modalHTML= '';
+    modalHTML += '<div class="item-content">' +
+        '<div class="item-inner">' +
+    '<div class="item-input">';
+
+    for (var i = 0; i < product.relatedVariations.length; i++) {
+        var variationAttribute = product.relatedVariations[i];
+        modalHTML += '<input type="text" data-attrName="'+variationAttribute.slug+'" class="variation-attribute" placeholder="'+variationAttribute.name+'" readonly id="'+variationAttribute.slug+'-picker">';
+    }
+    modalHTML += '</div>' +
+        '</div>' +
+    '</div>';
+
+    modalHTML += '<div class="change-product-modal-button"><span>Change Product</span></div>';
+
+    myApp.modal({
+        title: 'Please Choose:',
+        text: modalHTML,
+        buttons: [
+            {
+                text: 'Cancel'
+            }
+        ]
+    });
+
+    //$$('.modal-overlay').remove();
+
+    for (var i = 0; i < product.relatedVariations.length; i++) {
+        var variationAttribute = product.relatedVariations[i];
+        myApp.picker({
+            input: '#'+variationAttribute.slug+'-picker',
+            cols: [
+                {
+                    textAlign: 'center',
+                    values: variationAttribute.options
+                }
+            ]
+        });
+    }
+
+    $$('.variation-attribute').on('change', function(){
+        var allAttributesFilled = true;
+        var options = [];
+        $$('.change-product-modal-button span').removeClass('foundsku');
+        $$('.change-product-modal-button span').data('sku', '');
+        $$('.variation-attribute').each(function(index){
+            if(this.value == ''){
+                allAttributesFilled = false;
+            } else {
+                options.push({'name':$$(this).data('attrName'),'value':this.value});
+            }
+        });
+        if(allAttributesFilled){
+            TM.getVariationSku(product.sku, options, function(data){
+                if(data.ok){
+                    $$('.change-product-modal-button span').data('sku', data.sku);
+                    $$('.change-product-modal-button span').addClass('foundsku');
+                } else {
+                    console.log('===');
+                    console.log('Couldn\'t find related product');
+                    console.log(product.sku);
+                    console.log(data);
+                    console.log('===');
+                }
+            });
+        }
+    });
+
+    $$('.change-product-modal-button span').on('click', function(data){
+        var variationSku = $$(this).data('sku');
+        if(variationSku != ''){
+            invoice.deleteLine(id);
+            myApp.closeModal();
+            TM.getItemInfo(variationSku, invoice.itemPopup);
+        }
+    });
+};
 
 var choicelistModal= function(params) {
     // DEFAULTS
@@ -718,9 +793,7 @@ var choicelistModal= function(params) {
     $$.each(params,function(key, value) {
         ModalParamsObject[key]= value;
     });
-
-    if (ModalParamsObject.data.length> 0) {
-        
+    
         // TODO: allow a small modal INSTEAD of a popup...
         switch(ModalParamsObject.type) {
             case 'modal':
@@ -761,6 +834,22 @@ var choicelistModal= function(params) {
                                                 '<div class="item-content">'+
                                                     '<div class="item-inner">'+
                                                         '<div class="item-title">'+ModalParamsObject.data[i].text+'</div>'+
+                                                    '</div>'+
+                                                '</div>'+
+                                            '</a>'+
+                                        '</li>';
+                        }
+                        break;
+                    case '[object Array]':
+                        for (var i= 0; i< ModalParamsObject.data.length; i++) {
+                            modalHTML+= '<li>'+
+                                            '<a href="#" data-index="'+i+'" data-id="'+ModalParamsObject.data[i].id+'" class="item-link choicelistselect'+closeModalClass+'">'+
+                                                '<div class="item-content">'+
+                                                    '<div class="item-inner">'+
+                                                        '<select>';
+                            for (var j= 0; j< ModalParamsObject.data[i].length; j++) {
+                                modalHTML+= '<option>'+ModalParamsObject.data[i][j]+'</option>';
+                            }modalHTML+=                '</select>'+
                                                     '</div>'+
                                                 '</div>'+
                                             '</a>'+
@@ -916,8 +1005,4 @@ var choicelistModal= function(params) {
             var thisObject= $$(this);
             ModalParamsObject.success(parseInt(thisObject.attr("data-index")),thisObject.find('.item-title').text(),ModalParamsObject.data,parseInt(thisObject.attr("data-id")));
         });
-
-    } else {
-        // No choices... error?
-    }
 };

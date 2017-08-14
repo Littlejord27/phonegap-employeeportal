@@ -1,0 +1,65 @@
+{
+  "project_info": {
+    "project_number": "41878188115",
+    "firebase_url": "https://bedroomsandmore-1475864223819.firebaseio.com",
+    "project_id": "bedroomsandmore-1475864223819",
+    "storage_bucket": "bedroomsandmore-1475864223819.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:41878188115:android:689e1e97fc1ee627",
+        "android_client_info": {
+          "package_name": "com.bedroomsandmore.portal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "41878188115-mpob8nlivb2auncduabq1amu2slnfa03.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bedroomsandmore.portal",
+            "certificate_hash": "7d98ac8200d656f9fc59d0fb8e5c44f4f5426df1"
+          }
+        },
+        {
+          "client_id": "41878188115-jlc5hc4o11pqajbs2grnne7ns13346hs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjV_NlbiY8bkWIC6Poc2gPLjKDaPXqlBg"
+        },
+        {
+          "current_key": "AIzaSyB4IT7HHsUxzXSwYdFbeGPQoDdQJUfThNo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "41878188115-jlc5hc4o11pqajbs2grnne7ns13346hs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "41878188115-fglcnjhkuqffsvee3181l5pie78k1sq7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.bedroomsandmore.com"
+              }
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

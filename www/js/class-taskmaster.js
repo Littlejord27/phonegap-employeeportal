@@ -1,6 +1,9 @@
 function TaskMaster (){
 	this.host 	= "https://taskmaster.bedroomsandmore.com";
 
+	var noBeforeSendFunction= function() { };
+	var noCompleteFunction= function() { };
+
 	this.checkNewMessages = function(conversationId, latestMessageId, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
@@ -11,7 +14,9 @@ function TaskMaster (){
 			},
 			success: function(data) {
 				onSuccess(data);
-			}
+			},
+			beforeSend: noBeforeSendFunction,
+			complete: noCompleteFunction
 	   	});
 	}
 
@@ -24,7 +29,9 @@ function TaskMaster (){
 			},
 			success: function(data) {
 				onSuccess(data);
-			}
+			},
+			beforeSend: noBeforeSendFunction,
+			complete: noCompleteFunction
 	   	});
 	}
 
@@ -66,13 +73,13 @@ function TaskMaster (){
 				quoteId: quoteId
 			},
 			success: function(data) {
-				onSuccess(data);		
+				onSuccess(data);	
 			}
 	   	});
 	}
 
 	this.deliverystatus = function(month, year, zip, onSuccess){
-		this.ajaxToServer({ 
+		this.ajaxToServer({
 			url: '/4DACTION/api',
 			data: {
 				action: 'deliverystatus',
@@ -150,6 +157,21 @@ function TaskMaster (){
 	   	});
 	}
 
+	this.getEvents = function(onSuccess){
+		/*
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			data: {
+				action: 'getEvents',
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	   	*/
+	   	onSuccess([{startdate: '', enddate:'', title:'Tech Meeting', period:'BIWEEKLY'},{startdate: '', enddate: '', title:'Morning Meeting', period:'DAILY'},{startdate: '', enddate:'', title:'Meeting with Thane', period:'ONETIME'}]);
+	}
+
 	this.getinvoice = function(invoicenumber, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
@@ -164,7 +186,6 @@ function TaskMaster (){
 	}
 
 	this.getItemInfo = function(sku, onSuccess){
-		myApp.showIndicator();
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
@@ -172,7 +193,6 @@ function TaskMaster (){
 				sku: sku
 			},
 			success: function(data) {
-				myApp.hideIndicator();
 				if(data.ok){
 					onSuccess({
                         brand:data.item.brand,
@@ -219,7 +239,9 @@ function TaskMaster (){
 			},
 			success: function(data) {
 				onSuccess(data);
-			}
+			},
+			beforeSend: noBeforeSendFunction,
+			complete: noCompleteFunction
 	   	});
 	}
 
@@ -269,11 +291,26 @@ function TaskMaster (){
 	   	});
 	}
 
+	this.getVariationSku = function(sku, options, onSuccess){
+		this.ajaxToServer({ 
+			url: '/4DACTION/api',
+			method: 'POST',
+			data: {
+				action: 'getVariationSku',
+				sku: sku,
+				options: options
+			},
+			success: function(data) {
+				onSuccess(data);
+			}
+	   	});
+	}
+
 	this.listPrinters = function(onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
-				action: 'a'
+				action: 'listPrinters'
 			},
 			success: function(data) {
 				onSuccess(data);
@@ -293,17 +330,17 @@ function TaskMaster (){
 	   	});
 	}
 
-	this.login = function(password , onSuccess, onFail){
+	this.login = function(password, pushRegistrationId, onSuccess, onFail){
 		this.ajaxToServer({
             method: 'POST',
             url: '/4DACTION/mobile_auth',
             data: {
                 password: password,
-                device: {},
+                pushRegistrationId: pushRegistrationId,
             },
             success: function(data) {       
                 if (data.success) {
-                	onSuccess(data.employee);	
+                	onSuccess(data.employee);
                 } else {
                 	onFail(data.success);
                 }
@@ -325,7 +362,7 @@ function TaskMaster (){
 				}
 		   	});
 		} else {
-			this.ajaxToServer({ 
+			this.ajaxToServer({
 				url: '/4DACTION/api',
 				data: {
 					action: 'printInvoice',
@@ -333,7 +370,7 @@ function TaskMaster (){
 					printer: printer
 				},
 				success: function(data) {
-					onSuccess(data);	
+					onSuccess(data);
 				}
 		   	});
 		}
@@ -376,7 +413,6 @@ function TaskMaster (){
 	}
 
 	this.searchInventory = function(q, onSuccess){
-		myApp.showIndicator();
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
@@ -384,7 +420,6 @@ function TaskMaster (){
 				q: q
 			},
 			success: function(data) {
-				myApp.hideIndicator();
 				onSuccess(data);
 			}
 	   	});
@@ -422,17 +457,21 @@ function TaskMaster (){
 	   	});	
 	}
 
-	this.sendMessage = function(conversationid, message, onSuccess){
+	this.sendMessage = function(conversationid, message, images, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
+			method: 'POST',
 			data: {
 				action: 'sendMessage',
 				conversationid: conversationid,
-				message: message
+				message: message,
+				images: images
 			},
 			success: function(data) {
 				onSuccess(data);
-			}
+			},
+			beforeSend: noBeforeSendFunction,
+			complete: noCompleteFunction
 	   	});	
 	}
 
@@ -526,7 +565,10 @@ function TaskMaster (){
 	this.ajaxToServer= function(requestObject) {
 		var requestURL= '';
 		var dataObject= {};
+		var beforeSendFunction= function() { myApp.showIndicator(); };
+		var completeFunction= function() { myApp.hideIndicator(); };
 		var callbackFunction= function() {};
+		var errorFunction= function(data) { console.log(data); };
 		var requestMethod= 'GET';
 		
 		if (requestObject.hasOwnProperty('url')) { // REQUIRED
@@ -535,8 +577,17 @@ function TaskMaster (){
 			if (requestObject.hasOwnProperty('data')) {
 				dataObject= requestObject.data;
 			}
+			if (requestObject.hasOwnProperty('beforeSend')) {
+				beforeSendFunction= requestObject.beforeSend;
+			}
+			if (requestObject.hasOwnProperty('complete')) {
+				completeFunction= requestObject.complete;
+			}
 			if (requestObject.hasOwnProperty('success')) {
 				callbackFunction= requestObject.success;
+			}
+			if (requestObject.hasOwnProperty('error')) {
+				errorFunction= requestObject.error;
 			}
 			if (requestObject.hasOwnProperty('method')) {
 				requestMethod= requestObject.method;
@@ -568,29 +619,12 @@ function TaskMaster (){
 				method: requestMethod,
 				data: requestMethod == 'GET' ? dataObject : JSON.stringify(dataObject),
 				dataType: 'json',
-				success: tempCallBack
+				beforeSend: beforeSendFunction,
+				complete: completeFunction,
+				success: tempCallBack,
+				error: errorFunction
 			});
-			/*
-			switch(requestMethod) {
-				case 'GET':
-				case 'get':
-					
-					$$.getJSON(serverURL, dataObject, tempCallBack);
-					
-					break;
-				case 'POST':
-				case 'post':
-					
-					
-	
-					break;
-				default:
-					// unsupported other...
-			}
-
-			*/
 		} else {
-			// ERROR: url required...
 		}
 	};
 

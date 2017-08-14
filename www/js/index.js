@@ -39,31 +39,69 @@ var EMPLOYEE = {
     invoiceLocationID:0,
 };
 
-var userSwitch = 0;
-switch(userSwitch){
-    case 1:
-        EMPLOYEE.id = 42;
-        EMPLOYEE.name = 'JordanL';
-        EMPLOYEE.department = 'IT';
-        EMPLOYEE.locationid = 5;
-        EMPLOYEE.invoiceLocationID = 8;
-        break;
-    case 2:
-        EMPLOYEE.id = 16;
-        EMPLOYEE.name = 'MattD';
-        EMPLOYEE.department = 'IT';
-        EMPLOYEE.locationid = 5;
-        EMPLOYEE.invoiceLocationID = 8;
-        break;
-}
-
 var mainView = myApp.addView('.view-main', {
     dynamicNavbar: true,
     pushState : true
 });
 
+var push;
+var pushRegistrationId;
+
+function setupPush(){
+    push = PushNotification.init({
+        android: {
+            sound: true,
+            vibrate: true,
+        },
+        browser: {},
+        ios: {
+            alert: "true",
+            badge: true,
+            sound: 'false'
+        },
+        windows: {}
+    });
+
+    push.on('registration', function(data){
+        var newRegId = data.registrationId;
+        pushRegistrationId = newRegId;
+        NativeStorage.getItem('registrationId', function(obj){
+            var oldRegId = obj;
+            if(oldRegId !== newRegId){
+                NativeStorage.setItem('registrationId', newRegId, noop, noop);
+            }
+        }, function(error){
+            if(error.code == 2){
+                NativeStorage.setItem('registrationId', newRegId, noop, noop);
+            } else{
+                alert(error);
+            }
+        });
+    });
+
+    push.on('notification', function(data) {
+        var notificationData = data.additionalData;
+        var notificationType = notificationData.type;
+        switch(notificationType){
+            case 'message':
+                if(!notificationData.foreground){
+                    mainView.router.load({url:'msg_msg.html', query:{id:notificationData.conversationId}});
+                }
+                break;
+        }
+        console.log(data);
+    });
+
+
+    push.on('error', function(data) {
+        console.log(data);
+    });
+}
+
 $$(document).on('deviceready', function() {
     invoice.load();
+
+    setupPush();
 
     document.addEventListener("backbutton", function(){ consool('back captured');}, false);
 
@@ -72,7 +110,7 @@ $$(document).on('deviceready', function() {
     $$('.framework7-root').on('click', '.send-feedback', function(){
         var pageName = myApp.getCurrentView().activePage.name;
         var popupHTML = '<div class="popup feedback-popup center-align" id="feedback-pop">' +
-            '<div class="popup-header"><h1>Feedback</h1><i id="feedback-close" class="icon f7-icons">close</i></div>' +
+            '<div class="popup-header"><h1>Feedback</h1><span id="feedback-close"><i class="icon f7-icons">close</i></span></div>' +
             '<div class="content-block center-align">'+
                 '<p>Thank you for submitting your feedback. All Feedback will be reviewed by Matt and Jordan</p>' +
                 '<div class="left-align">Page:'+pageName+'</div>' +
@@ -98,8 +136,8 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.settings', function(){
-        //var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
-        //var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
+        // var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
+        // var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
         var menuItems = ['Update', 'Logout'];
         var selectors = ['update-setting-menu', 'logout-setting-menu'];
         var menu = '';
@@ -128,7 +166,7 @@ $$(document).on('deviceready', function() {
         });
 
         $$('#update-setting-menu').on('click', function(){ // Update -- update-setting-menu
-            window.open('https://bedroomsandmore.com/app', '_system');
+            window.open('https://bedroomsandmore.com/app?noPassword=true', '_system');
         });
 
         $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu 
@@ -154,20 +192,30 @@ $$(document).on('deviceready', function() {
 
     $$('.framework7-root').on('click', '.pos-actions', function(){
         serviceActions();
-    });	
+    });
+
+    $$('.framework7-root').on('click', '.app-back', function(){
+        mainView.router.back();
+    });
 
    	$$('.framework7-root').on('click', '.product-menu', function(){
 		var elem = $$(this);
 		var id = elem.data("id");
-		TM.getItemInfo(invoice.salesLines[id].sku, invoice.itemPopup);
-		/*
+        var product = invoice.salesLines[id];
 		choicelistModal({
             type: 'modal',
-            data: [],
+            data: ['Pick Stock Screen', 'Change Variation'],
             success: function(index,title,data) {
+                switch(data[index]){
+                    case 'Pick Stock Screen':
+                        TM.getItemInfo(product.sku, invoice.itemPopup);
+                        break;
+                    case 'Change Variation':
+                        changeVariation(product, id);
+                        break;
+                }
             }
         });
-        */
 	});
 
     $$('.framework7-root').on('click', '.quantity-col-card', function(){
@@ -324,10 +372,18 @@ $$(document).on('deviceready', function() {
         closeLightbox();
         $$('.framework7-root').off('click', 'body', closeLightbox);
         $$('.framework7-root').on('click', 'body', closeLightbox);
-        $$('body').append('<div style="top:150px;" class="img-lightbox"><div class="img-lightbox-inner"><img class="lightbox-img" src="'+$$(this).prop('src')+'"></div></div>');
+        $$('body').append('<div style="top:150px;" class="img-lightbox"><div class="img-lightbox-inner"><img class="lightbox-img" src="'+$$(this).prop('src')+'"></div></div><div class="modal-overlay modal-overlay-visible"></div>');
+    });
+
+    $$('.framework7-root').on('click', '.delete-sending-image', function(){
+        var target = $$(this).data('target');
+        var targetElem = $$('#'+target);
+		targetElem.addClass('dont-send');
+		$$('#'+target+' img').addClass('dont-send');
     });
 
     function closeLightbox(){
+        $$('.modal-overlay').remove();
         $$('.img-lightbox').remove();
     }
 });
@@ -361,6 +417,7 @@ myApp.onPageInit('profile', function (page) {
 
     var mySwiper = myApp.swiper('.profile-swiper', {
     });
+    
     $$('.scan-catch').on('click', function(){
         cloudSky.zBar.scan(
             {
@@ -970,6 +1027,20 @@ myApp.onPageInit('clk_home', function(page){
     }
 });
 
+myApp.onPageInit('training', function(page){
+    $$('.mod').on('click', function(){
+        var module = $$(this).data('module');
+        mainView.router.load({url:'training_module.html', query:{module:module}});
+    });
+});
+
+
+myApp.onPageInit('module', function(page){
+    var module = page.query.module;
+    console.log(module);
+    $$('#module-name').text(module);
+});
+
 myApp.onPageInit('msg_list', function(page){
 
     $$('.msg-list-back').on('click', function(){
@@ -990,7 +1061,7 @@ myApp.onPageInit('msg_list', function(page){
                 '<div class="item-inner">' +
                   '<div class="item-title-row">' +
                     '<div class="item-title">'+conversations[i].membersString+'</div>' +
-                    '<div class="item-after">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].timestring : '')+'</div>' +
+                    '<div class="item-after">'+conversations[i].time+'</div>' +
                   '</div>' +
                   '<div class="item-subtitle">'+(conversations[i].newMessageStatusBool ? '<span class="green-text">New Message</span> from '+conversations[i].recentMessages[0].sendername : '')+'</div>' +
                   '<div class="item-text">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].message : '')+'</div>' +
@@ -1010,6 +1081,8 @@ myApp.onPageInit('msg_list', function(page){
 myApp.onPageInit('msg_msg', function(page){
     var conversationId = page.query.id;
 
+    $$('.toolbar-image-area').hide();
+
     $$('.msg-msg-back').on('click', function(){
         mainView.router.loadPage('msg_list.html');
     });
@@ -1018,16 +1091,110 @@ myApp.onPageInit('msg_msg', function(page){
     TM.getMessages(conversationId, drawMessages);
 
     $$('#send-message').on('click', function(){
+        myApp.showIndicator();
         var newMessage = $$('#composed-message').val();
-        TM.sendMessage(conversationId, newMessage, function(){
-            var messageHTML =  '<div class="message message-sent">' +
-                '<div class="message-name">'+EMPLOYEE.name+'</div>' +
-                '<div class="message-text">'+newMessage+'</div>' +
-            '</div>';
-            $$('.messages').append(messageHTML);
-            scrollMessageToBottom();
-            $$('#composed-message').val('');
+        
+        var sendingImages = [];
+
+        var sendingImageLength = $$('.sending-image:not(.dont-send)').length;
+        
+        $$('.sending-image:not(.dont-send)').each(function(){
+    		var src = $$(this).attr('src');
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", src, true); 
+            xhr.responseType = "blob";
+            xhr.onload = function (e) {
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                       var res = event.target.result;
+                       sendingImages.push(res);
+                    }
+                    var file = this.response;
+                    reader.readAsDataURL(file);
+            };
+            xhr.send();
         });
+
+        if(sendingImageLength != 0){
+        	sendImageWait();
+        } else {
+        	sendMessage();
+        }
+
+        function sendImageWait(){
+			var imageSendTimeout = setTimeout(function(){
+				if(sendingImages.length != sendingImageLength){
+					sendImageWait();
+				} else {
+					sendMessage();
+				}
+			}, 1000);
+            if(sendingImages.length == sendingImageLength){
+                clearTimeout(imageSendTimeout);
+            }
+        }
+
+        function sendMessage(){
+            // TODO : Take hideIndicator and put it after it the image wait, then move message resets somewhere earlier
+            //          this change will allow users to leave the page after they send the message.
+        	if(newMessage.length > 0 || sendingImageLength != 0){
+	            TM.sendMessage(conversationId, newMessage, sendingImages, function(data){
+                    myApp.hideIndicator();
+                    var messageHTML = '';
+                    for (var i = 0; i < sendingImages.length; i++) {
+                        messageHTML +=  '<div class="message message-sent">' +
+                            '<div class="message-name">'+EMPLOYEE.name+'</div>' +
+                            '<div class="message-text"><img class="lightbox-image" src="'+sendingImages[i]+'"></div>' +
+                        '</div>';
+                    }
+                    if(newMessage.trim() != ''){
+                        messageHTML +=  '<div class="message message-sent">' +
+                            '<div class="message-name">'+EMPLOYEE.name+'</div>' +
+                            '<div class="message-text">'+newMessage+'</div>' +
+                        '</div>';
+                    }
+	                $$('.messages').append(messageHTML);
+	                scrollMessageToBottom();
+	                $$('#composed-message').val('');
+                    $$('.sending-image-div').remove();
+                    $$('.toolbar-image-area').hide();
+	            });
+	        }
+        }
+
+    });
+
+    $$('.send-image').on('click', function(){
+        var cameraOptions = {
+            quality: 90,
+            destinationType: navigator.camera.DestinationType.FILE_URI,
+            sourceType: navigator.camera.PictureSourceType.CAMERA, 
+            allowEdit: false,
+            encodingType: navigator.camera.EncodingType.JPEG,
+            mediaType: navigator.camera.MediaType.PICTURE,
+            correctOrientation: true,
+            saveToPhotoAlbum: true, 
+            cameraDirection: navigator.camera.Direction.BACK
+        };
+        navigator.camera.getPicture(sendImage, sendImageError, cameraOptions);
+    });
+    $$('.send-file').on('click', function(){
+        var cameraOptions = {
+            quality: 90,
+            destinationType: navigator.camera.DestinationType.FILE_URI,
+            sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY, 
+            allowEdit: false,
+            encodingType: navigator.camera.EncodingType.JPEG,
+            mediaType: navigator.camera.MediaType.PICTURE,
+            correctOrientation: true,
+        };
+        navigator.camera.getPicture(retrieveImage, retrieveImageError, cameraOptions);
+    });
+    $$('.send-video').on('click', function(){
+        myApp.alert('Not yet in.');
+    });
+    $$('.send-voice').on('click', function(){
+        myApp.alert('Not yet in.');
     });
 
 });
@@ -1090,6 +1257,82 @@ myApp.onPageInit('tools', function(page){
 
 });
 
+// calendar.html
+myApp.onPageInit('calendar', function(page){
+    $$.ajax({
+        url: 'dummydata_full.csv',
+        method: 'GET',
+        dataType: 'text',
+        success: function(allText){
+            console.log(allText);
+            var allTextLines = allText.split(/\r\n|\n/);
+            console.log(allTextLines);
+            var headers = allTextLines[0].split(',');
+            var lines = [];
+
+            for (var i=1; i<allTextLines.length; i++) {
+                var data = allTextLines[i].split(',');
+                if (data.length == headers.length) {
+
+                    var tarr = [];
+                    for (var j=0; j<headers.length; j++) {
+                        tarr.push(headers[j]+":"+data[j]);
+                    }
+                    lines.push(tarr);
+                }
+            }
+            console.log(lines);
+        }
+    });
+
+	TM.getEvents(function(data){
+		for (var i = 0; i < data.length; i++) {
+			var event = '<li class="accordion-item"><a href="#" class="item-content item-link">' +
+			    '<div class="item-inner">' +
+			      '<div class="item-title">'+data[i].title+'</div>' +
+			    '</div></a>' +
+			  '<div class="accordion-item-content">' +
+			    '<div class="content-block">' +
+			      '<p>Item 2 content. Lorem ipsum dolor sit amet...</p>' +
+			    '</div>' +
+			  '</div>' +
+			'</li>';
+			$$('#event-list').append(event);
+		}
+	});
+
+	var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August' , 'September' , 'October', 'November', 'December'];
+	var calendarInline = myApp.calendar({
+    	container: '#my-calendar',
+	    value: [new Date()],
+	    weekHeader: false,
+	    toolbarTemplate: 
+	        '<div class="toolbar calendar-custom-toolbar">' +
+	            '<div class="toolbar-inner">' +
+	                '<div class="left">' +
+	                    '<a href="#" class="link icon-only"><i class="icon icon-back"></i></a>' +
+	                '</div>' +
+	                '<div class="center"></div>' +
+	                '<div class="right">' +
+	                    '<a href="#" class="link icon-only"><i class="icon icon-forward"></i></a>' +
+	                '</div>' +
+	            '</div>' +
+	        '</div>',
+	    onOpen: function (p) {
+	        $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +', ' + p.currentYear);
+	        $$('.calendar-custom-toolbar .left .link').on('click', function () {
+	            calendarInline.prevMonth();
+	        });
+	        $$('.calendar-custom-toolbar .right .link').on('click', function () {
+	            calendarInline.nextMonth();
+	        });
+	    },
+	    onMonthYearChangeStart: function (p) {
+	        $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +', ' + p.currentYear);
+	    }
+	}); 
+});
+
 myApp.onPageInit('settings', function(page){
 
     var camera = navigator.camera;
@@ -1106,13 +1349,11 @@ myApp.onPageInit('settings', function(page){
             saveToPhotoAlbum: true, 
             cameraDirection: camera.Direction.FRONT
         };
-        consool('options');
         navigator.camera.getPicture(cameraCallback, cameraErrorback, options)
     });
 
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fs) {
         fs.root.getFile("newPersistentFile.txt", { create: true, exclusive: false }, function (fileEntry) {
-
             console.log("fileEntry is file?" + fileEntry.isFile.toString());
             // fileEntry.name == 'someFile.txt'
             // fileEntry.fullPath == '/ someFile.txt'
@@ -1124,17 +1365,10 @@ myApp.onPageInit('settings', function(page){
         consool('Loading Filesystem Error');
     });
 
-
     function cameraCallback(success){
         consool(success);
     }
     function cameraErrorback(error){
         consool(error);
     }
-
 });
-
-
-
-
-
