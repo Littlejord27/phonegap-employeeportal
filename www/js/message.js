@@ -6,27 +6,34 @@ function drawMessages(data){
     $$('#contact').text(data.membersString);
     var messages = data.messages;
     for (var i = 0; i < messages.length; i++) {
-        var messageHTML = 'Error loading Message - '+messages[i].id;
-        if(i == 0){ //first message
+
+        var messageHTML = '';
+
+        // Display date above messages
+        if(i == 0){
             $$('.messages').append('<div class="messages-date">'+messages[i].datestring+'<span>'+messages[i].timestring+'</span></div>');
         } else {
-            if(messages[i].datestring != messages[i-1].datestring){ //not the same day
-                //now need to break it by time.
-                $$('.messages').append('<div class="messages-date">'+messages[i].datestring+'<span>'+messages[i].timestring+'</span></div>');
+            if(messages[i].datestring != messages[i-1].datestring){ $$('.messages').append('<div class="messages-date">'+messages[i].datestring+'<span>'+messages[i].timestring+'</span></div>'); }
+        }
+
+        if(messages[i].attachments.length > 0){ //sent image
+            for (var j = 0; j < messages[i].attachments.length; j++) {
+                messageHTML += '<div class="message '+(messages[i].sender == EMPLOYEE.id ? 'message-sent' : 'message-with-avatar message-received')+'">' +
+                    '<div class="message-name">'+messages[i].sendername+'</div>' +
+                    '<div class="message-text"><img class="lightbox-image" src="'+messages[i].attachments[j].url+'"></div>' +
+                    (messages[i].sender == EMPLOYEE.id ? '' : '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messages[i].sender+')" class="message-avatar"></div>') +
+                '</div>';
             }
         }
-        if(messages[i].sender == EMPLOYEE.id){
-            messageHTML = '<div class="message message-sent">' +
+
+        if(messages[i].message.trim() != ''){
+            messageHTML += '<div class="message '+(messages[i].sender == EMPLOYEE.id ? 'message-sent' : 'message-with-avatar message-received')+'">' +
                 '<div class="message-name">'+messages[i].sendername+'</div>' +
                 '<div class="message-text">'+messages[i].message+'</div>' +
-            '</div>';
-        } else {
-            messageHTML = '<div class="message message-with-avatar message-received">' +
-                '<div class="message-name">'+messages[i].sendername+'</div>' +
-                '<div class="message-text">'+messages[i].message+'</div>' +
-                '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messages[i].sender+')" class="message-avatar"></div>' +
+                (messages[i].sender == EMPLOYEE.id ? '' : '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messages[i].sender+')" class="message-avatar"></div>') +
             '</div>';
         }
+
         $$('.messages').append(messageHTML);
     }
 
@@ -50,7 +57,7 @@ function startMessageCheck(conversationId, messageId){
                     messageHTML = '<div class="message message-with-avatar message-received '+(i == data.messages.length ? 'active': '')+'">' +
                         '<div class="message-name">'+data.messages[i].sendername+'</div>' +
                         '<div class="message-text">'+data.messages[i].message+'</div>' +
-                        '<div style="background-image:url(http://lorempixel.com/output/people-q-c-100-100-9.jpg)" class="message-avatar"></div>' +
+                        '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+data.messages[i].sender+')" class="message-avatar"></div>' +
                     '</div>';
                 }
                 $$('.messages').append(messageHTML);
@@ -116,6 +123,7 @@ function retrieveImageError(message){
     console.log(message);
 }
 function appendImage(imageData){
+    $$('.toolbar-image-area').show();
     var prevImageCount = $$('.sending-image-div').length + 1;
     $$('.toolbar-image-inner-area').append('<div id="held-image'+prevImageCount+'" class="sending-image-div"><i data-target="held-image'+prevImageCount+'" class="fa fa-times-circle-o delete-sending-image" aria-hidden="true"></i><img class="sending-image lightbox-image" height="100" width="70"></div>');
     $$('#held-image'+prevImageCount+' img').attr('src', imageData);

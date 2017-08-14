@@ -565,12 +565,46 @@ tr:nth-child(even) {
   margin-bottom: 5px !important;
 }
 
-/* Clock */
-.message.active .message-text{
-  background-color: #bdbdc1;
+/* Training */
+
+.grid-container{
+
+}
+.mod{
+  position: relative;
+  min-height: 150px;
+}
+.mod img{
+  text-align: center;
+}
+.mod-caption{
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+.mod-caption div{
+  text-align: center;
+}
+#quiz-title{
+  font-size: 22px;
+  padding: 15px;
+  margin-bottom: 20px;
+  padding-left: 5px;
+  font-weight: 400;
+}
+.quiz-question{
+  padding-left: 20px;
+}
+
+.quiz-question-title{
+  font-size: 18px;
 }
 
 /* Message */
+
+.message.active .message-text{
+  background-color: #bdbdc1;
+}
 
 .compose-message-bar{
   position: absolute;

@@ -136,8 +136,8 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.settings', function(){
-        //var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
-        //var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
+        // var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
+        // var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
         var menuItems = ['Update', 'Logout'];
         var selectors = ['update-setting-menu', 'logout-setting-menu'];
         var menu = '';
@@ -192,7 +192,11 @@ $$(document).on('deviceready', function() {
 
     $$('.framework7-root').on('click', '.pos-actions', function(){
         serviceActions();
-    });	
+    });
+
+    $$('.framework7-root').on('click', '.app-back', function(){
+        mainView.router.back();
+    });
 
    	$$('.framework7-root').on('click', '.product-menu', function(){
 		var elem = $$(this);
@@ -413,6 +417,7 @@ myApp.onPageInit('profile', function (page) {
 
     var mySwiper = myApp.swiper('.profile-swiper', {
     });
+    
     $$('.scan-catch').on('click', function(){
         cloudSky.zBar.scan(
             {
@@ -1022,6 +1027,20 @@ myApp.onPageInit('clk_home', function(page){
     }
 });
 
+myApp.onPageInit('training', function(page){
+    $$('.mod').on('click', function(){
+        var module = $$(this).data('module');
+        mainView.router.load({url:'training_module.html', query:{module:module}});
+    });
+});
+
+
+myApp.onPageInit('module', function(page){
+    var module = page.query.module;
+    console.log(module);
+    $$('#module-name').text(module);
+});
+
 myApp.onPageInit('msg_list', function(page){
 
     $$('.msg-list-back').on('click', function(){
@@ -1042,7 +1061,7 @@ myApp.onPageInit('msg_list', function(page){
                 '<div class="item-inner">' +
                   '<div class="item-title-row">' +
                     '<div class="item-title">'+conversations[i].membersString+'</div>' +
-                    '<div class="item-after">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].timestring : '')+'</div>' +
+                    '<div class="item-after">'+conversations[i].time+'</div>' +
                   '</div>' +
                   '<div class="item-subtitle">'+(conversations[i].newMessageStatusBool ? '<span class="green-text">New Message</span> from '+conversations[i].recentMessages[0].sendername : '')+'</div>' +
                   '<div class="item-text">'+(conversations[i].recentMessages.length > 0 ? conversations[i].recentMessages[0].message : '')+'</div>' +
@@ -1062,6 +1081,8 @@ myApp.onPageInit('msg_list', function(page){
 myApp.onPageInit('msg_msg', function(page){
     var conversationId = page.query.id;
 
+    $$('.toolbar-image-area').hide();
+
     $$('.msg-msg-back').on('click', function(){
         mainView.router.loadPage('msg_list.html');
     });
@@ -1070,6 +1091,7 @@ myApp.onPageInit('msg_msg', function(page){
     TM.getMessages(conversationId, drawMessages);
 
     $$('#send-message').on('click', function(){
+        myApp.showIndicator();
         var newMessage = $$('#composed-message').val();
         
         var sendingImages = [];
@@ -1100,26 +1122,42 @@ myApp.onPageInit('msg_msg', function(page){
         }
 
         function sendImageWait(){
-			setTimeout(function(){
+			var imageSendTimeout = setTimeout(function(){
 				if(sendingImages.length != sendingImageLength){
 					sendImageWait();
 				} else {
 					sendMessage();
 				}
 			}, 1000);
+            if(sendingImages.length == sendingImageLength){
+                clearTimeout(imageSendTimeout);
+            }
         }
 
         function sendMessage(){
+            // TODO : Take hideIndicator and put it after it the image wait, then move message resets somewhere earlier
+            //          this change will allow users to leave the page after they send the message.
         	if(newMessage.length > 0 || sendingImageLength != 0){
-				console.log(sendingImages);
-	            TM.sendMessage(conversationId, newMessage, sendingImages, function(){
-	                var messageHTML =  '<div class="message message-sent">' +
-	                    '<div class="message-name">'+EMPLOYEE.name+'</div>' +
-	                    '<div class="message-text">'+newMessage+'</div>' +
-	                '</div>';
+	            TM.sendMessage(conversationId, newMessage, sendingImages, function(data){
+                    myApp.hideIndicator();
+                    var messageHTML = '';
+                    for (var i = 0; i < sendingImages.length; i++) {
+                        messageHTML +=  '<div class="message message-sent">' +
+                            '<div class="message-name">'+EMPLOYEE.name+'</div>' +
+                            '<div class="message-text"><img class="lightbox-image" src="'+sendingImages[i]+'"></div>' +
+                        '</div>';
+                    }
+                    if(newMessage.trim() != ''){
+                        messageHTML +=  '<div class="message message-sent">' +
+                            '<div class="message-name">'+EMPLOYEE.name+'</div>' +
+                            '<div class="message-text">'+newMessage+'</div>' +
+                        '</div>';
+                    }
 	                $$('.messages').append(messageHTML);
 	                scrollMessageToBottom();
 	                $$('#composed-message').val('');
+                    $$('.sending-image-div').remove();
+                    $$('.toolbar-image-area').hide();
 	            });
 	        }
         }
@@ -1219,10 +1257,36 @@ myApp.onPageInit('tools', function(page){
 
 });
 
+// calendar.html
 myApp.onPageInit('calendar', function(page){
+    $$.ajax({
+        url: 'dummydata_full.csv',
+        method: 'GET',
+        dataType: 'text',
+        success: function(allText){
+            console.log(allText);
+            var allTextLines = allText.split(/\r\n|\n/);
+            console.log(allTextLines);
+            var headers = allTextLines[0].split(',');
+            var lines = [];
+
+            for (var i=1; i<allTextLines.length; i++) {
+                var data = allTextLines[i].split(',');
+                if (data.length == headers.length) {
+
+                    var tarr = [];
+                    for (var j=0; j<headers.length; j++) {
+                        tarr.push(headers[j]+":"+data[j]);
+                    }
+                    lines.push(tarr);
+                }
+            }
+            console.log(lines);
+        }
+    });
+
 	TM.getEvents(function(data){
 		for (var i = 0; i < data.length; i++) {
-			console.log(data[i]);
 			var event = '<li class="accordion-item"><a href="#" class="item-content item-link">' +
 			    '<div class="item-inner">' +
 			      '<div class="item-title">'+data[i].title+'</div>' +
@@ -1255,8 +1319,6 @@ myApp.onPageInit('calendar', function(page){
 	            '</div>' +
 	        '</div>',
 	    onOpen: function (p) {
-	    	console.log(p.currentMonth);
-	    	console.log(p.currentYear);
 	        $$('.calendar-custom-toolbar .center').text(monthNames[p.currentMonth] +', ' + p.currentYear);
 	        $$('.calendar-custom-toolbar .left .link').on('click', function () {
 	            calendarInline.prevMonth();

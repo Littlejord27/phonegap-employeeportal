@@ -359,8 +359,7 @@
 
 	// TODO: Show Discounts
 	Invoice.prototype.draw = function(selector){
-		//if(this.salesLines.length == 0){
-		if(false){
+		if(this.salesLines.length == 0){
 			if (selector === undefined || selector == '.cart-list'){
 				var newSaleHTML = '<div id="new-sale"><div id="new-sale-header"></div><div id="returning-customer">Returning</div></div>';
 				$$('.cart-list').empty();
@@ -387,7 +386,7 @@
 				            clearTimeout(lookupDelayTimer);
 				            (function(search){
 				                lookupDelayTimer = setTimeout(function() {
-				                    TM.searchCustomer(search, function(data){
+				                    TM.searchAnyValue(search, function(data){
 				                        $$('.search-results-lookup').empty();
 				                        for (var i = 0; i < listNames.length; i++) {
 				                            //var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title search-result-item">'+listNames[i]+'</div></div></li>');
@@ -397,7 +396,7 @@
 				                            });
 				                            //$$('.search-results-lookup').append(searchItem);
 				                        }
-				                    });
+									});
 				                }, 500); // Will do the ajax stuff after 1000 ms, or 1 s
 				            })(this.value);
 				        }

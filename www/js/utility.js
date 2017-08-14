@@ -348,7 +348,7 @@ function standardDiscountModal(){
                 case 'Toll Bridge':
                     invoice.addDiscount({type:'Toll'});
                     break;
-                case '<-- Back': standardDiscountModal(); break;
+                case '<-- Back': addDiscountModal(); break;
             }
             mainView.router.refreshPage();
         }
@@ -666,17 +666,13 @@ var loginPopup = function(params){
                         '</div>';
     myApp.popup(popupHTML);
     $$('.login-popup-button').on('click', function(){
-        console.log($$('#password-popup'));
         login($$('#password-popup').val());
     });
 };
 
 var login = function(password){
-    myApp.showIndicator();
-
     TM.login(password, pushRegistrationId, function(employee){
         notificationTimeoutStart(0,0,0,0);
-
         // TODO turn off notification check when logged out and invalid login.
         EMPLOYEE.id = employee.id;
         EMPLOYEE.name = employee.name;
@@ -684,7 +680,6 @@ var login = function(password){
         EMPLOYEE.locationid = employee.store;
         EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
         invoice.setSalesperson(EMPLOYEE.name);
-        myApp.hideIndicator();
         if($$('.login-popup').length > 0){
             myApp.closeModal('.login-popup');
             toast('Logged In - ' + EMPLOYEE.name, SHORT);
@@ -692,7 +687,6 @@ var login = function(password){
             mainView.router.loadPage({url:'profile.html'});
         }
     }, function(error){
-        myApp.hideIndicator();
         consool(error);
         if($$('.login-popup').length > 0){
             toast('Invalid Login - Popup', SHORT);
