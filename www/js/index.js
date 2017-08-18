@@ -20,6 +20,7 @@ var $$ = Dom7;
 
 var isAndroid = Framework7.prototype.device.android === true;
 var isIos = Framework7.prototype.device.ios === true;
+console.log(Framework7.prototype.device);
 var isBrowser = (!isAndroid & !isIos) ? true : false;
 
 var TM = new TaskMaster();
@@ -98,8 +99,18 @@ function setupPush(){
     });
 }
 
+var onlineStatus = false;
+
+document.addEventListener("offline", function(){ console.log('offline');}, false);
+
+document.addEventListener("online", function(){ console.log('online');}, false);
+
 $$(document).on('deviceready', function() {
     invoice.load();
+
+    console.log(navigator.accelerometer);
+
+    screen.orientation.lock('portrait-primary');
 
     setupPush();
 
