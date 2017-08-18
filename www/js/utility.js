@@ -650,27 +650,45 @@ function memorialDaySale(){
 }
 
 var loginPopup = function(params){
+    var rememberLoginPopup= false;
     var popupHTML = '<div class="popup login-popup">' +
-                            '<div class="login-popup-content">' +
-                                '<p class="center-align"><img src="media/symbol.png" class="login-symbol"></p>' +
-                                '<h2 class="center-align white">Employee Portal</h2>' +
-                                '<div class="bottom-center">' +
-                                    '<div>' +
-                                        '<p class="center-align"><input type="password" id="password-popup" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
-                                        '<p class="center-align"><button class="login-popup-button">Login</button></p>' +
-                                        '<p class="center-align"> Forgot Password?</p>' +
-                                        '<p class="center-align"> Contact Matt to reset.</p>' +
-                                    '</div>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>';
+        '<div class="login-popup-content">' +
+            '<p class="center-align"><img src="media/symbol.png" class="login-symbol"></p>' +
+            '<h2 class="center-align white">Employee Portal</h2>' +
+            '<div class="bottom-center">' +
+                '<div>' +
+                    '<p class="center-align"><input type="password" id="password-popup" placeholder="Password" class="password-login" pattern="[0-9]*" inputmode="numeric"></p>' +
+                    '<p class="center-align"><button class="login-popup-button">Login</button></p>' +
+                    '<p class="center-align" style="padding: 5px 0px;"><span class="remember-loginpopup"><span class="remember-loginpopup-text">Remember Login?</span><span class="remember-loginpopup-checkbox"></span></span></p>'+
+                    '<p class="center-align"> Forgot Password?</p>' +
+                    '<p class="center-align"> Contact Matt to reset.</p>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
     myApp.popup(popupHTML);
+    $$('.remember-loginpopup').on('click', function(){
+        if($$('.remember-loginpopup-checkbox').children().length > 0){
+            $$('.remember-loginpopup-checkbox').empty();
+            rememberLoginPopup = false;
+        } else {
+            $$('.remember-loginpopup-checkbox').append('<span class="fa-stack fa-lg"><i class="fa fa-square-o fa-stack-2x"></i><i class="fa fa-check fa-stack-1x"></i></span>');
+            rememberLoginPopup = true;
+        }
+    });
     $$('.login-popup-button').on('click', function(){
-        login($$('#password-popup').val());
+        login($$('#password-popup').val(), rememberLoginPopup);
     });
 };
 
-var login = function(password){
+var login = function(password, remember){
+    console.log(remember);
+    if(remember){
+        NativeStorage.setItem('pwdkeystore', password, noop, noop);
+    } else {
+        NativeStorage.remove("pwdkeystore", function(){ console.log('removed key');}, consool);
+    }
+
     TM.login(password, pushRegistrationId, function(employee){
         notificationTimeoutStart(0,0,0,0);
         // TODO turn off notification check when logged out and invalid login.
@@ -681,7 +699,9 @@ var login = function(password){
         EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
         invoice.setSalesperson(EMPLOYEE.name);
         if($$('.login-popup').length > 0){
+            mainView.router.refreshPage();
             myApp.closeModal('.login-popup');
+            myApp.closeModal('.setting-popover');
             toast('Logged In - ' + EMPLOYEE.name, SHORT);
         } else {
             mainView.router.loadPage({url:'profile.html'});

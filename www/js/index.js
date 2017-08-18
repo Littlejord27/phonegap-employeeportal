@@ -12,6 +12,7 @@
 
 // Initialize your app
 var myApp = new Framework7({
+    tapHold: true,
 });
 
 // Export selectors engine
@@ -89,7 +90,6 @@ function setupPush(){
                 }
                 break;
         }
-        console.log(data);
     });
 
 
@@ -136,10 +136,10 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.settings', function(){
-        // var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
-        // var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
-        var menuItems = ['Update', 'Logout'];
-        var selectors = ['update-setting-menu', 'logout-setting-menu'];
+        var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
+        var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
+        // var menuItems = ['Update', 'Logout'];
+        // var selectors = ['update-setting-menu', 'logout-setting-menu'];
         var menu = '';
 
         for (var i = 0; i < menuItems.length; i++) {
@@ -157,7 +157,8 @@ $$(document).on('deviceready', function() {
         myApp.popover(popoverHTML, clickedLink);
 
         $$('#print-setting-menu').on('click', function(){ // Print -- print-setting-menu
-            consool(this);
+            myApp.closeModal('.setting-popover');
+            myApp.alert('Function Coming Soon');
         });
 
         $$('#settinglink-setting-menu').on('click', function(){ // Settings -- settinglink-setting-menu
@@ -169,7 +170,7 @@ $$(document).on('deviceready', function() {
             window.open('https://bedroomsandmore.com/app?noPassword=true', '_system');
         });
 
-        $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu 
+        $$('#logout-setting-menu').on('click', function(){ // Logout -- logout-setting-menu
             var EMPLOYEE = {
                 id:0,
                 name:'',
@@ -177,9 +178,9 @@ $$(document).on('deviceready', function() {
                 locationid:0,
                 invoiceLocationID:0,
             };
+            NativeStorage.remove("pwdkeystore", function(){ console.log('removed key');}, consool);
             loginPopup();
         });
-
     });
 
     $$('.framework7-root').on('click', '.home-icon', function(){
@@ -195,7 +196,7 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.app-back', function(){
-        mainView.router.back();
+        mainView.router.refreshPreviousPage();
     });
 
    	$$('.framework7-root').on('click', '.product-menu', function(){
@@ -357,15 +358,20 @@ $$(document).on('deviceready', function() {
         }
     });
 
-    if(EMPLOYEE.id != 0){
-        mainView.router.loadPage({url:'profile.html'});
-    } else {
-        navigator.splashscreen.hide();
-    }
-
     $$('#password').on('focus', function(){$$(this).val('');});
     $$('.framework7-root').on('click', '.login-button', function(){
-        login($$('#password').val());
+        login($$('#password').val(), rememberLogin);
+    });
+
+    var rememberLogin= false;
+    $$('.remember-login').on('click', function(){
+        if($$('.remember-login-checkbox').children().length > 0){
+            $$('.remember-login-checkbox').empty();
+            rememberLogin = false;
+        } else {
+            $$('.remember-login-checkbox').append('<span class="fa-stack fa-lg"><i class="fa fa-square-o fa-stack-2x"></i><i class="fa fa-check fa-stack-1x"></i></span>');
+            rememberLogin = true;
+        }
     });
 
     $$('.framework7-root').on('click', '.lightbox-image', function(){
@@ -378,14 +384,36 @@ $$(document).on('deviceready', function() {
     $$('.framework7-root').on('click', '.delete-sending-image', function(){
         var target = $$(this).data('target');
         var targetElem = $$('#'+target);
-		targetElem.addClass('dont-send');
-		$$('#'+target+' img').addClass('dont-send');
+        targetElem.remove();
     });
 
     function closeLightbox(){
         $$('.modal-overlay').remove();
         $$('.img-lightbox').remove();
     }
+
+    NativeStorage.getItem('pwdkeystore', function(res){
+    	toast('Attempting to Login', LONG);
+        TM.login(res, pushRegistrationId, function(employee){
+            notificationTimeoutStart(0,0,0,0);
+            // TODO turn off notification check when logged out and invalid login.
+            EMPLOYEE.id = employee.id;
+            EMPLOYEE.name = employee.name;
+            EMPLOYEE.department = employee.department;
+            EMPLOYEE.locationid = employee.store;
+            EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
+            invoice.setSalesperson(EMPLOYEE.name);
+            mainView.router.loadPage({url:'profile.html'});
+            toast('Logged In - ' + EMPLOYEE.name, LONG);
+        }, function(error){
+            consool(error);
+            navigator.splashscreen.hide();
+            toast('Invalid Remembered Password', SHORT);
+        });
+    }, function(error){
+    	navigator.splashscreen.hide();
+        console.log(error);
+    });
 });
 
 myApp.onPageInit('profile', function (page) {
@@ -952,7 +980,7 @@ myApp.onPageInit('clk_home', function(page){
         $$('.current-clock-time').text(h+':'+m+':'+s);
     }, 1000);
 
-    TM.timeclock(invoice.id, 'STATUS', function(data){
+    TM.timeclock(invoice.id, 'STATUS', null, function(data){
         var clockHistoryHtml = '';
         if(data.currentlyClockedIn){
             $$('#clockin-button').addClass('inactive');
@@ -978,20 +1006,51 @@ myApp.onPageInit('clk_home', function(page){
         $$('.clock-history').append(clockHistoryHtml);
     });
 
+    $$('.clock-button').on('taphold', function(){
+        var event = $$(this).data("clockevent");
+        if(event == 'start'){
+            TM.timeclock(EMPLOYEE.id, event, 'SOFTCLOCK', function(data){
+                if(data.ok){
+                    $$('#clockin-button').addClass('inactive');
+                    $$('#clockout-button').removeClass('inactive');
+                    toast('Soft Clock In', SHORT);
+                }
+            });
+        }
+    });
+
     $$('.clock-button').on('click', function(){
         if(!$$(this).hasClass('inactive')){
             var event = $$(this).data("clockevent");
-            TM.timeclock(EMPLOYEE.id, event, function(data){
-                if(data.ok && event == 'start'){
-                    $$('#clockin-button').addClass('inactive');
-                    $$('#clockout-button').removeClass('inactive');
-                    toast('Clocked In', SHORT);
-                } else if(data.ok && event == 'stop'){
-                    $$('#clockin-button').removeClass('inactive');
-                    $$('#clockout-button').addClass('inactive');
-                    toast('Clocked Out', SHORT);
-                }
-            });
+            if(event == 'start'){
+                cloudSky.zBar.scan(
+                    {
+                        text_title: "Bedrooms and More",
+                        text_instructions: "Scan Login Qr Code",
+                        camera: "back",
+                        flash: "off",
+                        drawSight: true
+                    },
+                    function(qrcode) {
+                        TM.timeclock(EMPLOYEE.id, event, qrcode, function(data){
+                            if(data.ok){
+                                $$('#clockin-button').addClass('inactive');
+                                $$('#clockout-button').removeClass('inactive');
+                                toast('Clocked In', SHORT);
+                            }
+                        });
+                    }
+                );
+            }
+            if(event == 'stop'){
+                TM.timeclock(EMPLOYEE.id, event, null, function(data){
+                    if(data.ok){
+                        $$('#clockin-button').removeClass('inactive');
+                        $$('#clockout-button').addClass('inactive');
+                        toast('Clocked Out', SHORT);
+                    }
+                });
+            }
         }
     });
 
@@ -1037,11 +1096,14 @@ myApp.onPageInit('training', function(page){
 
 myApp.onPageInit('module', function(page){
     var module = page.query.module;
-    console.log(module);
     $$('#module-name').text(module);
 });
 
 myApp.onPageInit('msg_list', function(page){
+
+    $$('.profile-back').on('click', function(){
+        mainView.router.loadPage('profile.html');
+    });
 
     $$('.msg-list-back').on('click', function(){
         mainView.router.loadPage('profile.html');
@@ -1081,89 +1143,100 @@ myApp.onPageInit('msg_list', function(page){
 myApp.onPageInit('msg_msg', function(page){
     var conversationId = page.query.id;
 
+    $$('.msg-list-back').on('click', function(){
+        mainView.router.loadPage('msg_list.html');
+    });
+
+    var messageAppControl = myApp.messages('.messages', {
+        autoLayout: true
+    });
+
     $$('.toolbar-image-area').hide();
+
+    TM.getMessages(conversationId, function(data){
+        messageAppControl.clean();
+        $$('#contact').text(data.membersString);
+        var messagesFromServer = data.messages;
+        var messages = [];
+        for (var i = 0; i < messagesFromServer.length; i++) {
+            for (var j = 0; j < messagesFromServer[i].attachments.length; j++) {
+                messages.push({text: '<img class="lightbox-image" src="'+messagesFromServer[i].attachments[j].url+'">', date: ' ', name: messagesFromServer[i].sendername, avatar: 'https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messagesFromServer[i].sender, type: (messagesFromServer[i].sender == EMPLOYEE.id ? 'sent' : 'received'), day: messagesFromServer[i].datestring, time: messagesFromServer[i].timestring});
+            }
+            if(messagesFromServer[i].message != ''){
+                messages.push({text: messagesFromServer[i].message, date: ' ', name: messagesFromServer[i].sendername, avatar: 'https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messagesFromServer[i].sender, type: (messagesFromServer[i].sender == EMPLOYEE.id ? 'sent' : 'received'), day: messagesFromServer[i].datestring, time: messagesFromServer[i].timestring});
+            }
+        }
+        messageAppControl.addMessages(messages, 'append', false);
+
+        setTimeout(messageAppControl.scrollMessages, 250);
+        //Start timer check on last message in the app.
+        startMessageCheck(data.conversationId, data.messages[data.messages.length-1].id);
+    });
 
     $$('.msg-msg-back').on('click', function(){
         mainView.router.loadPage('msg_list.html');
     });
 
-    $$('.messages').empty();
-    TM.getMessages(conversationId, drawMessages);
-
     $$('#send-message').on('click', function(){
-        myApp.showIndicator();
         var newMessage = $$('#composed-message').val();
-        
-        var sendingImages = [];
+        if(newMessage == ''){
+            toast('No Message Typed', SHORT);
+            return;
+        }
+        var imageSrcs = [];
+        var imageDataUrls = [];
 
-        var sendingImageLength = $$('.sending-image:not(.dont-send)').length;
-        
-        $$('.sending-image:not(.dont-send)').each(function(){
-    		var src = $$(this).attr('src');
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", src, true); 
-            xhr.responseType = "blob";
-            xhr.onload = function (e) {
-                    var reader = new FileReader();
-                    reader.onload = function(event) {
-                       var res = event.target.result;
-                       sendingImages.push(res);
-                    }
-                    var file = this.response;
-                    reader.readAsDataURL(file);
-            };
-            xhr.send();
+        $$('#composed-message').val('');
+        $$('.sending-image').each(function(){
+            imageSrcs.push($$(this).attr('src'));
         });
 
-        if(sendingImageLength != 0){
-        	sendImageWait();
-        } else {
-        	sendMessage();
-        }
+        $$('.sending-image-div').remove();
+        $$('.toolbar-image-area').hide();
 
-        function sendImageWait(){
-			var imageSendTimeout = setTimeout(function(){
-				if(sendingImages.length != sendingImageLength){
-					sendImageWait();
-				} else {
-					sendMessage();
-				}
-			}, 1000);
-            if(sendingImages.length == sendingImageLength){
-                clearTimeout(imageSendTimeout);
+        sendMessage(newMessage, imageSrcs);
+
+        function sendMessage(message, images){
+            if(images.length > 0){
+                for (var i = 0; i < images.length; i++) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", images[i], true); 
+                    xhr.responseType = "blob";
+                    xhr.onload = function (e) {
+                        var reader = new FileReader();
+                        reader.onload = function(event) {
+                            var res = event.target.result;
+                            imageDataUrls.push(res);
+                            if(imageDataUrls.length == images.length){
+                                sendMessageToTaskmaster(message, imageDataUrls, messageAppControl);
+                            }
+                        }
+                        var file = this.response;
+                        reader.readAsDataURL(file);
+                    };
+                    xhr.send();
+                }
+            } else{
+                if(message.length > 0){
+                    sendMessageToTaskmaster(message, images, messageAppControl);
+                }
             }
         }
 
-        function sendMessage(){
-            // TODO : Take hideIndicator and put it after it the image wait, then move message resets somewhere earlier
-            //          this change will allow users to leave the page after they send the message.
-        	if(newMessage.length > 0 || sendingImageLength != 0){
-	            TM.sendMessage(conversationId, newMessage, sendingImages, function(data){
-                    myApp.hideIndicator();
-                    var messageHTML = '';
-                    for (var i = 0; i < sendingImages.length; i++) {
-                        messageHTML +=  '<div class="message message-sent">' +
-                            '<div class="message-name">'+EMPLOYEE.name+'</div>' +
-                            '<div class="message-text"><img class="lightbox-image" src="'+sendingImages[i]+'"></div>' +
-                        '</div>';
-                    }
-                    if(newMessage.trim() != ''){
-                        messageHTML +=  '<div class="message message-sent">' +
-                            '<div class="message-name">'+EMPLOYEE.name+'</div>' +
-                            '<div class="message-text">'+newMessage+'</div>' +
-                        '</div>';
-                    }
-	                $$('.messages').append(messageHTML);
-	                scrollMessageToBottom();
-	                $$('#composed-message').val('');
-                    $$('.sending-image-div').remove();
-                    $$('.toolbar-image-area').hide();
-	            });
-	        }
-        }
+        function sendMessageToTaskmaster(message, images, messageAppControl){
+            TM.sendMessage(conversationId, message, images, function(data){
+                for (var i = 0; i < images.length; i++) {
+                    messageAppControl.addMessage({text: '<img class="lightbox-image" src="'+images[i]+'">', date: ' ', name: EMPLOYEE.name, avatar: 'https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+EMPLOYEE.id, type: 'sent', day: 'Today', time: 'Right Now'}, 'append', false);
+                }
+                if(newMessage.trim() != ''){
+                    messageAppControl.addMessage({text: message, date: ' ', name: EMPLOYEE.name, avatar: 'https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+EMPLOYEE.id, type: 'sent', day: 'Today', time: 'Right Now'}, 'append', false);
+                }
+                startMessageCheck(conversationId,data.id);
+                scrollMessageToBottom();
+            });
+        } /* sendMessageToTaskmaster end */
 
     });
-
     $$('.send-image').on('click', function(){
         var cameraOptions = {
             quality: 90,
@@ -1197,6 +1270,10 @@ myApp.onPageInit('msg_msg', function(page){
         myApp.alert('Not yet in.');
     });
 
+});
+
+myApp.onPageAfterBack('msg_msg', function(page){
+    clearTimeout(timeoutObj);
 });
 
 myApp.onPageInit('msg_compose', function(page){
@@ -1248,10 +1325,6 @@ myApp.onPageInit('msg_compose', function(page){
     });
 
 }); 
-
-myApp.onPageAfterBack('msg_msg', function(page){
-    clearTimeout(timeoutObj);
-});
 
 myApp.onPageInit('tools', function(page){
 

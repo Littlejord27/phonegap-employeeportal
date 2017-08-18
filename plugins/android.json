@@ -22,6 +22,9 @@
         "cordova-plugin-inappbrowser": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         },
+        "cordova-plugin-media": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
         "cordova-plugin-media-capture": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         },
@@ -43,7 +46,16 @@
         "phonegap-plugin-push": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         },
-        "cordova-plugin-media": {
+        "cordova-plugin-secure-key-store": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "cordova-plugin-device-motion": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "cordova-plugin-screen-orientation": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "cordova-plugin-network-information": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         }
     },
@@ -52,6 +64,9 @@
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         },
         "cordova-plugin-file": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "es6-promise-plugin": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         }
     }

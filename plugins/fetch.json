@@ -105,14 +105,6 @@
         "is_top_level": true,
         "variables": {}
     },
-    "phonegap-plugin-push": {
-        "source": {
-            "type": "registry",
-            "id": "phonegap-plugin-push"
-        },
-        "is_top_level": true,
-        "variables": {}
-    },
     "cordova-plugin-media": {
         "source": {
             "type": "registry",
@@ -122,5 +114,53 @@
         "variables": {
             "MICROPHONE_USAGE_DESCRIPTION": "Allow to send voice messages."
         }
+    },
+    "phonegap-plugin-push": {
+        "source": {
+            "type": "registry",
+            "id": "phonegap-plugin-push@2.0.0"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-secure-key-store": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-secure-key-store"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-device-motion": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-device-motion"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-screen-orientation": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-screen-orientation"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "es6-promise-plugin": {
+        "source": {
+            "type": "registry",
+            "id": "https://github.com/vstirbu/PromisesPlugin.git"
+        },
+        "is_top_level": false,
+        "variables": {}
+    },
+    "cordova-plugin-network-information": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-network-information"
+        },
+        "is_top_level": true,
+        "variables": {}
     }
 }

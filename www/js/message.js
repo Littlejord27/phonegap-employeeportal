@@ -1,46 +1,6 @@
 /*
 ** Message Functions
 */
-
-function drawMessages(data){
-    $$('#contact').text(data.membersString);
-    var messages = data.messages;
-    for (var i = 0; i < messages.length; i++) {
-
-        var messageHTML = '';
-
-        // Display date above messages
-        if(i == 0){
-            $$('.messages').append('<div class="messages-date">'+messages[i].datestring+'<span>'+messages[i].timestring+'</span></div>');
-        } else {
-            if(messages[i].datestring != messages[i-1].datestring){ $$('.messages').append('<div class="messages-date">'+messages[i].datestring+'<span>'+messages[i].timestring+'</span></div>'); }
-        }
-
-        if(messages[i].attachments.length > 0){ //sent image
-            for (var j = 0; j < messages[i].attachments.length; j++) {
-                messageHTML += '<div class="message '+(messages[i].sender == EMPLOYEE.id ? 'message-sent' : 'message-with-avatar message-received')+'">' +
-                    '<div class="message-name">'+messages[i].sendername+'</div>' +
-                    '<div class="message-text"><img class="lightbox-image" src="'+messages[i].attachments[j].url+'"></div>' +
-                    (messages[i].sender == EMPLOYEE.id ? '' : '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messages[i].sender+')" class="message-avatar"></div>') +
-                '</div>';
-            }
-        }
-
-        if(messages[i].message.trim() != ''){
-            messageHTML += '<div class="message '+(messages[i].sender == EMPLOYEE.id ? 'message-sent' : 'message-with-avatar message-received')+'">' +
-                '<div class="message-name">'+messages[i].sendername+'</div>' +
-                '<div class="message-text">'+messages[i].message+'</div>' +
-                (messages[i].sender == EMPLOYEE.id ? '' : '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+messages[i].sender+')" class="message-avatar"></div>') +
-            '</div>';
-        }
-
-        $$('.messages').append(messageHTML);
-    }
-
-    scrollMessageToBottom();
-    startMessageCheck(data.conversationId,messages[messages.length-1].id);
-}
-
 var timeoutObj;
 var newestMessageId;
 function startMessageCheck(conversationId, messageId){
@@ -62,9 +22,13 @@ function startMessageCheck(conversationId, messageId){
                 }
                 $$('.messages').append(messageHTML);
             }
+            console.log(data.messages.length);
             if(data.messages.length > 0){
+                clearTimeout(timeoutObj);
+                console.log(data.messages[data.messages.length-1].id);
                 startMessageCheck(conversationId, data.messages[data.messages.length-1].id);
             } else{
+                clearTimeout(timeoutObj);
                 startMessageCheck(conversationId, messageId);
             }
         });

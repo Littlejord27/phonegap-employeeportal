@@ -5,9 +5,17 @@ if [ "$#" -gt 0 ]
         then
             cd ~/Code/SourceTree/employee_portal
     fi
+    if [ "$1" == "ios" ]
+        then
+            phonegap clean ios
+            rm B\&M\ Portal.ipa
+            clear
+            phonegap build ios --device
+            xcodebuild -exportArchive -archivePath platforms/ios/B\&M\ Portal.xcarchive -exportPath . -exportOptionsPlist platforms/ios/B\&M\ Portal/B\&M\ Portal-Info.plist
+            scp B\&M\ Portal.ipa jordan@localwebserver.bedroomsandmore.com:/home/jordan/www/jandwmarketing.com/htdocs/app/ios/bnmportal.ipa
+    fi
     if [ "$1" == "app" ]
         then
-
             phonegap clean ios
             phonegap clean android
             rm B\&M\ Portal.ipa

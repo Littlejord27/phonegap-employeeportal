@@ -24,6 +24,10 @@
         "cordova-plugin-inappbrowser": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         },
+        "cordova-plugin-media": {
+            "MICROPHONE_USAGE_DESCRIPTION": "Allow to send voice messages.",
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
         "cordova-plugin-media-capture": {
             "CAMERA_USAGE_DESCRIPTION": " ",
             "MICROPHONE_USAGE_DESCRIPTION": " ",
@@ -48,8 +52,16 @@
         "phonegap-plugin-push": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         },
-        "cordova-plugin-media": {
-            "MICROPHONE_USAGE_DESCRIPTION": "Allow to send voice messages.",
+        "cordova-plugin-secure-key-store": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "cordova-plugin-device-motion": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "cordova-plugin-screen-orientation": {
+            "PACKAGE_NAME": "com.bedroomsandmore.portal"
+        },
+        "cordova-plugin-network-information": {
             "PACKAGE_NAME": "com.bedroomsandmore.portal"
         }
     },

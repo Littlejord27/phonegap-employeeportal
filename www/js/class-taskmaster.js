@@ -489,12 +489,13 @@ function TaskMaster (){
 	   	});
 	}
 
-	this.timeclock = function(employeeId, clockEvent, onSuccess){
+	this.timeclock = function(employeeId, clockEvent, logincode, onSuccess){
 		this.ajaxToServer({ 
 			url: '/4DACTION/api',
 			data: {
 				action: 'timeclock',
 				employeeId: employeeId,
+				logincode: logincode,
 				clockEvent: clockEvent
 			},
 			success: function(data) {

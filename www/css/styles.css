@@ -88,7 +88,24 @@ div.navbar{
   height: 3em;
   font-size: 15px;
 }
+.login-popup-button{
+  width: 250px;
+  height: 3em;
+  font-size: 15px;
+}
 
+.remember-login{
+  padding: 5px 10px;
+  background-color: rgba(250, 250, 250, 0.8);
+  border-radius: 10px;
+  display: inline-block;
+}
+.remember-loginpopup{
+  padding: 5px 10px;
+  background-color: rgba(250, 250, 250, 0.8);
+  border-radius: 10px;
+  display: inline-block;
+}
 
 /* Profile */
 
@@ -321,28 +338,22 @@ tr:nth-child(even) {
 #section-one .list-block{
   margin: 10px 0;
 }
-
 #section-three{
   display: none;
 }
-
 #section-four{
   display: none;
 }
-
 .page[data-page='pos_delivery']{
   padding-bottom: 60px;
 }
-
 .picker-calendar-day.picker-calendar-day-today span{
   background: #e3e3e3;
   color: black;
 }
-
 .picker-calendar-day.picker-calendar-day-selected{
   background-color: #007aff;
 }
-
 #additional-notes{
   width: 90%;
   margin: 0px 10px;
@@ -350,13 +361,11 @@ tr:nth-child(even) {
   height: 10em;
   padding: 10px;
 }
-
 .receiving-section .list-block-title{
   border-bottom: 1px solid black;
   padding-left: 10px;
   line-height: 2em;
 }
-
 #same-as-billing-label{
   padding-right: 10px;
   line-height: 3em;
@@ -415,7 +424,6 @@ tr:nth-child(even) {
 #note-card-summary{
   margin: 0 0 20px;
 }
-
 #balance-input{
   height: 3em;
 }
@@ -441,11 +449,9 @@ tr:nth-child(even) {
 .charge-type{
 
 }
-
 .skip-payment{
   min-height: 47px;
 }
-
 .payment-popup .row{
   height: 50px;
 }
@@ -457,7 +463,6 @@ tr:nth-child(even) {
   text-align: center;
   padding-top: 30%;
 }
-
 .rec-method-button{
   width: 200px;
   height: 60px;
@@ -475,11 +480,9 @@ tr:nth-child(even) {
 .setting-popover{
   width: 130px !important;
 }
-
 .setting-section{
   padding: 0px 0 20px 20px;
 }
-
 .setting-section .inner-section{
   padding: 0 10px 0 15px;
 }
@@ -512,7 +515,6 @@ tr:nth-child(even) {
   font-size: 30px;
   color: rgba(0, 0, 0, 0.8);
 }
-
 .circle {
   border: 20px solid rgb(255, 255, 255);
   box-shadow: 0px 0px 5px #888888;
@@ -523,7 +525,6 @@ tr:nth-child(even) {
   /* -moz-box-sizing: border-box; */
   /* box-sizing: border-box; */
 }
-
 .hour-hand{
   position: absolute;
   background-color: white;
@@ -531,7 +532,6 @@ tr:nth-child(even) {
   width: 5px;
   margin-left: 37px;
 }
-
 .minute-hand-in{
   position: absolute;
   background-color: white;
@@ -547,7 +547,6 @@ tr:nth-child(even) {
   text-align: center;
   padding-top: 5px;
 }
-
 .history-section-label{
   text-align: center;
   font-size: 20px;
@@ -556,13 +555,20 @@ tr:nth-child(even) {
   margin: auto;
   margin-top: 10px;
 }
-
 .inactive .circle{
   background-color: grey;
 }
-
 .clockhistory-list-label{
   margin-bottom: 5px !important;
+}
+.noselect *{
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
 }
 
 /* Training */
@@ -605,7 +611,6 @@ tr:nth-child(even) {
 .message.active .message-text{
   background-color: #bdbdc1;
 }
-
 .compose-message-bar{
   position: absolute;
   width: 100%;
@@ -669,9 +674,17 @@ tr:nth-child(even) {
   top: 3%;
   margin: 0 0 10px 10px;
 }
-
 .messages{
   padding-bottom: 30px;
+}
+#message-hang{
+  text-align: center;
+  background-color: teal;
+  color: white;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  padding-bottom: 10px;
+  padding-top: 15px;
 }
 
 /* Feedback */
@@ -692,7 +705,6 @@ tr:nth-child(even) {
   box-shadow: 0px 5px 4px #888888;
   font-size: 40px;
 }
-
 #feedback-close{
   padding: 10px;
 }
@@ -708,18 +720,15 @@ tr:nth-child(even) {
   width: 100%;
   background-color: white;
 }
-
 .reduced-margin-content-block{
   margin: 20px 0;
 }
-
 .list-block ul:before{
   height: 0px;
 }
 .list-block ul:after{
   height: 0px;
 }
-
 .custom-discount-modal{
   margin-top: -235px !important;
   background-color: white;
@@ -759,11 +768,9 @@ tr:nth-child(even) {
 .custom-discount-type.active{
   background-color: rgb(71, 188, 195);
 }
-
 .active .custom-discount-list-item{
   background-color: rgb(71, 188, 195);
 }
-
 .custome-discount-or{
   font-size: 15px;
   margin: 10px;
