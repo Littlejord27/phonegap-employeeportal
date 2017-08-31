@@ -211,6 +211,7 @@ function TaskMaster (){
                         relatedVariations: data.item.relatedVariations,
                         collection:data.item.collection,
                         toplevelcategoryname:data.item.toplevelcategoryname,
+                        discounts:[],
                         imageurl: (data.item.imageurl != '' ? data.item.imageurl : 'media/products/no-product-pic_icon.png')
                     });
 				}

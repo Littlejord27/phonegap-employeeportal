@@ -20,7 +20,7 @@ var $$ = Dom7;
 
 var isAndroid = Framework7.prototype.device.android === true;
 var isIos = Framework7.prototype.device.ios === true;
-console.log(Framework7.prototype.device);
+var isIpad = Framework7.prototype.device.ipad === true;
 var isBrowser = (!isAndroid & !isIos) ? true : false;
 
 var TM = new TaskMaster();
@@ -79,6 +79,30 @@ function setupPush(){
                 alert(error);
             }
         });
+
+        NativeStorage.getItem('pwdkeystore', function(res){
+	    	toast('Attempting to Login', LONG);
+	        TM.login(res, pushRegistrationId, function(employee){
+	            notificationTimeoutStart(0,0,0,0);
+	            // TODO turn off notification check when logged out and invalid login.
+	            EMPLOYEE.id = employee.id;
+	            EMPLOYEE.name = employee.name;
+	            EMPLOYEE.department = employee.department;
+	            EMPLOYEE.locationid = employee.store;
+	            EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
+	            invoice.setSalesperson(EMPLOYEE.name);
+	            mainView.router.loadPage({url:'profile.html'});
+	            toast('Logged In - ' + EMPLOYEE.name, LONG);
+	        }, function(error){
+	            consool(error);
+	            navigator.splashscreen.hide();
+	            toast('Invalid Remembered Password', SHORT);
+	        });
+	    }, function(error){
+	    	navigator.splashscreen.hide();
+	    	console.log('PWD Keystore Error');
+	        console.log(error);
+	    });
     });
 
     push.on('notification', function(data) {
@@ -90,11 +114,17 @@ function setupPush(){
                     mainView.router.load({url:'msg_msg.html', query:{id:notificationData.conversationId}});
                 }
                 break;
+			case 'update':
+                if(!notificationData.foreground){
+                    window.open('https://bedroomsandmore.com/app?noPassword=true', '_system');
+                }
+                break;
         }
     });
 
 
     push.on('error', function(data) {
+    	console.log('Note Error');
         console.log(data);
     });
 }
@@ -106,13 +136,18 @@ document.addEventListener("offline", function(){ console.log('offline');}, false
 document.addEventListener("online", function(){ console.log('online');}, false);
 
 $$(document).on('deviceready', function() {
+    
+	setupPush();
+
     invoice.load();
+
+    gameSetup();
 
     console.log(navigator.accelerometer);
 
-    screen.orientation.lock('portrait-primary');
-
-    setupPush();
+    if(!isIpad){
+        screen.orientation.lock('portrait-primary');
+    }
 
     document.addEventListener("backbutton", function(){ consool('back captured');}, false);
 
@@ -147,10 +182,10 @@ $$(document).on('deviceready', function() {
     });
 
     $$('.framework7-root').on('click', '.settings', function(){
-        var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
-        var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
-        // var menuItems = ['Update', 'Logout'];
-        // var selectors = ['update-setting-menu', 'logout-setting-menu'];
+        //var menuItems = ['Print', 'Settings',  'Update', 'Logout'];
+        //var selectors = ['print-setting-menu', 'settinglink-setting-menu',  'update-setting-menu', 'logout-setting-menu'];
+        var menuItems = ['Update', 'Logout'];
+        var selectors = ['update-setting-menu', 'logout-setting-menu'];
         var menu = '';
 
         for (var i = 0; i < menuItems.length; i++) {
@@ -213,6 +248,10 @@ $$(document).on('deviceready', function() {
    	$$('.framework7-root').on('click', '.product-menu', function(){
 		var elem = $$(this);
 		var id = elem.data("id");
+		createVariationModal(id);
+	});
+
+	function createVariationModal(id){
         var product = invoice.salesLines[id];
 		choicelistModal({
             type: 'modal',
@@ -228,7 +267,7 @@ $$(document).on('deviceready', function() {
                 }
             }
         });
-	});
+	}
 
     $$('.framework7-root').on('click', '.quantity-col-card', function(){
 		var elem = $$(this);
@@ -342,6 +381,26 @@ $$(document).on('deviceready', function() {
         }
     });
 
+    $$('.framework7-root').on('click', '.refresh-search', function(){
+    	var searchTermRefresh = $$('#search-box').val();
+    	console.log(searchTermRefresh);
+    	if(searchTermRefresh.length > 2){
+    		TM.searchInventory(searchTermRefresh, function(data){
+	            $$('.search-results').empty();
+	            var listNames = data.inventoryNames;
+	            var listSkus = data.inventorySkus;
+	            for (var i = 0; i < listNames.length; i++) {
+	                var searchItem = $$('<li class="item-content" data-sku="'+listSkus[i]+'"><div class="item-inner"><div class="item-title search-result-item">'+listNames[i]+'</div></div></li>');
+	                searchItem.on('click', function(){
+	                    TM.getItemInfo($$(this).data('sku'), invoice.itemPopup);
+	                });
+	                $$('.search-results').append(searchItem);
+	            }
+	        });
+    	}
+    });
+
+
 	$$('#clear-native').on('click', function(){
 		NativeStorage.clear( consool, consool );
 	});
@@ -402,29 +461,6 @@ $$(document).on('deviceready', function() {
         $$('.modal-overlay').remove();
         $$('.img-lightbox').remove();
     }
-
-    NativeStorage.getItem('pwdkeystore', function(res){
-    	toast('Attempting to Login', LONG);
-        TM.login(res, pushRegistrationId, function(employee){
-            notificationTimeoutStart(0,0,0,0);
-            // TODO turn off notification check when logged out and invalid login.
-            EMPLOYEE.id = employee.id;
-            EMPLOYEE.name = employee.name;
-            EMPLOYEE.department = employee.department;
-            EMPLOYEE.locationid = employee.store;
-            EMPLOYEE.invoiceLocationID = employee.invoiceLocationID;
-            invoice.setSalesperson(EMPLOYEE.name);
-            mainView.router.loadPage({url:'profile.html'});
-            toast('Logged In - ' + EMPLOYEE.name, LONG);
-        }, function(error){
-            consool(error);
-            navigator.splashscreen.hide();
-            toast('Invalid Remembered Password', SHORT);
-        });
-    }, function(error){
-    	navigator.splashscreen.hide();
-        console.log(error);
-    });
 });
 
 myApp.onPageInit('profile', function (page) {
@@ -503,7 +539,7 @@ myApp.onPageInit('pos_cart', function (page) {
 
     function startSearch(){
         var searchModal = myApp.modal({
-            title:  'Search',
+            title:  'Search<i class="fa fa-refresh refresh-search" aria-hidden="true"></i>',
             text: '<input id="search-box" placeholder="Search">',
             afterText: '<div class="list-block search-result-div"><ul class="search-results"></ul></div>',
             buttons: [
@@ -971,7 +1007,8 @@ myApp.onPageInit('pos__thankyou', function (page) {
 
 myApp.onPageInit('clk_home', function(page){
     var currentFullDate = new Date();
-    var currentDate = (currentFullDate.getMonth()+1) +' '+ currentFullDate.getDate() +' '+ currentFullDate.getFullYear();
+    var currentDate = (currentFullDate.getMonth()+1) +'.'+ currentFullDate.getDate() +'.'+ currentFullDate.getFullYear();
+    $$('.current-clock-date').text(currentDate);
     var h = currentFullDate.getHours();
     h = h > 12 ? h-12 : h;
     var m = currentFullDate.getMinutes();
@@ -1150,7 +1187,12 @@ myApp.onPageInit('msg_list', function(page){
     });
 
 });
-
+var timeoutObjMessageCheck;
+var messageAppControl;
+myApp.onPageBeforeRemove('msg_msg', function(page){
+    console.log(timeoutObjMessageCheck);
+    clearTimeout(timeoutObjMessageCheck);
+});
 myApp.onPageInit('msg_msg', function(page){
     var conversationId = page.query.id;
 
@@ -1158,7 +1200,7 @@ myApp.onPageInit('msg_msg', function(page){
         mainView.router.loadPage('msg_list.html');
     });
 
-    var messageAppControl = myApp.messages('.messages', {
+    messageAppControl = myApp.messages('.messages', {
         autoLayout: true
     });
 
@@ -1180,6 +1222,7 @@ myApp.onPageInit('msg_msg', function(page){
         messageAppControl.addMessages(messages, 'append', false);
 
         setTimeout(messageAppControl.scrollMessages, 250);
+
         //Start timer check on last message in the app.
         startMessageCheck(data.conversationId, data.messages[data.messages.length-1].id);
     });
@@ -1190,17 +1233,19 @@ myApp.onPageInit('msg_msg', function(page){
 
     $$('#send-message').on('click', function(){
         var newMessage = $$('#composed-message').val();
-        if(newMessage == ''){
-            toast('No Message Typed', SHORT);
-            return;
-        }
+        $$('#composed-message').val('');
+
         var imageSrcs = [];
         var imageDataUrls = [];
 
-        $$('#composed-message').val('');
         $$('.sending-image').each(function(){
             imageSrcs.push($$(this).attr('src'));
         });
+
+        if(newMessage == '' && imageSrcs.length == 0){
+            toast('No Message Typed', SHORT);
+            return;
+        }
 
         $$('.sending-image-div').remove();
         $$('.toolbar-image-area').hide();
@@ -1343,32 +1388,6 @@ myApp.onPageInit('tools', function(page){
 
 // calendar.html
 myApp.onPageInit('calendar', function(page){
-    $$.ajax({
-        url: 'dummydata_full.csv',
-        method: 'GET',
-        dataType: 'text',
-        success: function(allText){
-            console.log(allText);
-            var allTextLines = allText.split(/\r\n|\n/);
-            console.log(allTextLines);
-            var headers = allTextLines[0].split(',');
-            var lines = [];
-
-            for (var i=1; i<allTextLines.length; i++) {
-                var data = allTextLines[i].split(',');
-                if (data.length == headers.length) {
-
-                    var tarr = [];
-                    for (var j=0; j<headers.length; j++) {
-                        tarr.push(headers[j]+":"+data[j]);
-                    }
-                    lines.push(tarr);
-                }
-            }
-            console.log(lines);
-        }
-    });
-
 	TM.getEvents(function(data){
 		for (var i = 0; i < data.length; i++) {
 			var event = '<li class="accordion-item"><a href="#" class="item-content item-link">' +
@@ -1455,4 +1474,12 @@ myApp.onPageInit('settings', function(page){
     function cameraErrorback(error){
         consool(error);
     }
+});
+
+myApp.onPageInit('playground', function(page){
+	$$('.testdata').append('<h1>Test Data</h1>');
+});
+
+myApp.onPageInit('seahawk', function(page){
+
 });

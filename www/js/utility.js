@@ -134,6 +134,10 @@ function getLocationNickname(locationid){
             //fall through
         case 9:
             return 'Philanthropy';
+        case 'TEST':
+            //fall through
+        case 10:
+            return 'Testing';
         case 'SO':
         case 42:
             return 'Special Order';
@@ -168,10 +172,28 @@ function discountActions(){
         data: actions,
         success: function(index,title,data) {
             switch(data[index]){
-                case 'Add Discount': addDiscountModal(); break;
+                case 'Add Discount': addDiscountModal();break;
                 case 'Tax Exempt': taxExemptModal();break;
-                case 'Clear Discounts': invoice.setDiscounts([]); invoice.setTaxFree(false); mainView.router.refreshPage(); break;
-                case '<-- Back': serviceActions(); break;
+                case 'Clear Discounts': clearDiscountActions();break;
+                case '<-- Back': serviceActions();break;
+            }
+        }
+    });
+}
+
+function clearDiscountActions(){
+    var actions = ['Clear Custom from Item', 'Clear Custom from Cart', 'Remove Discount', 'Remove Tax Free', '<-- Back']; 
+    choicelistModal({
+        type: 'modal',
+        title: 'Services:',
+        data: actions,
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'Clear Custom from Item': break;
+                case 'Clear Custom from Cart': break;
+                case 'Remove Discount': break;
+                case 'Remove Tax Free': invoice.setTaxFree(false);break;
+                case '<-- Back': discountActions(); break;
             }
         }
     });
@@ -244,7 +266,7 @@ function invoiceActions(){
     });
 }
 function locationChangeChoicelist() {
-    var actions = ['Store', 'Outlet', 'Hospatility', '45th Street Bedding', 'Bedrooms & More Online', 'Philanthropy']; 
+    var actions = ['Store', 'Outlet', 'Hospatility', '45th Street Bedding', 'Bedrooms & More Online', 'Philanthropy', 'Testing'];
     choicelistModal({
         type: 'modal',
         data: actions,
@@ -267,6 +289,9 @@ function locationChangeChoicelist() {
                     break;
                 case 'Philanthropy':
                     EMPLOYEE.invoiceLocationID = 9;
+                    break;
+                case 'Testing':
+                    EMPLOYEE.invoiceLocationID = 10;
                     break;
             }
             $$('.invoicelocation-toolbar').html(getLocationNickname(EMPLOYEE.invoiceLocationID));
@@ -313,8 +338,8 @@ function draftAndQUoteActions(){
 function addDiscountModal(){
     choicelistModal({
         type: 'modal',
-        //data: ['Standard Discount', 'Custom Discount', 'Memorial Day', '<-- Back'], // TODO : Get tax array from TM
-        data: ['Standard Discount', '<-- Back'],
+        //data: ['Standard Discount', 'Custom Discount', 'Labor Day', 'Memorial Day', '<-- Back'], // TODO : Get tax array from TM
+        data: ['Standard Discount', 'Custom Discount', 'Labor Day', '<-- Back'],
         success: function(index,title,data) {
             switch(data[index]){
                 case 'Standard Discount':
@@ -322,6 +347,9 @@ function addDiscountModal(){
                     break;
                 case 'Custom Discount':
                     customDiscountModal();
+                    break;
+                case 'Labor Day':
+                    laborDayDiscountModal();
                     break;
                 case 'Memorial Day':
                     memorialDaySale();
@@ -332,7 +360,21 @@ function addDiscountModal(){
         }
     }); 
 }
-
+function laborDayDiscountModal(){
+    choicelistModal({
+        type: 'modal',
+        data: ['We Pay Your Tax', '<-- Back'],
+        success: function(index,title,data) {
+            switch(data[index]){
+                case 'We Pay Your Tax':
+                    invoice.addDiscount({type:'wepaytax'});
+                    break;
+                case '<-- Back': addDiscountModal(); break;
+            }
+            mainView.router.refreshPage();
+        }
+    }); 
+}
 function standardDiscountModal(){
     choicelistModal({
         type: 'modal',
@@ -383,7 +425,12 @@ function customDiscountModal(){
             text: 'Cancel', onClick: function() { }
           },
           {
-            text: 'Add', onClick: function() { }
+            text: 'Add', onClick: function() {
+                for (var i = 0; i < items.length; i++) {
+                    invoice.salesLines[items[i]].discounts.push({type: 'CUSTDIS', moneyType: type, amount: parseInt(amt)});
+                }
+                NativeStorage.setItem('cart', JSON.stringify(invoice.salesLines), nsSetNoop, noop);
+            }
           },
         ],
     });
@@ -392,7 +439,7 @@ function customDiscountModal(){
 
     var addButton = $$(customDiscountModal).find('.modal-button')[1];
     
-    $$(addButton).attr('disabled',true);
+    $$(addButton).prop('disabled',true);
 
     for (var i = 0; i < invoice.salesLines.length; i++) {
         var customItem = '<div class="row item-select" data-id="'+i+'">' +
@@ -415,11 +462,11 @@ function customDiscountModal(){
                     items.splice(i, 1);
                 }
             }
-            task(items, type, amt, addButton);
+            customDiscountFilloutCheck(items, type, amt, addButton);
         } else {
             items.push(lineId);
             elem.addClass('active');
-            task(items, type, amt, addButton);
+            customDiscountFilloutCheck(items, type, amt, addButton);
         }
     });
 
@@ -427,23 +474,20 @@ function customDiscountModal(){
         $$('.custom-discount-type').removeClass('active');
         $$(this).addClass('active');
         type = $$(this).data('type');
-        task(items, type, amt, addButton);
+        customDiscountFilloutCheck(items, type, amt, addButton);
     });
 
     $$('#custom-discount-amount').on('keyup', function(){
         amt = $$(this).val();
-        task(items, type, amt, addButton);
+        customDiscountFilloutCheck(items, type, amt, addButton);
     });
 }
 
-function task(items, type, amt, addButton){
+function customDiscountFilloutCheck(items, type, amt, addButton){
     if(items.length > 0 && type != '' && amt > 0 && amt != ''){
-        consool(items);
-        consool(type);
-        consool(amt);
-        $$(addButton).attr('disabled',false);
+        $$(addButton).prop('disabled',false);
     } else {
-        $$(addButton).attr('disabled',true);
+        $$(addButton).prop('disabled',true);
     }
 }
 
@@ -718,6 +762,10 @@ var login = function(password, remember){
 };
 
 var changeVariation = function(product, id){
+    if(product.relatedVariations.length == 0){
+        toast('No Variations', SHORT);
+        return;
+    }
     var modalHTML= '';
     modalHTML += '<div class="item-content">' +
         '<div class="item-inner">' +
@@ -789,7 +837,9 @@ var changeVariation = function(product, id){
     $$('.change-product-modal-button span').on('click', function(data){
         var variationSku = $$(this).data('sku');
         if(variationSku != ''){
-            invoice.deleteLine(id);
+            if(id >= 0){ // I pass a -1 if it's the popup window and it isn't added to the invoice yet
+                invoice.deleteLine(id);
+            }
             myApp.closeModal();
             TM.getItemInfo(variationSku, invoice.itemPopup);
         }

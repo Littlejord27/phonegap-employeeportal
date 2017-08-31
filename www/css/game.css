@@ -1,0 +1,95 @@
+/* Games */
+.page[data-page="mancala"] > .page-content{
+	padding-bottom: 0px !important;
+	margin-bottom: 0px !important;
+}
+.mancala-board{
+	background-color: rgba(181, 137, 52, 0.38);
+	min-height: 100%;
+	padding-bottom: 20px;
+}
+.mancala-row {
+  	display: flex;
+  	justify-content: space-between;
+}
+.mancala-row .mancala-pit {
+  	width: 50%;
+}
+.mancala-pit{
+	width: 50%;
+	min-height: 25px;
+	margin: 10px;
+	text-align: center;
+	padding-top: 10px;
+}
+.mancala-hole{
+	margin: 0 10px;
+	height: 40px;
+	padding-top: 20px;
+}
+.player1{
+	background-color: rgb(171, 218, 255);
+}
+.player2{
+	background-color: rgb(255, 181, 115);
+}
+.mancala-pit[data-gemstones="0"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="0"]:after{
+	content: "";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="1"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="1"]:after{
+	content: "\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="2"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="2"]:after{
+	content: "\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="3"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="3"]:after{
+	content: "\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="4"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="4"]:after{
+	content: "\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="5"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="5"]:after{
+	content: "\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="6"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="6"]:after{
+	content: "\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="7"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="7"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="8"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="8"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="9"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="9"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="10"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="10"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="11"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="11"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="12"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="12"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="13"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="13"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}
+.mancala-pit[data-gemstones="14"]:after, .mancala-hole > div > .manc-score-symb[data-gemstones="14"]:after{
+	content: "\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736\02736";
+	word-break: break-all;
+}

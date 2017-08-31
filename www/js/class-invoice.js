@@ -163,25 +163,56 @@
 		cartDetailsToolbarHeader();
 	}
 
-	Invoice.prototype.recalc = function(item){
+	function getItemSubtotal(salesLine){
+		if(salesLine.discounts.length > 0){
+			var dollarDiscountAmount = 0;
+			var percentDiscountAmount = 0;
+			for (var i = 0; i < salesLine.discounts.length; i++) {
+				if(salesLine.discounts[i].moneyType == 'dollar'){
+					dollarDiscountAmount += salesLine.discounts[i].amount;
+				}
+				if(salesLine.discounts[i].moneyType == 'percent'){
+					percentDiscountAmount += salesLine.discounts[i].amount;
+				}	
+			}
+			var dollarDiscountTotal = ((salesLine.retailAmount * salesLine.quantity) - dollarDiscountAmount);
+			console.log(dollarDiscountTotal);
+			console.log(percentDiscountAmount);
+			return dollarDiscountTotal;
+		} else {
+			return salesLine.retailAmount * salesLine.quantity;
+		}
+	}
+
+	Invoice.prototype.recalc = function(){
 		this.subtotalAmount = 0;
 		this.taxAmount 		= 0;
 		this.totalAmount 	= 0;
 		this.discount 		= 0;
+		var wepaytax 		= false;
 		for (var i = 0; i < this.salesLines.length; i++) {
-			var quantityDollarAmount = this.salesLines[i].retailAmount * this.salesLines[i].quantity;
-			this.subtotalAmount += quantityDollarAmount;
-			this.taxAmount += quantityDollarAmount * this.taxPercent;
-		}
-		for (var i = 0; i < this.discounts.length; i++) {
-			this.discount += this.calcDiscount(this.discounts[i]);
+			this.subtotalAmount += getItemSubtotal(this.salesLines[i]);
 		}
 		this.subtotalAmount = roundTo(this.subtotalAmount, 2);
-		this.taxAmount = roundTo(this.taxAmount, 2);
+		for (var i = 0; i < this.discounts.length; i++) {
+			if(this.discounts[i].type == 'wepaytax'){
+				wepaytax = true;
+			}
+			this.discount = this.calcDiscount(this.discounts[i].type);
+		}
 		this.discount = roundTo(this.discount, 2);
-		this.totalAmount = roundTo(this.subtotalAmount - this.discount, 2);
-		if(!this.taxFree){
+		this.taxAmount = roundTo((this.subtotalAmount - this.discount) * this.taxPercent, 2);
+		this.totalAmount = roundTo(this.subtotalAmount + this.discount, 2);
+		if(!this.taxFree && !wepaytax){
 			this.totalAmount = roundTo(this.totalAmount + this.taxAmount, 2);
+		}
+		if(wepaytax && !this.taxFree){
+			this.taxAmount = (this.totalAmount/(1+(this.taxPercent)))-this.totalAmount;
+			this.subtotalAmount += this.taxAmount;
+			this.taxAmount = this.taxAmount * -1;
+		}
+		if(!wepaytax && this.taxFree){
+			this.totalAmount = roundTo(this.totalAmount, 2);
 		}
 	}
 
@@ -513,8 +544,7 @@
 			  				'</div>' +
 						'</div>';
 		    }
-
-			if (selector !== undefined) {
+		    if (selector !== undefined) {
 				$$(selector).empty();
 				$$(selector).append(cart);
 			} else {
@@ -528,6 +558,7 @@
 		var stockTable 	= 	createStockTable(item.stock);
 		var popupHTML = '<div class="popup stock-popup">'+
 							'<div class="content-block center-align">'+
+								'<div><i class="fa fa-qrcode fa-2x generate-qr-code" data-qr="'+item.sku+'" aria-hidden="true"></i></div>'+
 								'<div><h1>'+item.model+'</h1></div>'+
 								(item.collection != '' ? '<div><h3>'+item.collection+'</h3></div>' : '') +
 								'<div><h3>'+item.brand+'</h3></div>'+
@@ -552,6 +583,11 @@
 		myApp.popup(popupHTML);
 
 		$$('.stock-table').append(stockTable);
+
+		$$('.generate-qr-code').on('click', function(){
+			var sku = $$(this).data('qr');
+			console.log(sku);
+		});
 
 		$$('.add-to-cart').on('click', function(){
 			var stockOptions = $$('.stock-table-quantity');
@@ -593,21 +629,7 @@
 		});
 
 		$$('.attribute-border').on('click', function(){
-			var resizeModal = myApp.modal({
-	            title:  'Variation',
-	            text: '<div id="variation-chart"></div>',
-	            afterText: '<div>Change</div>',
-	            buttons: [
-	              {
-	                text: 'Cancel', onClick: function() { }
-	              },
-	            ],
-	        });
-	        $$(resizeModal).addClass('resize-modal');
-
-	        console.log(item.relatedVariations);
-	        var variationsHTML = '';
-	        $$('#variation-chart').append(variationsHTML);
+			changeVariation(item, -1);
 		});
 	};
 

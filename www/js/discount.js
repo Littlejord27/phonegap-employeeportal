@@ -22,6 +22,7 @@ Invoice.prototype.calcDiscount = function(discount){
 		case 'instockSeating': // invoice discount
 			return addInstockSeatingDiscount();
 			break;
+		default: return 0; break;
 	}
 }
 function addPMDDiscount(){

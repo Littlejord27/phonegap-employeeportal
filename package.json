@@ -46,6 +46,7 @@
         }
     },
     "dependencies": {
+        "app": "^0.1.0",
         "cordova-android": "^6.2.3",
         "cordova-ios": "git+https://github.com/shazron/cordova-ios.git#CB-13112",
         "cordova-plugin-camera": "~2.4.1",

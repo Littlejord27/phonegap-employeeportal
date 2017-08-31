@@ -1,36 +1,11 @@
 /*
 ** Message Functions
 */
-var timeoutObj;
 var newestMessageId;
 function startMessageCheck(conversationId, messageId){
-    timeoutObj = setTimeout(function(){
+    timeoutObjMessageCheck = setTimeout(function(){
         TM.checkNewMessages(conversationId, messageId, function(data){
-            for (var i = 0; i < data.messages.length; i++) {
-                var messageHTML = 'Error loading Message - '+data.messages[i].id;
-                if(data.messages[i].sender == EMPLOYEE.id){
-                    messageHTML = '<div class="message message-sent '+(i == data.messages.length ? 'active': '')+'">' +
-                        '<div class="message-name">'+data.messages[i].sendername+'</div>' +
-                        '<div class="message-text">'+data.messages[i].message+'</div>' +
-                    '</div>';
-                } else {
-                    messageHTML = '<div class="message message-with-avatar message-received '+(i == data.messages.length ? 'active': '')+'">' +
-                        '<div class="message-name">'+data.messages[i].sendername+'</div>' +
-                        '<div class="message-text">'+data.messages[i].message+'</div>' +
-                        '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+data.messages[i].sender+')" class="message-avatar"></div>' +
-                    '</div>';
-                }
-                $$('.messages').append(messageHTML);
-            }
-            console.log(data.messages.length);
-            if(data.messages.length > 0){
-                clearTimeout(timeoutObj);
-                console.log(data.messages[data.messages.length-1].id);
-                startMessageCheck(conversationId, data.messages[data.messages.length-1].id);
-            } else{
-                clearTimeout(timeoutObj);
-                startMessageCheck(conversationId, messageId);
-            }
+            startMessageCheck(conversationId, messageId);
         });
     }, 5000);
 }
@@ -74,6 +49,26 @@ function notificationTimeoutStart(eNum, mNum, pNum, tNum){
         }, 10000);
     });
 }
+
+console.log('check message before comment message.js 53');
+/*for (var i = 0; i < data.messages.length; i++) {
+    var messageHTML = 'Error loading Message - '+data.messages[i].id;
+    if(data.messages[i].sender == EMPLOYEE.id){
+        messageHTML = '<div class="message message-sent '+(i == data.messages.length ? 'active': '')+'">' +
+            '<div class="message-name">'+data.messages[i].sendername+'</div>' +
+            '<div class="message-text">'+data.messages[i].message+'</div>' +
+        '</div>';
+    } else {
+        messageHTML = '<div class="message message-with-avatar message-received '+(i == data.messages.length ? 'active': '')+'">' +
+            '<div class="message-name">'+data.messages[i].sendername+'</div>' +
+            '<div class="message-text">'+data.messages[i].message+'</div>' +
+            '<div style="background-image:url(https://taskmaster.bedroomsandmore.com/4DACTION/getImage/Employees/'+data.messages[i].sender+')" class="message-avatar"></div>' +
+        '</div>';
+    }
+    $$('.messages').append(messageHTML);
+}*/
+
+
 function sendImage(imageData){
     appendImage(imageData);
 }
