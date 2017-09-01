@@ -129,11 +129,11 @@ function setupPush(){
     });
 }
 
-var onlineStatus = false;
+var onlineStatus = true;
 
-document.addEventListener("offline", function(){ console.log('offline');}, false);
+document.addEventListener("offline", function(){ console.log('offline'); onlineStatus=false;}, false);
 
-document.addEventListener("online", function(){ console.log('online');}, false);
+document.addEventListener("online", function(){ console.log('online'); onlineStatus=true;}, false);
 
 $$(document).on('deviceready', function() {
     

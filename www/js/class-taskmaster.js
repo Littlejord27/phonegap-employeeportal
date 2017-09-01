@@ -565,68 +565,72 @@ function TaskMaster (){
 	}
 
 	this.ajaxToServer= function(requestObject) {
-		var requestURL= '';
-		var dataObject= {};
-		var beforeSendFunction= function() { myApp.showIndicator(); };
-		var completeFunction= function() { myApp.hideIndicator(); };
-		var callbackFunction= function() {};
-		var errorFunction= function(data) { console.log(data); };
-		var requestMethod= 'GET';
-		
-		if (requestObject.hasOwnProperty('url')) { // REQUIRED
-			requestURL= requestObject.url;
-
-			if (requestObject.hasOwnProperty('data')) {
-				dataObject= requestObject.data;
-			}
-			if (requestObject.hasOwnProperty('beforeSend')) {
-				beforeSendFunction= requestObject.beforeSend;
-			}
-			if (requestObject.hasOwnProperty('complete')) {
-				completeFunction= requestObject.complete;
-			}
-			if (requestObject.hasOwnProperty('success')) {
-				callbackFunction= requestObject.success;
-			}
-			if (requestObject.hasOwnProperty('error')) {
-				errorFunction= requestObject.error;
-			}
-			if (requestObject.hasOwnProperty('method')) {
-				requestMethod= requestObject.method;
-			}
-			
-			var serverURL= this.host;
-			if (requestURL.indexOf("http") > -1) {
-				serverURL= requestURL;
-			} else {
-				serverURL+= requestURL;
-			}
-			
-			var tempCallBack= function(data) {
-				if (data.hasOwnProperty('invalidsession')) {
-					invalidSessionAfterLoginAjaxCall= {
-						'url': requestURL,
-						'data': dataObject,
-						'success': callbackFunction,
-						'method': requestMethod
-					};
-					logoutUser(data);
-				} else {
-					callbackFunction(data);
-				}
-			};
-
-			$$.ajax({
-				url: serverURL,
-				method: requestMethod,
-				data: requestMethod == 'GET' ? dataObject : JSON.stringify(dataObject),
-				dataType: 'json',
-				beforeSend: beforeSendFunction,
-				complete: completeFunction,
-				success: tempCallBack,
-				error: errorFunction
-			});
+		if(onlineStatus == false){
+			console.log(requestObject);
+			toast('Go Online and try again', SHORT);
 		} else {
+			var requestURL= '';
+			var dataObject= {};
+			var beforeSendFunction= function() { myApp.showIndicator(); };
+			var completeFunction= function() { myApp.hideIndicator(); };
+			var callbackFunction= function() {};
+			var errorFunction= function(data) { console.log(data); };
+			var requestMethod= 'GET';
+			
+			if (requestObject.hasOwnProperty('url')) { // REQUIRED
+				requestURL= requestObject.url;
+
+				if (requestObject.hasOwnProperty('data')) {
+					dataObject= requestObject.data;
+				}
+				if (requestObject.hasOwnProperty('beforeSend')) {
+					beforeSendFunction= requestObject.beforeSend;
+				}
+				if (requestObject.hasOwnProperty('complete')) {
+					completeFunction= requestObject.complete;
+				}
+				if (requestObject.hasOwnProperty('success')) {
+					callbackFunction= requestObject.success;
+				}
+				if (requestObject.hasOwnProperty('error')) {
+					errorFunction= requestObject.error;
+				}
+				if (requestObject.hasOwnProperty('method')) {
+					requestMethod= requestObject.method;
+				}
+				
+				var serverURL= this.host;
+				if (requestURL.indexOf("http") > -1) {
+					serverURL= requestURL;
+				} else {
+					serverURL+= requestURL;
+				}
+				
+				var tempCallBack= function(data) {
+					if (data.hasOwnProperty('invalidsession')) {
+						invalidSessionAfterLoginAjaxCall= {
+							'url': requestURL,
+							'data': dataObject,
+							'success': callbackFunction,
+							'method': requestMethod
+						};
+						logoutUser(data);
+					} else {
+						callbackFunction(data);
+					}
+				};
+
+				$$.ajax({
+					url: serverURL,
+					method: requestMethod,
+					data: requestMethod == 'GET' ? dataObject : JSON.stringify(dataObject),
+					dataType: 'json',
+					beforeSend: beforeSendFunction,
+					complete: completeFunction,
+					success: tempCallBack,
+					error: errorFunction
+				});
+			}
 		}
 	};
 
